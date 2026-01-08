@@ -900,7 +900,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # ===== GLOBAL FILTERS (5 Required) =====
+  # ===== GLOBAL FILTERS (5 Required) =====
     if st.session_state.data_loaded:
         st.markdown('<p style="color: #06b6d4; font-weight: 600; margin-bottom: 15px; letter-spacing: 1.2px; font-size: 0.85rem;">🎛️ GLOBAL FILTERS</p>', unsafe_allow_html=True)
         
@@ -911,48 +911,45 @@ with st.sidebar:
         # Filter 1: Date Range
         if sales_df is not None and 'order_time' in sales_df.columns:
             try:
-                sales_df['order_time'] = pd.to_datetime(sales_df['order_time'], errors='coerce')
-                min_date = sales_df['order_time'].min()
-                max_date = sales_df['order_time'].max()
+                temp_sales = sales_df.copy()
+                temp_sales['order_time'] = pd.to_datetime(temp_sales['order_time'], errors='coerce')
+                min_date = temp_sales['order_time'].min()
+                max_date = temp_sales['order_time'].max()
                 if pd.notna(min_date) and pd.notna(max_date):
-                    date_range = st.date_input(
+                    st.date_input(
                         "📅 Date Range",
                         value=(min_date.date(), max_date.date()),
                         min_value=min_date.date(),
                         max_value=max_date.date(),
-                        key='filter_date'
+                        key='filter_date_range'
                     )
-                    st.session_state.filter_date_range = date_range
             except:
                 pass
         
         # Filter 2: City
         cities = ['All']
         if stores_df is not None and 'city' in stores_df.columns:
-            cities += sorted(stores_df['city'].dropna().unique().tolist())
-        selected_city = st.selectbox("🏙️ City", cities, key='filter_city')
-        st.session_state.filter_city = selected_city
+            cities += sorted([str(c) for c in stores_df['city'].dropna().unique().tolist()])
+        st.selectbox("🏙️ City", cities, key='filter_city')
         
         # Filter 3: Channel
         channels = ['All']
         if stores_df is not None and 'channel' in stores_df.columns:
-            channels += sorted(stores_df['channel'].dropna().unique().tolist())
-        selected_channel = st.selectbox("📱 Channel", channels, key='filter_channel')
-        st.session_state.filter_channel = selected_channel
+            channels += sorted([str(c) for c in stores_df['channel'].dropna().unique().tolist()])
+        st.selectbox("📱 Channel", channels, key='filter_channel')
         
         # Filter 4: Category
         categories = ['All']
         if products_df is not None and 'category' in products_df.columns:
-            categories += sorted(products_df['category'].dropna().unique().tolist())
-        selected_category = st.selectbox("📦 Category", categories, key='filter_category')
-        st.session_state.filter_category = selected_category
+            categories += sorted([str(c) for c in products_df['category'].dropna().unique().tolist()])
+        st.selectbox("📦 Category", categories, key='filter_category')
         
         # Filter 5: Brand
         brands = ['All']
         if products_df is not None and 'brand' in products_df.columns:
-            brands += sorted(products_df['brand'].dropna().unique().tolist())[:20]  # Limit to 20
-        selected_brand = st.selectbox("🏷️ Brand", brands, key='filter_brand')
-        st.session_state.filter_brand = selected_brand
+            brand_list = [str(b) for b in products_df['brand'].dropna().unique().tolist()]
+            brands += sorted(brand_list)[:20]  # Limit to 20
+        st.selectbox("🏷️ Brand", brands, key='filter_brand')
         
         st.markdown("---")
     
