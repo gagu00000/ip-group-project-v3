@@ -1,0 +1,30 @@
+{
+    "cities": {
+        "दुबई": "Dubai",
+        "अबू धाबी": "Abu Dhabi",
+        "शारजाह": "Sharjah",
+        "دبي": "Dubai",
+        "أبو ظبي": "Abu Dhabi",
+        "الشارقة": "Sharjah",
+        "Duabi": "Dubai",
+        "Dubay": "Dubai",
+        "Abudhabi": "Abu Dhabi"
+    },
+    "channels": {
+        "ऑनलाइन": "Online",
+        "ऑफलाइन": "Offline",
+        "أونلاين": "Online",
+        "متجر": "Store"
+    },
+    "categories": {
+        "इलेक्ट्रॉनिक्स": "Electronics",
+        "फैशन": "Fashion",
+        "إلكترونيات": "Electronics",
+        "أزياء": "Fashion"
+    },
+    "standard_values": {
+        "cities": ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain"],
+        "channels": ["Online", "Offline", "Store", "Website", "Mobile", "Marketplace"],
+        "categories": ["Electronics", "Fashion", "Grocery", "Beauty", "Home", "Sports", "Toys", "Books"]
+    }
+}
