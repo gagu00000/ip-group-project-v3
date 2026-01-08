@@ -40,11 +40,14 @@ from styles import (
 # ============================================================================
 
 st.set_page_config(
+    load_premium_css(theme='dark', include_orbs=True)
     page_title="UAE Pulse Simulator",
     page_icon="🚀",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+
 
 # ============================================================================
 # THEME STATE MANAGEMENT
