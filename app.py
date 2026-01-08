@@ -195,6 +195,7 @@ with st.sidebar:
         "Navigate",
         ["🏠 Home", "📂 Data", "🧹 Cleaner", "👔 Executive", "📋 Manager", "🎯 Simulator", "📊 Analytics"],
         label_visibility="collapsed"
+        key="main_navigation"
     )
     
     st.markdown("---")
@@ -459,24 +460,64 @@ if 'is_cleaned' not in st.session_state:
 if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
 
-# ============================================================================
+    # ============================================================================
 # SIDEBAR NAVIGATION
 # ============================================================================
 
 with st.sidebar:
-    # Title with NO empty space
-    st.markdown("""
-    <div style="text-align: center; margin-top: -20px; padding-bottom: 15px;">
-        <div style="font-size: 48px; margin-bottom: 5px;">🛒</div>
-        <div style="
-            font-size: 26px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        ">UAE Pulse</div>
-        <div style="color: #94a3b8; font-size: 13px;">Simulator + Data Rescue</div>
+    # Logo and Title
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        st.markdown("""
+        <div style="text-align: center; margin-top: -20px; padding-bottom: 15px;">
+            <div style="font-size: 48px; margin-bottom: 5px; animation: float 3s ease-in-out infinite;">🛒</div>
+            <div class="gradient-text" style="font-size: 26px; font-weight: 800;">UAE Pulse</div>
+            <div style="color: var(--text-muted); font-size: 13px;">Simulator + Data Rescue</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        # Theme toggle button
+        theme_icon = "🌙" if st.session_state.theme == 'light' else "☀️"
+        if st.button(theme_icon, key='theme_toggle', help="Toggle Theme"):
+            toggle_theme()
+            st.rerun()
+    
+    st.markdown("---")
+    
+    # Navigation
+    st.markdown('<p style="color: var(--accent-pink); font-weight: 600; margin-bottom: 15px; letter-spacing: 1.2px; font-size: 0.85rem;">📍 NAVIGATION</p>', unsafe_allow_html=True)
+    
+    # 👇 ADD key="main_navigation" HERE
+    page = st.radio(
+        "Navigate",
+        ["🏠 Home", "📂 Data", "🧹 Cleaner", "👔 Executive", "📋 Manager", "🎯 Simulator", "📊 Analytics"],
+        label_visibility="collapsed",
+        key="main_navigation"  # ✅ THIS FIXES THE ERROR
+    )
+    
+    st.markdown("---")
+    
+    # Data Status
+    st.markdown('<p style="color: var(--accent-blue); font-weight: 600; margin-bottom: 15px; letter-spacing: 1.2px; font-size: 0.85rem;">📡 STATUS</p>', unsafe_allow_html=True)
+    
+    data_loaded = st.session_state.get('data_loaded', False)
+    data_cleaned = st.session_state.get('is_cleaned', False)
+    
+    status_class_loaded = "green" if data_loaded else "red"
+    status_class_cleaned = "green" if data_cleaned else ("orange" if data_loaded else "red")
+    
+    st.markdown(f"""
+    <div class="premium-container" style="padding: 16px;">
+        <div style="display: flex; align-items: center; margin: 10px 0;">
+            <div class="status-dot {status_class_loaded}" style="margin-right: 12px;"></div>
+            <span style="color: var(--text-primary); font-size: 0.9rem;">Data Loaded</span>
+        </div>
+        <div style="display: flex; align-items: center; margin: 10px 0;">
+            <div class="status-dot {status_class_cleaned}" style="margin-right: 12px;"></div>
+            <span style="color: var(--text-primary); font-size: 0.9rem;">Data Cleaned</span>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
