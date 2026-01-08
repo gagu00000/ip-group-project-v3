@@ -1000,10 +1000,13 @@ with st.sidebar:
 
 def apply_filters(sales_df, stores_df, products_df):
     """Apply global sidebar filters to dataframes."""
+    if sales_df is None:
+        return sales_df
+    
     filtered_sales = sales_df.copy()
     
     # Date filter
-    if hasattr(st.session_state, 'filter_date_range') and st.session_state.filter_date_range:
+    if 'filter_date_range' in st.session_state and st.session_state.filter_date_range:
         try:
             date_range = st.session_state.filter_date_range
             if len(date_range) == 2:
@@ -1016,25 +1019,25 @@ def apply_filters(sales_df, stores_df, products_df):
             pass
     
     # City filter
-    if hasattr(st.session_state, 'filter_city') and st.session_state.filter_city != 'All':
+    if 'filter_city' in st.session_state and st.session_state.filter_city != 'All':
         if stores_df is not None and 'store_id' in filtered_sales.columns:
             city_stores = stores_df[stores_df['city'] == st.session_state.filter_city]['store_id'].tolist()
             filtered_sales = filtered_sales[filtered_sales['store_id'].isin(city_stores)]
     
     # Channel filter
-    if hasattr(st.session_state, 'filter_channel') and st.session_state.filter_channel != 'All':
+    if 'filter_channel' in st.session_state and st.session_state.filter_channel != 'All':
         if stores_df is not None and 'store_id' in filtered_sales.columns:
             channel_stores = stores_df[stores_df['channel'] == st.session_state.filter_channel]['store_id'].tolist()
             filtered_sales = filtered_sales[filtered_sales['store_id'].isin(channel_stores)]
     
     # Category filter
-    if hasattr(st.session_state, 'filter_category') and st.session_state.filter_category != 'All':
+    if 'filter_category' in st.session_state and st.session_state.filter_category != 'All':
         if products_df is not None and 'product_id' in filtered_sales.columns:
             cat_products = products_df[products_df['category'] == st.session_state.filter_category]['product_id'].tolist()
             filtered_sales = filtered_sales[filtered_sales['product_id'].isin(cat_products)]
     
     # Brand filter
-    if hasattr(st.session_state, 'filter_brand') and st.session_state.filter_brand != 'All':
+    if 'filter_brand' in st.session_state and st.session_state.filter_brand != 'All':
         if products_df is not None and 'product_id' in filtered_sales.columns:
             brand_products = products_df[products_df['brand'] == st.session_state.filter_brand]['product_id'].tolist()
             filtered_sales = filtered_sales[filtered_sales['product_id'].isin(brand_products)]
