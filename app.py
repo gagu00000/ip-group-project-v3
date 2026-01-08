@@ -1,6 +1,6 @@
 # ============================================================================
 # UAE Promo Pulse Simulator + Data Rescue Dashboard
-# PREMIUM ENHANCED VERSION v3.0 - Advanced EDA & Theme Toggle
+# PREMIUM ENHANCED VERSION v3.1 - Fixed Visibility + All Features
 # ============================================================================
 
 import streamlit as st
@@ -74,7 +74,7 @@ THEMES = {
 current_theme = THEMES[st.session_state.theme]
 
 # ============================================================================
-# PREMIUM CSS WITH THEME SUPPORT
+# PREMIUM CSS WITH THEME SUPPORT - FIXED VISIBILITY
 # ============================================================================
 
 st.markdown(f"""
@@ -221,20 +221,23 @@ st.markdown(f"""
         animation: gradientFlow 4s ease infinite;
     }}
     
-    /* METRIC CARDS - PREMIUM */
+    /* ============================================ */
+    /* METRIC CARDS - FIXED VISIBILITY VERSION     */
+    /* ============================================ */
     .metric-card-premium {{
         background: var(--bg-card);
-        border-radius: 20px;
-        padding: 28px 24px;
+        border-radius: 16px;
+        padding: 18px 16px;
         border: 1px solid var(--border-color);
         box-shadow: var(--shadow-sm);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        height: 160px;
+        transition: all 0.3s ease;
+        min-height: 130px;
+        max-height: 150px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         position: relative;
-        overflow: hidden;
+        overflow: visible;
     }}
     
     .metric-card-premium::before {{
@@ -243,16 +246,17 @@ st.markdown(f"""
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
+        height: 3px;
         background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
         opacity: 0;
         transition: opacity 0.3s ease;
+        border-radius: 16px 16px 0 0;
     }}
     
     .metric-card-premium:hover {{
-        transform: translateY(-8px) scale(1.02);
+        transform: translateY(-4px);
         border-color: var(--accent-cyan);
-        box-shadow: var(--shadow-lg);
+        box-shadow: var(--shadow-md);
     }}
     
     .metric-card-premium:hover::before {{
@@ -260,27 +264,56 @@ st.markdown(f"""
     }}
     
     .metric-label-premium {{
-        font-size: 0.75rem;
+        font-size: 0.65rem;
         color: var(--text-muted);
         text-transform: uppercase;
-        letter-spacing: 2px;
+        letter-spacing: 1.2px;
         font-weight: 700;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }}
     
     .metric-value-premium {{
-        font-size: 2.25rem;
+        font-size: 1.4rem;
         font-weight: 800;
         font-family: 'JetBrains Mono', monospace;
-        margin: 12px 0;
+        margin: 6px 0;
+        line-height: 1.3;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }}
     
     .metric-delta {{
-        font-size: 0.9rem;
+        font-size: 0.75rem;
         font-weight: 600;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 4px;
+        margin-top: 4px;
+    }}
+    
+    /* Responsive metric values */
+    @media (max-width: 1400px) {{
+        .metric-value-premium {{
+            font-size: 1.25rem;
+        }}
+        .metric-label-premium {{
+            font-size: 0.6rem;
+        }}
+    }}
+    
+    @media (max-width: 1200px) {{
+        .metric-value-premium {{
+            font-size: 1.1rem;
+        }}
+    }}
+    
+    @media (max-width: 992px) {{
+        .metric-value-premium {{
+            font-size: 1rem;
+        }}
     }}
     
     /* PAGE TITLES */
@@ -294,7 +327,7 @@ st.markdown(f"""
     }}
     
     .section-title-premium {{
-        font-size: 2rem;
+        font-size: 1.8rem;
         font-weight: 700;
         margin: 32px 0 20px 0;
         color: var(--text-primary);
@@ -614,11 +647,53 @@ if 'cleaner_stats' not in st.session_state:
     st.session_state.cleaner_stats = None
 
 # ============================================================================
-# HELPER FUNCTIONS
+# HELPER FUNCTIONS - NUMBER FORMATTING
+# ============================================================================
+
+def format_currency(value, prefix="AED "):
+    """Format large currency values with K/M suffix for better readability."""
+    try:
+        value = float(value)
+        if value >= 1_000_000:
+            return f"{prefix}{value/1_000_000:.2f}M"
+        elif value >= 100_000:
+            return f"{prefix}{value/1_000:.0f}K"
+        elif value >= 10_000:
+            return f"{prefix}{value/1_000:.1f}K"
+        else:
+            return f"{prefix}{value:,.0f}"
+    except:
+        return f"{prefix}0"
+
+def format_number(value):
+    """Format numbers with K/M suffix for better readability."""
+    try:
+        value = float(value)
+        if value >= 1_000_000:
+            return f"{value/1_000_000:.2f}M"
+        elif value >= 100_000:
+            return f"{value/1_000:.0f}K"
+        elif value >= 10_000:
+            return f"{value/1_000:.1f}K"
+        else:
+            return f"{value:,.0f}"
+    except:
+        return "0"
+
+def format_percentage(value):
+    """Format percentage values."""
+    try:
+        value = float(value)
+        return f"{value:.1f}%"
+    except:
+        return "0%"
+
+# ============================================================================
+# HELPER FUNCTIONS - UI COMPONENTS
 # ============================================================================
 
 def create_metric_card_premium(label, value, delta=None, delta_type="positive", color="cyan"):
-    """Create premium metric card."""
+    """Create premium metric card with fixed visibility."""
     colors = {
         'cyan': '#06b6d4', 'blue': '#3b82f6', 'purple': '#8b5cf6',
         'pink': '#ec4899', 'green': '#10b981', 'orange': '#f59e0b',
@@ -632,11 +707,14 @@ def create_metric_card_premium(label, value, delta=None, delta_type="positive", 
         delta_icon = "↑" if delta_type == "positive" else "↓"
         delta_html = f'<div class="metric-delta" style="color: {delta_color};">{delta_icon} {delta}</div>'
     else:
-        delta_html = '<div style="height: 28px;"></div>'
+        delta_html = '<div style="height: 18px;"></div>'
+    
+    # Truncate long labels
+    display_label = label[:14] + ".." if len(label) > 14 else label
     
     return f"""
     <div class="metric-card-premium">
-        <div class="metric-label-premium">{label}</div>
+        <div class="metric-label-premium" title="{label}">{display_label}</div>
         <div class="metric-value-premium" style="color: {accent};">{value}</div>
         {delta_html}
     </div>
@@ -659,15 +737,6 @@ def create_recommendation_premium(title, items):
         <div style="color: #10b981; font-size: 1.4rem; font-weight: 800; margin-bottom: 16px;">📋 {title}</div>
         <div style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.9;">{items_html}</div>
     </div>
-    """
-
-def create_chart_container(title, chart_key):
-    """Create chart container header HTML."""
-    return f"""
-    <div class="chart-container">
-        <div class="chart-header">
-            <span class="chart-title">{title}</span>
-        </div>
     """
 
 def get_plotly_template():
@@ -742,7 +811,7 @@ def create_customer_cohort_analysis(sales_df):
         cohort_size = cohort_pivot.iloc[:, 0]
         retention = cohort_pivot.divide(cohort_size, axis=0) * 100
         
-        return retention.iloc[:6, :6]  # Limit size for display
+        return retention.iloc[:6, :6]
     except:
         return None
 
@@ -810,7 +879,7 @@ def create_price_elasticity_analysis(sales_df, products_df):
         
         sales_copy['discount_bin'] = pd.cut(sales_copy['discount_pct'], 
                                              bins=[-1, 0, 5, 10, 15, 20, 100],
-                                             labels=['No Discount', '1-5%', '6-10%', '11-15%', '16-20%', '20%+'])
+                                             labels=['0%', '1-5%', '6-10%', '11-15%', '16-20%', '20%+'])
         
         elasticity = sales_copy.groupby('discount_bin', observed=True).agg({
             'qty': 'sum',
@@ -832,15 +901,15 @@ def generate_insights(kpis, city_kpis=None, channel_kpis=None, cat_kpis=None):
     if kpis.get('total_revenue', 0) > 0:
         aov = kpis.get('avg_order_value', 0)
         if aov > 500:
-            insights.append(("Premium Customer Base", f"AOV of AED {aov:,.0f} indicates high-value customers. Consider VIP loyalty programs."))
+            insights.append(("Premium Customers", f"AOV of AED {aov:,.0f} indicates high-value customers. Consider VIP loyalty programs."))
         elif aov < 200:
-            insights.append(("Volume Opportunity", f"AOV of AED {aov:,.0f} suggests room for bundle offers to increase basket size."))
+            insights.append(("Volume Opportunity", f"AOV of AED {aov:,.0f} suggests room for bundle offers."))
     
     margin = kpis.get('profit_margin_pct', 0)
     if margin > 25:
-        insights.append(("Strong Margins", f"{margin:.1f}% margin provides flexibility for promotional campaigns."))
+        insights.append(("Strong Margins", f"{margin:.1f}% margin supports promotional campaigns."))
     elif margin < 15:
-        insights.append(("Margin Alert", f"{margin:.1f}% margin is below benchmark. Review pricing strategy."))
+        insights.append(("Margin Alert", f"{margin:.1f}% margin needs pricing review."))
     
     return_rate = kpis.get('return_rate_pct', 0)
     if return_rate > 10:
@@ -854,7 +923,7 @@ def generate_recommendations(kpis, sim_results=None):
     
     margin = kpis.get('profit_margin_pct', 0)
     if margin > 25:
-        recommendations.append(f"Strong {margin:.0f}% margin supports promotional campaigns up to 15% discount.")
+        recommendations.append(f"Strong {margin:.0f}% margin supports up to 15% discount campaigns.")
     else:
         recommendations.append(f"Current {margin:.0f}% margin requires careful discount management.")
     
@@ -865,12 +934,12 @@ def generate_recommendations(kpis, sim_results=None):
     if sim_results:
         roi = sim_results.get('outputs', {}).get('roi_pct', 0)
         if roi > 50:
-            recommendations.append(f"Campaign projects {roi:.0f}% ROI - recommend immediate execution.")
+            recommendations.append(f"Campaign projects {roi:.0f}% ROI - recommend execution.")
         elif roi < 0:
             recommendations.append("Negative ROI projected - reduce discount or narrow targeting.")
     
     if not recommendations:
-        recommendations.append("All metrics within optimal range. Proceed with planned strategy.")
+        recommendations.append("All metrics within optimal range.")
     
     return recommendations
 
@@ -946,7 +1015,7 @@ def show_home_page():
         <div style="text-align: center; position: relative; z-index: 1;">
             <div style="margin-bottom: 24px;">
                 <span style="display: inline-block; padding: 12px 28px; background: linear-gradient(135deg, #06b6d4, #3b82f6); border-radius: 50px; color: white; font-size: 1rem; font-weight: 700; margin-right: 12px;">✨ Premium Analytics</span>
-                <span style="display: inline-block; padding: 12px 28px; background: linear-gradient(135deg, #8b5cf6, #ec4899); border-radius: 50px; color: white; font-size: 1rem; font-weight: 700;">🚀 v3.0</span>
+                <span style="display: inline-block; padding: 12px 28px; background: linear-gradient(135deg, #8b5cf6, #ec4899); border-radius: 50px; color: white; font-size: 1rem; font-weight: 700;">🚀 v3.1</span>
             </div>
             <div class="hero-title-premium">Promo Pulse Simulator</div>
             <p style="color: var(--text-secondary); font-size: 1.3rem; margin: 0; line-height: 1.6;">
@@ -962,24 +1031,24 @@ def show_home_page():
         
         col1, col2, col3, col4 = st.columns(4)
         features = [
-            ("📂", "Data Upload", "Multi-format data ingestion with validation", "cyan"),
-            ("🧹", "Data Rescue", "AI-powered quality detection & auto-fix", "blue"),
-            ("🎯", "Smart Simulation", "What-if scenarios with constraints", "purple"),
-            ("📊", "Advanced Analytics", "Executive & operational dashboards", "pink")
+            ("📂", "Data Upload", "Multi-format ingestion", "cyan"),
+            ("🧹", "Data Rescue", "AI-powered cleaning", "blue"),
+            ("🎯", "Simulator", "What-if scenarios", "purple"),
+            ("📊", "Analytics", "Executive dashboards", "pink")
         ]
         
         for col, (icon, title, desc, color) in zip([col1, col2, col3, col4], features):
             with col:
                 st.markdown(f"""
-                <div class="premium-container" style="height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-                    <div style="font-size: 56px; margin-bottom: 16px;">{icon}</div>
-                    <div style="color: var(--accent-{color}); font-size: 1.15rem; font-weight: 700; margin-bottom: 12px;">{title}</div>
-                    <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">{desc}</div>
+                <div class="premium-container" style="height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 12px;">{icon}</div>
+                    <div style="color: var(--accent-{color}); font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">{title}</div>
+                    <div style="color: var(--text-secondary); font-size: 0.85rem;">{desc}</div>
                 </div>
                 """, unsafe_allow_html=True)
         
         st.markdown("---")
-        st.markdown('<div class="alert-info"><strong>👈 Navigate to Data Upload</strong> to load your e-commerce data files or sample dataset.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="alert-info"><strong>👈 Navigate to Data Upload</strong> to load your e-commerce data files.</div>', unsafe_allow_html=True)
     
     else:
         st.markdown('<div class="section-title-premium">📊 Data Overview</div>', unsafe_allow_html=True)
@@ -988,20 +1057,20 @@ def show_home_page():
         counts = [
             ("Products", len(st.session_state.raw_products) if st.session_state.raw_products is not None else 0, "cyan"),
             ("Stores", len(st.session_state.raw_stores) if st.session_state.raw_stores is not None else 0, "blue"),
-            ("Sales Records", len(st.session_state.raw_sales) if st.session_state.raw_sales is not None else 0, "purple"),
+            ("Sales", len(st.session_state.raw_sales) if st.session_state.raw_sales is not None else 0, "purple"),
             ("Inventory", len(st.session_state.raw_inventory) if st.session_state.raw_inventory is not None else 0, "pink")
         ]
         
         for col, (label, count, color) in zip([col1, col2, col3, col4], counts):
             with col:
-                st.markdown(create_metric_card_premium(label, f"{count:,}", color=color), unsafe_allow_html=True)
+                st.markdown(create_metric_card_premium(label, format_number(count), color=color), unsafe_allow_html=True)
         
         st.markdown("---")
         
         if st.session_state.is_cleaned:
-            st.markdown('<div class="alert-success">✅ <strong>Data Ready:</strong> Your data has been cleaned and validated!</div>', unsafe_allow_html=True)
+            st.markdown('<div class="alert-success">✅ <strong>Data Ready:</strong> Your data has been cleaned!</div>', unsafe_allow_html=True)
         else:
-            st.markdown('<div class="alert-warning">⚠️ <strong>Action Required:</strong> Navigate to Data Rescue to clean your data.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="alert-warning">⚠️ <strong>Action Required:</strong> Go to Data Rescue to clean data.</div>', unsafe_allow_html=True)
     
     show_footer()
 
@@ -1012,7 +1081,7 @@ def show_home_page():
 def show_data_page():
     """Data upload page."""
     st.markdown('<h1 class="page-title-premium" style="color: var(--accent-cyan);">📂 Data Upload</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem;">Upload your e-commerce data files or load sample data</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem;">Upload your data files or load sample data</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -1080,9 +1149,9 @@ def show_data_page():
                 if df is not None:
                     col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.markdown(create_metric_card_premium("Rows", f"{len(df):,}", color="cyan"), unsafe_allow_html=True)
+                        st.markdown(create_metric_card_premium("Rows", format_number(len(df)), color="cyan"), unsafe_allow_html=True)
                     with col2:
-                        st.markdown(create_metric_card_premium("Columns", f"{len(df.columns)}", color="blue"), unsafe_allow_html=True)
+                        st.markdown(create_metric_card_premium("Columns", str(len(df.columns)), color="blue"), unsafe_allow_html=True)
                     with col3:
                         null_pct = (df.isnull().sum().sum() / (len(df) * len(df.columns)) * 100) if len(df) > 0 else 0
                         st.markdown(create_metric_card_premium("Null %", f"{null_pct:.1f}%", color="orange"), unsafe_allow_html=True)
@@ -1098,7 +1167,7 @@ def show_data_page():
 def show_cleaner_page():
     """Data rescue page."""
     st.markdown('<h1 class="page-title-premium" style="color: var(--accent-green);">🧹 Data Rescue Center</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem;">Validate, detect issues, and clean your data automatically</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem;">Detect issues and clean your data automatically</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -1111,9 +1180,9 @@ def show_cleaner_page():
     
     col1, col2, col3 = st.columns(3)
     issue_types = [
-        ("Data Quality", ["Missing values", "Duplicate records", "Null representations"], "cyan"),
-        ("Format Issues", ["Invalid timestamps", "Inconsistent cities", "Mixed case values"], "purple"),
-        ("Value Issues", ["Outliers & negatives", "FK violations", "Invalid categories"], "pink")
+        ("Data Quality", ["Missing values", "Duplicates", "Nulls"], "cyan"),
+        ("Format Issues", ["Invalid timestamps", "Cities", "Case"], "purple"),
+        ("Value Issues", ["Outliers", "FK violations", "Categories"], "pink")
     ]
     
     for col, (title, items, color) in zip([col1, col2, col3], issue_types):
@@ -1168,7 +1237,7 @@ def show_cleaner_page():
                     after = stats.get(ds, {}).get('after', 0)
                     delta = f"{before - after} fixed" if before > after else "Clean"
                     delta_type = "negative" if before > after else "positive"
-                    st.markdown(create_metric_card_premium(ds.title(), f"{after:,}", delta, delta_type, color), unsafe_allow_html=True)
+                    st.markdown(create_metric_card_premium(ds.title(), format_number(after), delta, delta_type, color), unsafe_allow_html=True)
         
         issues_df = st.session_state.issues_df
         if issues_df is not None and len(issues_df) > 0:
@@ -1184,7 +1253,7 @@ def show_cleaner_page():
                 fig = px.bar(issue_counts, x='Count', y='Issue Type', orientation='h', color='Count',
                            color_continuous_scale=['#06b6d4', '#8b5cf6'])
                 fig = style_plotly_chart_themed(fig)
-                fig.update_layout(title='Issues by Type', coloraxis_showscale=False)
+                fig.update_layout(title='Issues by Type', coloraxis_showscale=False, height=350)
                 st.plotly_chart(fig, use_container_width=True)
             
             with col2:
@@ -1194,11 +1263,11 @@ def show_cleaner_page():
                 fig.add_trace(go.Bar(x=issue_counts_sorted['Issue Type'], y=issue_counts_sorted['Count'], name='Count', marker_color='#06b6d4'), secondary_y=False)
                 fig.add_trace(go.Scatter(x=issue_counts_sorted['Issue Type'], y=issue_counts_sorted['Cumulative %'], name='Cumulative %', marker_color='#ec4899', mode='lines+markers'), secondary_y=True)
                 fig = style_plotly_chart_themed(fig)
-                fig.update_layout(title='Pareto Chart')
+                fig.update_layout(title='Pareto Chart', height=350)
                 st.plotly_chart(fig, use_container_width=True)
             
             st.markdown('<div class="section-title-premium">📋 Issues Log</div>', unsafe_allow_html=True)
-            st.dataframe(issues_df, use_container_width=True)
+            st.dataframe(issues_df, use_container_width=True, height=300)
             
             col1, col2 = st.columns(2)
             with col1:
@@ -1218,7 +1287,7 @@ def show_cleaner_page():
 def show_simulator_page():
     """Simulator page."""
     st.markdown('<h1 class="page-title-premium" style="color: var(--accent-purple);">🎯 Promo Pulse Simulator</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem;">Run what-if discount scenarios with budget & margin constraints</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem;">Run what-if discount scenarios with constraints</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -1288,11 +1357,11 @@ def show_simulator_page():
         with col1:
             delta = f"{comparison.get('revenue_change_pct', 0):+.1f}%"
             delta_type = "positive" if comparison.get('revenue_change_pct', 0) > 0 else "negative"
-            st.markdown(create_metric_card_premium("Expected Revenue", f"AED {outputs.get('expected_revenue', 0):,.0f}", delta, delta_type, "cyan"), unsafe_allow_html=True)
+            st.markdown(create_metric_card_premium("Exp. Revenue", format_currency(outputs.get('expected_revenue', 0)), delta, delta_type, "cyan"), unsafe_allow_html=True)
         with col2:
             delta = f"{comparison.get('profit_change_pct', 0):+.1f}%"
             delta_type = "positive" if comparison.get('profit_change_pct', 0) > 0 else "negative"
-            st.markdown(create_metric_card_premium("Net Profit", f"AED {outputs.get('expected_net_profit', 0):,.0f}", delta, delta_type, "green"), unsafe_allow_html=True)
+            st.markdown(create_metric_card_premium("Net Profit", format_currency(outputs.get('expected_net_profit', 0)), delta, delta_type, "green"), unsafe_allow_html=True)
         with col3:
             roi = outputs.get('roi_pct', 0)
             st.markdown(create_metric_card_premium("ROI", f"{roi:.1f}%", color="green" if roi > 0 else "red"), unsafe_allow_html=True)
@@ -1306,11 +1375,12 @@ def show_simulator_page():
         with col1:
             st.markdown(create_metric_card_premium("Demand Lift", f"+{outputs.get('demand_lift_pct', 0):.1f}%", color="purple"), unsafe_allow_html=True)
         with col2:
-            st.markdown(create_metric_card_premium("Exp. Margin", f"{outputs.get('expected_margin_pct', 0):.1f}%", color="green" if outputs.get('expected_margin_pct', 0) >= margin_floor else "orange"), unsafe_allow_html=True)
+            margin_val = outputs.get('expected_margin_pct', 0)
+            st.markdown(create_metric_card_premium("Exp. Margin", f"{margin_val:.1f}%", color="green" if margin_val >= margin_floor else "orange"), unsafe_allow_html=True)
         with col3:
-            st.markdown(create_metric_card_premium("Promo Cost", f"AED {outputs.get('promo_cost', 0):,.0f}", color="orange"), unsafe_allow_html=True)
+            st.markdown(create_metric_card_premium("Promo Cost", format_currency(outputs.get('promo_cost', 0)), color="orange"), unsafe_allow_html=True)
         with col4:
-            st.markdown(create_metric_card_premium("Expected Orders", f"{outputs.get('expected_orders', 0):,}", color="blue"), unsafe_allow_html=True)
+            st.markdown(create_metric_card_premium("Exp. Orders", format_number(outputs.get('expected_orders', 0)), color="blue"), unsafe_allow_html=True)
         
         if violations:
             st.markdown("---")
@@ -1322,7 +1392,7 @@ def show_simulator_page():
                 st.markdown(f'<div class="alert-warning">⚠️ {w}</div>', unsafe_allow_html=True)
         
         if not warnings and not violations:
-            st.markdown('<div class="alert-success">✅ All metrics within range. Campaign looks healthy!</div>', unsafe_allow_html=True)
+            st.markdown('<div class="alert-success">✅ All metrics healthy. Campaign looks good!</div>', unsafe_allow_html=True)
         
         st.markdown("---")
         col1, col2 = st.columns(2)
@@ -1337,14 +1407,14 @@ def show_simulator_page():
             fig.add_trace(go.Bar(name='Baseline', x=comp_data['Metric'], y=comp_data['Baseline'], marker_color='#3b82f6'))
             fig.add_trace(go.Bar(name='Campaign', x=comp_data['Metric'], y=comp_data['Campaign'], marker_color='#06b6d4'))
             fig = style_plotly_chart_themed(fig)
-            fig.update_layout(barmode='group', title='Revenue & Profit Comparison')
+            fig.update_layout(barmode='group', title='Revenue & Profit Comparison', height=350)
             st.plotly_chart(fig, use_container_width=True)
         
         with col2:
             orders_data = pd.DataFrame({'Type': ['Baseline', 'Campaign'], 'Orders': [comparison.get('baseline_orders', 0), outputs.get('expected_orders', 0)]})
             fig = px.bar(orders_data, x='Type', y='Orders', color='Type', color_discrete_sequence=['#8b5cf6', '#ec4899'])
             fig = style_plotly_chart_themed(fig)
-            fig.update_layout(title='Orders Comparison', showlegend=False)
+            fig.update_layout(title='Orders Comparison', showlegend=False, height=350)
             st.plotly_chart(fig, use_container_width=True)
     
     show_footer()
@@ -1370,7 +1440,7 @@ def show_dashboard_page():
     # View Toggle
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        view_mode = st.radio("Dashboard View", ["👔 Executive View", "⚙️ Manager View"], horizontal=True, key='dashboard_view')
+        view_mode = st.radio("Dashboard View", ["👔 Executive", "⚙️ Manager"], horizontal=True, key='dashboard_view')
     
     st.markdown("---")
     
@@ -1421,7 +1491,7 @@ def show_dashboard_page():
     sim = Simulator()
     kpis = sim.calculate_overall_kpis(filtered_sales, products_df)
     
-    if view_mode == "👔 Executive View":
+    if view_mode == "👔 Executive":
         show_executive_view(filtered_sales, stores_df, products_df, kpis, sim)
     else:
         show_manager_view(filtered_sales, stores_df, products_df, inventory_df, kpis, sim)
@@ -1434,25 +1504,33 @@ def show_executive_view(sales_df, stores_df, products_df, kpis, sim):
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown(create_metric_card_premium("Net Revenue", f"AED {kpis.get('net_revenue', kpis.get('total_revenue', 0)):,.0f}", "+12.5%", "positive", "cyan"), unsafe_allow_html=True)
+        revenue = kpis.get('net_revenue', kpis.get('total_revenue', 0))
+        st.markdown(create_metric_card_premium("Net Revenue", format_currency(revenue), "+12.5%", "positive", "cyan"), unsafe_allow_html=True)
     with col2:
-        st.markdown(create_metric_card_premium("Gross Margin", f"{kpis.get('profit_margin_pct', 0):.1f}%", "+2.3%", "positive", "green"), unsafe_allow_html=True)
+        margin = kpis.get('profit_margin_pct', 0)
+        st.markdown(create_metric_card_premium("Gross Margin", f"{margin:.1f}%", "+2.3%", "positive", "green"), unsafe_allow_html=True)
     with col3:
-        st.markdown(create_metric_card_premium("Total Orders", f"{kpis.get('total_orders', 0):,}", "+8.7%", "positive", "purple"), unsafe_allow_html=True)
+        orders = kpis.get('total_orders', 0)
+        st.markdown(create_metric_card_premium("Total Orders", format_number(orders), "+8.7%", "positive", "purple"), unsafe_allow_html=True)
     with col4:
-        st.markdown(create_metric_card_premium("Avg Order Value", f"AED {kpis.get('avg_order_value', 0):,.0f}", "-1.2%", "negative", "pink"), unsafe_allow_html=True)
+        aov = kpis.get('avg_order_value', 0)
+        st.markdown(create_metric_card_premium("Avg Order", format_currency(aov), "-1.2%", "negative", "pink"), unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown(create_metric_card_premium("Profit Proxy", f"AED {kpis.get('total_profit', 0):,.0f}", color="green"), unsafe_allow_html=True)
+        profit = kpis.get('total_profit', 0)
+        st.markdown(create_metric_card_premium("Profit Proxy", format_currency(profit), color="green"), unsafe_allow_html=True)
     with col2:
-        st.markdown(create_metric_card_premium("Avg Discount", f"{kpis.get('avg_discount_pct', 0):.1f}%", color="orange"), unsafe_allow_html=True)
+        discount = kpis.get('avg_discount_pct', 0)
+        st.markdown(create_metric_card_premium("Avg Discount", f"{discount:.1f}%", color="orange"), unsafe_allow_html=True)
     with col3:
-        st.markdown(create_metric_card_premium("Return Rate", f"{kpis.get('return_rate_pct', 0):.1f}%", color="pink"), unsafe_allow_html=True)
+        return_rate = kpis.get('return_rate_pct', 0)
+        st.markdown(create_metric_card_premium("Return Rate", f"{return_rate:.1f}%", color="pink"), unsafe_allow_html=True)
     with col4:
-        st.markdown(create_metric_card_premium("Products", f"{kpis.get('unique_products', 0):,}", color="blue"), unsafe_allow_html=True)
+        products = kpis.get('unique_products', 0)
+        st.markdown(create_metric_card_premium("Products", format_number(products), color="blue"), unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -1476,6 +1554,7 @@ def show_executive_view(sales_df, stores_df, products_df, kpis, sim):
             fig = px.area(daily, x='date', y='revenue', color_discrete_sequence=['#06b6d4'])
             fig = style_plotly_chart_themed(fig)
             fig.update_traces(line=dict(width=3), fillcolor='rgba(6, 182, 212, 0.15)')
+            fig.update_layout(height=350)
             st.plotly_chart(fig, use_container_width=True)
     
     with col2:
@@ -1485,7 +1564,7 @@ def show_executive_view(sales_df, stores_df, products_df, kpis, sim):
             metric_col = 'revenue' if city_metric == "Revenue" else ('orders' if city_metric == "Orders" else 'profit_margin_pct')
             fig = px.bar(city_kpis, x='city', y=metric_col, color='city', color_discrete_sequence=['#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'])
             fig = style_plotly_chart_themed(fig)
-            fig.update_layout(showlegend=False)
+            fig.update_layout(showlegend=False, height=350)
             st.plotly_chart(fig, use_container_width=True)
     
     col1, col2 = st.columns(2)
@@ -1497,7 +1576,7 @@ def show_executive_view(sales_df, stores_df, products_df, kpis, sim):
             y_col = 'revenue' if cat_view == "Revenue" else 'profit_margin_pct'
             fig = px.bar(cat_kpis.head(8), x='category', y=y_col, color=y_col, color_continuous_scale=['#06b6d4', '#8b5cf6', '#ec4899'])
             fig = style_plotly_chart_themed(fig)
-            fig.update_layout(coloraxis_showscale=False)
+            fig.update_layout(coloraxis_showscale=False, height=350)
             st.plotly_chart(fig, use_container_width=True)
     
     with col2:
@@ -1505,6 +1584,7 @@ def show_executive_view(sales_df, stores_df, products_df, kpis, sim):
         if channel_kpis is not None and len(channel_kpis) > 0:
             fig = px.pie(channel_kpis, values='revenue', names='channel', color_discrete_sequence=['#06b6d4', '#8b5cf6', '#ec4899', '#f59e0b'], hole=0.45)
             fig = style_plotly_chart_themed(fig)
+            fig.update_layout(height=350)
             st.plotly_chart(fig, use_container_width=True)
     
     st.markdown("---")
@@ -1531,14 +1611,18 @@ def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim)
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        color = "red" if stockout.get('stockout_risk_pct', 0) > 15 else "green"
-        st.markdown(create_metric_card_premium("Stockout Risk", f"{stockout.get('stockout_risk_pct', 0):.1f}%", color=color), unsafe_allow_html=True)
+        risk_pct = stockout.get('stockout_risk_pct', 0)
+        color = "red" if risk_pct > 15 else "green"
+        st.markdown(create_metric_card_premium("Stockout Risk", f"{risk_pct:.1f}%", color=color), unsafe_allow_html=True)
     with col2:
-        st.markdown(create_metric_card_premium("Return Rate", f"{kpis.get('return_rate_pct', 0):.1f}%", color="orange"), unsafe_allow_html=True)
+        return_rate = kpis.get('return_rate_pct', 0)
+        st.markdown(create_metric_card_premium("Return Rate", f"{return_rate:.1f}%", color="orange"), unsafe_allow_html=True)
     with col3:
-        st.markdown(create_metric_card_premium("Payment Fail %", f"{kpis.get('payment_failure_rate_pct', 0):.1f}%", color="red" if kpis.get('payment_failure_rate_pct', 0) > 5 else "green"), unsafe_allow_html=True)
+        pf_rate = kpis.get('payment_failure_rate_pct', 0)
+        st.markdown(create_metric_card_premium("Payment Fail", f"{pf_rate:.1f}%", color="red" if pf_rate > 5 else "green"), unsafe_allow_html=True)
     with col4:
-        st.markdown(create_metric_card_premium("Low Stock SKUs", f"{stockout.get('low_stock_items', 0):,}", color="purple"), unsafe_allow_html=True)
+        low_stock = stockout.get('low_stock_items', 0)
+        st.markdown(create_metric_card_premium("Low Stock SKUs", format_number(low_stock), color="purple"), unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -1553,7 +1637,7 @@ def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim)
                 stock_by = inv.groupby('city')['stock_on_hand'].sum().reset_index()
                 fig = px.bar(stock_by, x='city', y='stock_on_hand', color='stock_on_hand', color_continuous_scale=['#ef4444', '#f59e0b', '#10b981'])
                 fig = style_plotly_chart_themed(fig)
-                fig.update_layout(coloraxis_showscale=False)
+                fig.update_layout(coloraxis_showscale=False, height=350)
                 st.plotly_chart(fig, use_container_width=True)
             except:
                 st.info("Unable to generate chart")
@@ -1593,8 +1677,8 @@ def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim)
 
 def show_advanced_eda_page():
     """Advanced EDA page."""
-    st.markdown('<h1 class="page-title-premium" style="color: var(--accent-purple);">🔬 Advanced Exploratory Data Analysis</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem;">Deep-dive analytics with cohort analysis, customer segmentation, and price elasticity</p>', unsafe_allow_html=True)
+    st.markdown('<h1 class="page-title-premium" style="color: var(--accent-purple);">🔬 Advanced EDA</h1>', unsafe_allow_html=True)
+    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem;">Deep-dive analytics: cohorts, segmentation, price elasticity</p>', unsafe_allow_html=True)
     
     if not st.session_state.data_loaded:
         st.markdown('<div class="alert-warning">⚠️ Please load data first.</div>', unsafe_allow_html=True)
@@ -1607,10 +1691,10 @@ def show_advanced_eda_page():
     st.markdown("---")
     
     # 1. Cohort Analysis
-    st.markdown('<div class="section-title-premium">📅 Customer Cohort Retention Analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title-premium">📅 Customer Cohort Retention</div>', unsafe_allow_html=True)
     
     with st.expander("ℹ️ What is Cohort Analysis?", expanded=False):
-        st.markdown('<div class="alert-info">Cohort analysis tracks customer behavior over time by grouping customers based on their first purchase month. This reveals retention patterns and helps identify churn points.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="alert-info">Cohort analysis tracks customer behavior over time by grouping customers based on their first purchase month.</div>', unsafe_allow_html=True)
     
     cohort_data = create_customer_cohort_analysis(sales_df)
     
@@ -1628,7 +1712,7 @@ def show_advanced_eda_page():
         st.plotly_chart(fig, use_container_width=True)
         
         avg_m1 = cohort_data.iloc[:, 1].mean() if cohort_data.shape[1] > 1 else 0
-        st.markdown(create_insight_card_premium("Retention Insight", f"Average 1-month retention is {avg_m1:.1f}%. Consider implementing a 30-day engagement campaign."), unsafe_allow_html=True)
+        st.markdown(create_insight_card_premium("Retention Insight", f"Average 1-month retention is {avg_m1:.1f}%. Consider 30-day engagement campaigns."), unsafe_allow_html=True)
     else:
         st.info("Insufficient data for cohort analysis.")
     
@@ -1638,7 +1722,7 @@ def show_advanced_eda_page():
     st.markdown('<div class="section-title-premium">👥 RFM Customer Segmentation</div>', unsafe_allow_html=True)
     
     with st.expander("ℹ️ What is RFM Analysis?", expanded=False):
-        st.markdown('<div class="alert-info">RFM stands for Recency, Frequency, Monetary value. It segments customers based on purchase behavior to enable personalized marketing.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="alert-info">RFM stands for Recency, Frequency, Monetary value. It segments customers for personalized marketing.</div>', unsafe_allow_html=True)
     
     rfm_data = create_rfm_segmentation(sales_df)
     
@@ -1648,9 +1732,9 @@ def show_advanced_eda_page():
         with col1:
             segment_counts = rfm_data['segment'].value_counts().reset_index()
             segment_counts.columns = ['Segment', 'Count']
-            fig = px.bar(segment_counts, x='Segment', y='Count', title='Customer Segment Distribution', color='Segment', color_discrete_sequence=['#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'])
+            fig = px.bar(segment_counts, x='Segment', y='Count', title='Customer Segments', color='Segment', color_discrete_sequence=['#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'])
             fig = style_plotly_chart_themed(fig)
-            fig.update_layout(showlegend=False)
+            fig.update_layout(showlegend=False, height=350)
             st.plotly_chart(fig, use_container_width=True)
         
         with col2:
@@ -1658,6 +1742,7 @@ def show_advanced_eda_page():
             segment_value.columns = ['Segment', 'Total Value']
             fig = px.pie(segment_value, values='Total Value', names='Segment', title='Revenue by Segment', color_discrete_sequence=['#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b'], hole=0.4)
             fig = style_plotly_chart_themed(fig)
+            fig.update_layout(height=350)
             st.plotly_chart(fig, use_container_width=True)
         
         champions_pct = (rfm_data[rfm_data['segment'] == 'Champions'].shape[0] / len(rfm_data) * 100) if len(rfm_data) > 0 else 0
@@ -1675,10 +1760,10 @@ def show_advanced_eda_page():
     st.markdown("---")
     
     # 3. Price Elasticity
-    st.markdown('<div class="section-title-premium">💰 Price Elasticity & Discount Effectiveness</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title-premium">💰 Price Elasticity Analysis</div>', unsafe_allow_html=True)
     
     with st.expander("ℹ️ What is Price Elasticity?", expanded=False):
-        st.markdown('<div class="alert-info">Price elasticity measures how demand responds to price changes. This reveals optimal discount levels that maximize volume without eroding profitability.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="alert-info">Price elasticity measures how demand responds to price changes. Reveals optimal discount levels.</div>', unsafe_allow_html=True)
     
     # Local filter for this chart
     pe_cols = st.columns(2)
@@ -1698,22 +1783,23 @@ def show_advanced_eda_page():
         col1, col2 = st.columns(2)
         
         with col1:
-            fig = px.bar(elasticity_data, x='discount_bin', y='total_qty', title='Total Quantity by Discount Level', color='total_qty', color_continuous_scale='Blues')
+            fig = px.bar(elasticity_data, x='discount_bin', y='total_qty', title='Quantity by Discount Level', color='total_qty', color_continuous_scale='Blues')
             fig = style_plotly_chart_themed(fig)
-            fig.update_layout(coloraxis_showscale=False)
+            fig.update_layout(coloraxis_showscale=False, height=350)
             st.plotly_chart(fig, use_container_width=True)
         
         with col2:
-            fig = px.line(elasticity_data, x='discount_bin', y='avg_qty_per_order', title='Avg Quantity per Order', markers=True, line_shape='spline')
+            fig = px.line(elasticity_data, x='discount_bin', y='avg_qty_per_order', title='Avg Qty per Order', markers=True, line_shape='spline')
             fig.update_traces(line=dict(color='#06b6d4', width=3), marker=dict(size=10))
             fig = style_plotly_chart_themed(fig)
+            fig.update_layout(height=350)
             st.plotly_chart(fig, use_container_width=True)
         
         optimal_idx = elasticity_data['avg_qty_per_order'].idxmax()
         optimal_discount = elasticity_data.iloc[optimal_idx]['discount_bin']
         optimal_qty = elasticity_data.iloc[optimal_idx]['avg_qty_per_order']
         
-        st.markdown(create_insight_card_premium("Optimal Discount", f"The {optimal_discount} range shows highest avg quantity ({optimal_qty:.2f} units). This is your optimal discount sweet spot."), unsafe_allow_html=True)
+        st.markdown(create_insight_card_premium("Optimal Discount", f"The {optimal_discount} range shows highest avg quantity ({optimal_qty:.2f} units). This is your discount sweet spot."), unsafe_allow_html=True)
     else:
         st.info("Unable to calculate price elasticity.")
     
