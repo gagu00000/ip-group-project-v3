@@ -62,7 +62,7 @@ def toggle_theme():
 # LOAD PREMIUM CSS (This replaces your entire 500+ line CSS block!)
 # ============================================================================
 
-load_premium_css(theme=st.session_state.theme, include_orbs=True)
+load_premium_css(theme=st.session_state.theme, include_orbs=False)
 
 # Get theme colors for Plotly charts
 theme_colors = get_theme_colors(st.session_state.theme)
