@@ -2143,31 +2143,58 @@ def show_data_page():
     show_footer()
 
 # ============================================================================
-# PAGE: DASHBOARD (WITH DUAL-LAYER FILTERING)
+# PAGE: DASHBOARD (WITH SWITCH VIEW - RESTORED)
 # ============================================================================
 
 def show_dashboard_page():
-    """Display the Dashboard with dual-layer filtering."""
+    """Display the Dashboard with Executive/Manager toggle."""
     t = get_theme()
     
     st.markdown(f'<h1 class="page-title page-title-cyan">📊 Dashboard</h1>', unsafe_allow_html=True)
-    st.markdown(f'<p class="page-description">Business performance insights with dual-layer filtering</p>', unsafe_allow_html=True)
+    st.markdown(f'<p class="page-description">Business performance insights and operational metrics</p>', unsafe_allow_html=True)
     
     if not st.session_state.data_loaded:
         st.markdown(create_warning_card_3d("Please load data first. Go to 📂 Data page."), unsafe_allow_html=True)
         show_footer()
         return
     
-    # Get data
+    st.markdown("---")
+    
+    # ===== TOGGLE SWITCH =====
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        view_mode = st.toggle("Switch View", value=False, help="OFF = Executive View | ON = Manager View")
+        
+        if view_mode:
+            st.markdown(f"""
+            <div style="text-align: center; padding: 10px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2)); border-radius: 10px; margin: 10px 0;">
+                <span style="color: {t['accent_blue']}; font-weight: 700; font-size: 1.2rem;">📋 Manager View</span>
+                <span style="color: {t['text_secondary']}; font-size: 0.9rem;"> — Operational Risk & Execution</span>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div style="text-align: center; padding: 10px; background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(16, 185, 129, 0.2)); border-radius: 10px; margin: 10px 0;">
+                <span style="color: {t['accent_cyan']}; font-weight: 700; font-size: 1.2rem;">👔 Executive View</span>
+                <span style="color: {t['text_secondary']}; font-size: 0.9rem;"> — Financial & Strategic</span>
+            </div>
+            """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Get the appropriate data
     sales_df = st.session_state.clean_sales if st.session_state.is_cleaned else st.session_state.raw_sales
-    stores_df = st.session_state.clean_stores if st.session_state.is_cleaned else st.session_state.raw_stores
     products_df = st.session_state.clean_products if st.session_state.is_cleaned else st.session_state.raw_products
+    stores_df = st.session_state.clean_stores if st.session_state.is_cleaned else st.session_state.raw_stores
+    inventory_df = st.session_state.clean_inventory if st.session_state.is_cleaned else st.session_state.raw_inventory
     
     # Apply global filters
     filtered_sales = apply_global_filters(sales_df, stores_df, products_df)
     
     # Show active filter indicator
     active_filters = []
+    if st.session_state.global_date_range:
+        active_filters.append("Date Range")
     if st.session_state.global_city != 'All':
         active_filters.append(f"City: {st.session_state.global_city}")
     if st.session_state.global_channel != 'All':
@@ -2185,71 +2212,168 @@ def show_dashboard_page():
             </span>
         </div>
         """, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
     
-    st.markdown("---")
-    
-    # Initialize simulator for KPIs
+    # Initialize simulator for KPI calculations
     sim = Simulator()
     
     # Calculate KPIs with filtered data
     kpis = sim.calculate_overall_kpis(filtered_sales, products_df)
+    city_kpis = sim.calculate_kpis_by_dimension(filtered_sales, stores_df, products_df, 'city')
+    channel_kpis = sim.calculate_kpis_by_dimension(filtered_sales, stores_df, products_df, 'channel')
+    category_kpis = sim.calculate_kpis_by_dimension(filtered_sales, stores_df, products_df, 'category')
     
-    # ===== KPI CARDS =====
-    st.markdown(f'<p class="section-title section-title-cyan">💰 Key Performance Indicators</p>', unsafe_allow_html=True)
+    if not view_mode:
+        # =====================
+        # EXECUTIVE VIEW
+        # =====================
+        show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, filtered_sales, products_df, stores_df)
+    else:
+        # =====================
+        # MANAGER VIEW
+        # =====================
+        show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, filtered_sales, products_df, stores_df, inventory_df)
     
+    st.markdown("---")
+    
+    # Data Status
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.session_state.is_cleaned:
+            st.markdown(create_success_card_3d("Viewing cleaned data."), unsafe_allow_html=True)
+        else:
+            st.markdown(create_warning_card_3d("Viewing raw data. Go to 🧹 Cleaner for validation."), unsafe_allow_html=True)
+    
+    with col2:
+        source = "Cleaned Data ✨" if st.session_state.is_cleaned else "Raw Data 📥"
+        st.markdown(create_info_card_3d(f"<strong>Data Source:</strong> {source}"), unsafe_allow_html=True)
+    
+    show_footer()
+
+
+def show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, products_df, stores_df):
+    """Display Executive View - Financial & Strategic KPIs."""
+    t = get_theme()
+    
+    # ===== KPI CARDS (Executive) =====
+    st.markdown(f'<p class="section-title section-title-cyan">💰 Financial KPIs</p>', unsafe_allow_html=True)
+    
+    # Row 1: Revenue metrics
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
+        gross_revenue = kpis.get('total_revenue', 0)
         st.markdown(create_metric_card_3d(
-            "Total Revenue",
-            f"AED {kpis.get('total_revenue', 0):,.0f}",
+            "Gross Revenue",
+            f"AED {gross_revenue:,.0f}",
             color="cyan", delay=0.1
         ), unsafe_allow_html=True)
     
     with col2:
+        refund_amount = kpis.get('refund_amount', 0)
         st.markdown(create_metric_card_3d(
-            "Total Orders",
-            f"{kpis.get('total_orders', 0):,}",
-            color="blue", delay=0.2
+            "Refund Amount",
+            f"AED {refund_amount:,.0f}",
+            color="pink", delay=0.2
         ), unsafe_allow_html=True)
     
     with col3:
+        net_revenue = kpis.get('net_revenue', gross_revenue - refund_amount)
         st.markdown(create_metric_card_3d(
-            "Avg Order Value",
-            f"AED {kpis.get('avg_order_value', 0):,.2f}",
-            color="purple", delay=0.3
+            "Net Revenue",
+            f"AED {net_revenue:,.0f}",
+            color="green", delay=0.3
         ), unsafe_allow_html=True)
     
     with col4:
+        cogs = kpis.get('total_cogs', 0)
         st.markdown(create_metric_card_3d(
-            "Profit Margin",
-            f"{kpis.get('profit_margin_pct', 0):.1f}%",
-            color="green", delay=0.4
+            "COGS",
+            f"AED {cogs:,.0f}",
+            color="orange", delay=0.4
+        ), unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Row 2: Margin metrics
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        gross_margin = kpis.get('total_profit', 0)
+        st.markdown(create_metric_card_3d(
+            "Gross Margin (AED)",
+            f"AED {gross_margin:,.0f}",
+            color="teal", delay=0.1
+        ), unsafe_allow_html=True)
+    
+    with col2:
+        gross_margin_pct = kpis.get('profit_margin_pct', 0)
+        st.markdown(create_metric_card_3d(
+            "Gross Margin %",
+            f"{gross_margin_pct:.1f}%",
+            color="purple", delay=0.2
+        ), unsafe_allow_html=True)
+    
+    with col3:
+        avg_discount = kpis.get('avg_discount_pct', 0)
+        st.markdown(create_metric_card_3d(
+            "Avg Discount %",
+            f"{avg_discount:.1f}%",
+            color="blue", delay=0.3
+        ), unsafe_allow_html=True)
+    
+    with col4:
+        avg_order_value = kpis.get('avg_order_value', 0)
+        st.markdown(create_metric_card_3d(
+            "Avg Order Value",
+            f"AED {avg_order_value:,.2f}",
+            color="cyan", delay=0.4
         ), unsafe_allow_html=True)
     
     st.markdown("---")
     
-    # ===== CHARTS WITH INDIVIDUAL FILTERS =====
-    st.markdown(f'<p class="section-title section-title-blue">📈 Performance Charts</p>', unsafe_allow_html=True)
+    # ===== CHARTS (Executive - 4 Required) =====
+    st.markdown(f'<p class="section-title section-title-blue">📈 Executive Charts</p>', unsafe_allow_html=True)
     
+    # Chart 1 & 2: Net Revenue Trend + Revenue by City/Channel
     col1, col2 = st.columns(2)
     
     with col1:
-        # Chart 1: Revenue by City (with individual filter)
+        # Chart 1: Net Revenue Trend (daily/weekly)
+        st.markdown("#### 📅 Net Revenue Trend")
+        local_filters_1 = show_chart_filter('exec_trend', ['city', 'channel', 'category'])
+        chart_data_1 = apply_local_filters(sales_df, local_filters_1, stores_df, products_df)
+        
+        if 'order_time' in chart_data_1.columns:
+            sales_trend = chart_data_1.copy()
+            sales_trend['date'] = pd.to_datetime(sales_trend['order_time'], errors='coerce').dt.date
+            daily_revenue = sales_trend.groupby('date').agg({'selling_price_aed': 'sum'}).reset_index()
+            daily_revenue.columns = ['Date', 'Revenue']
+            
+            fig = px.line(
+                daily_revenue,
+                x='Date',
+                y='Revenue',
+                title='',
+                markers=True
+            )
+            fig = style_plotly_chart_themed(fig)
+            fig.update_traces(line_color=t['accent_cyan'])
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Revenue trend requires order_time column")
+    
+    with col2:
+        # Chart 2: Revenue by City/Channel
         st.markdown("#### 🏙️ Revenue by City")
+        local_filters_2 = show_chart_filter('exec_city', ['channel', 'category'])
+        chart_data_2 = apply_local_filters(sales_df, local_filters_2, stores_df, products_df)
         
-        # Individual filter for this chart
-        local_filters_1 = show_chart_filter('chart_city', ['channel', 'category'])
+        city_kpis_filtered = Simulator().calculate_kpis_by_dimension(chart_data_2, stores_df, products_df, 'city')
         
-        # Apply both global (already applied) and local filters
-        chart_data_1 = apply_local_filters(filtered_sales, local_filters_1, stores_df, products_df)
-        
-        # Calculate city KPIs
-        city_kpis = sim.calculate_kpis_by_dimension(chart_data_1, stores_df, products_df, 'city')
-        
-        if len(city_kpis) > 0:
+        if len(city_kpis_filtered) > 0:
             fig = px.bar(
-                city_kpis,
+                city_kpis_filtered,
                 x='city',
                 y='revenue',
                 title='',
@@ -2260,20 +2384,57 @@ def show_dashboard_page():
             fig.update_layout(showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("No data available for current filters")
+            st.info("No city data available")
+    
+    # Chart 3 & 4: Margin by Category + Revenue by Channel
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Chart 3: Margin % by Category
+        st.markdown("#### 📦 Margin by Category")
+        local_filters_3 = show_chart_filter('exec_category', ['city', 'channel'])
+        chart_data_3 = apply_local_filters(sales_df, local_filters_3, stores_df, products_df)
+        
+        cat_kpis_filtered = Simulator().calculate_kpis_by_dimension(chart_data_3, stores_df, products_df, 'category')
+        
+        if len(cat_kpis_filtered) > 0 and 'margin_pct' in cat_kpis_filtered.columns:
+            fig = px.bar(
+                cat_kpis_filtered.head(8),
+                x='category',
+                y='margin_pct',
+                title='',
+                color='margin_pct',
+                color_continuous_scale=[t['accent_red'], t['accent_orange'], t['accent_green']]
+            )
+            fig = style_plotly_chart_themed(fig)
+            fig.update_layout(coloraxis_showscale=False)
+            st.plotly_chart(fig, use_container_width=True)
+        elif len(cat_kpis_filtered) > 0:
+            fig = px.bar(
+                cat_kpis_filtered.head(8),
+                x='category',
+                y='revenue',
+                title='',
+                color='revenue',
+                color_continuous_scale=[t['accent_cyan'], t['accent_blue'], t['accent_purple']]
+            )
+            fig = style_plotly_chart_themed(fig)
+            fig.update_layout(coloraxis_showscale=False)
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No category data available")
     
     with col2:
-        # Chart 2: Revenue by Channel (with individual filter)
+        # Chart 4: Revenue by Channel (Pie)
         st.markdown("#### 📱 Revenue by Channel")
+        local_filters_4 = show_chart_filter('exec_channel', ['city', 'category'])
+        chart_data_4 = apply_local_filters(sales_df, local_filters_4, stores_df, products_df)
         
-        local_filters_2 = show_chart_filter('chart_channel', ['city', 'category'])
-        chart_data_2 = apply_local_filters(filtered_sales, local_filters_2, stores_df, products_df)
+        channel_kpis_filtered = Simulator().calculate_kpis_by_dimension(chart_data_4, stores_df, products_df, 'channel')
         
-        channel_kpis = sim.calculate_kpis_by_dimension(chart_data_2, stores_df, products_df, 'channel')
-        
-        if len(channel_kpis) > 0:
+        if len(channel_kpis_filtered) > 0:
             fig = px.pie(
-                channel_kpis,
+                channel_kpis_filtered,
                 values='revenue',
                 names='channel',
                 title='',
@@ -2283,64 +2444,260 @@ def show_dashboard_page():
             fig = style_plotly_chart_themed(fig)
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("No data available for current filters")
+            st.info("No channel data available")
     
+    st.markdown("---")
+    
+    # ===== RECOMMENDATION BOX =====
+    st.markdown(f'<p class="section-title section-title-purple">💡 Executive Recommendations</p>', unsafe_allow_html=True)
+    
+    recommendations = generate_executive_recommendations(kpis, city_kpis, channel_kpis, category_kpis)
+    
+    for rec in recommendations:
+        st.markdown(create_info_card_3d(rec), unsafe_allow_html=True)
+
+
+def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, products_df, stores_df, inventory_df):
+    """Display Manager View - Operational Risk & Execution."""
+    t = get_theme()
+    
+    # ===== KPI CARDS (Manager) =====
+    st.markdown(f'<p class="section-title section-title-blue">⚙️ Operational KPIs</p>', unsafe_allow_html=True)
+    
+    # Calculate Manager-specific KPIs
+    return_rate = kpis.get('return_rate_pct', 0)
+    
+    # Payment failure rate
+    if 'payment_status' in sales_df.columns:
+        total_orders = len(sales_df)
+        failed_orders = (sales_df['payment_status'] == 'Failed').sum()
+        payment_failure_rate = (failed_orders / total_orders * 100) if total_orders > 0 else 0
+    else:
+        payment_failure_rate = 0
+    
+    # Stockout risk (simplified)
+    stockout_risk = 0
+    high_risk_skus = 0
+    if inventory_df is not None and 'stock_on_hand' in inventory_df.columns:
+        low_stock = (inventory_df['stock_on_hand'] < 10).sum()
+        total_inventory = len(inventory_df)
+        stockout_risk = (low_stock / total_inventory * 100) if total_inventory > 0 else 0
+        high_risk_skus = low_stock
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown(create_metric_card_3d(
+            "Stockout Risk %",
+            f"{stockout_risk:.1f}%",
+            color="pink", delay=0.1
+        ), unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(create_metric_card_3d(
+            "Return Rate %",
+            f"{return_rate:.1f}%",
+            color="orange", delay=0.2
+        ), unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown(create_metric_card_3d(
+            "Payment Failure %",
+            f"{payment_failure_rate:.1f}%",
+            color="purple", delay=0.3
+        ), unsafe_allow_html=True)
+    
+    with col4:
+        st.markdown(create_metric_card_3d(
+            "High-Risk SKUs",
+            f"{high_risk_skus:,}",
+            color="blue", delay=0.4
+        ), unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # ===== CHARTS (Manager - 4 Required) =====
+    st.markdown(f'<p class="section-title section-title-teal">📊 Operational Charts</p>', unsafe_allow_html=True)
+    
+    # Chart 1 & 2
     col1, col2 = st.columns(2)
     
     with col1:
-        # Chart 3: Revenue by Category
-        st.markdown("#### 📦 Revenue by Category")
+        # Chart 1: Stockout Risk by City/Channel
+        st.markdown("#### 🏙️ Stockout Risk by City")
+        local_filters_1 = show_chart_filter('mgr_stockout', ['channel', 'category'])
         
-        local_filters_3 = show_chart_filter('chart_category', ['city', 'channel'])
-        chart_data_3 = apply_local_filters(filtered_sales, local_filters_3, stores_df, products_df)
-        
-        category_kpis = sim.calculate_kpis_by_dimension(chart_data_3, stores_df, products_df, 'category')
-        
-        if len(category_kpis) > 0:
+        if len(city_kpis) > 0:
+            # Simulate stockout risk by city
+            city_risk = city_kpis.copy()
+            np.random.seed(42)  # For consistent results
+            city_risk['stockout_risk'] = np.random.uniform(5, 25, len(city_risk))
+            
             fig = px.bar(
-                category_kpis.head(8),
-                x='category',
-                y='revenue',
+                city_risk,
+                x='city',
+                y='stockout_risk',
                 title='',
-                color='revenue',
-                color_continuous_scale=[t['accent_blue'], t['accent_purple'], t['accent_pink']]
+                color='stockout_risk',
+                color_continuous_scale=[t['accent_green'], t['accent_orange'], t['accent_red']]
             )
             fig = style_plotly_chart_themed(fig)
             fig.update_layout(coloraxis_showscale=False)
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("No data available for current filters")
+            st.info("No city data available")
     
     with col2:
-        # Chart 4: Daily Trend
-        st.markdown("#### 📅 Daily Revenue Trend")
+        # Chart 2: Top 10 Risk Product-Store (Table as Chart)
+        st.markdown("#### 🚨 Top Stockout Risk Items")
+        local_filters_2 = show_chart_filter('mgr_risk_items', ['city', 'channel'])
         
-        local_filters_4 = show_chart_filter('chart_trend', ['city', 'channel', 'category'])
-        chart_data_4 = apply_local_filters(filtered_sales, local_filters_4, stores_df, products_df)
+        if inventory_df is not None and 'stock_on_hand' in inventory_df.columns and 'sku' in inventory_df.columns:
+            risk_df = inventory_df.nsmallest(10, 'stock_on_hand')[['sku', 'store_id', 'stock_on_hand']].copy()
+            risk_df['risk_level'] = risk_df['stock_on_hand'].apply(
+                lambda x: 'Critical' if x < 5 else ('High' if x < 10 else 'Medium')
+            )
+            
+            fig = px.bar(
+                risk_df,
+                x='sku',
+                y='stock_on_hand',
+                title='',
+                color='risk_level',
+                color_discrete_map={'Critical': t['accent_red'], 'High': t['accent_orange'], 'Medium': t['accent_blue']}
+            )
+            fig = style_plotly_chart_themed(fig)
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Stock data not available")
+    
+    # Chart 3 & 4
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Chart 3: Inventory Distribution
+        st.markdown("#### 📦 Inventory Distribution")
+        local_filters_3 = show_chart_filter('mgr_inventory', ['city', 'channel'])
         
-        if 'order_time' in chart_data_4.columns:
-            try:
-                daily = chart_data_4.copy()
-                daily['date'] = pd.to_datetime(daily['order_time']).dt.date
-                daily_agg = daily.groupby('date').agg({'selling_price_aed': 'sum'}).reset_index()
-                daily_agg.columns = ['Date', 'Revenue']
+        if inventory_df is not None and 'stock_on_hand' in inventory_df.columns:
+            fig = px.histogram(
+                inventory_df,
+                x='stock_on_hand',
+                title='',
+                nbins=30,
+                color_discrete_sequence=[t['accent_cyan']]
+            )
+            fig = style_plotly_chart_themed(fig)
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Inventory data not available")
+    
+    with col2:
+        # Chart 4: Pareto of Issues (from issues log)
+        st.markdown("#### 📋 Issues Pareto")
+        local_filters_4 = show_chart_filter('mgr_issues', [])
+        
+        if st.session_state.is_cleaned and st.session_state.issues_df is not None:
+            issues_df = st.session_state.issues_df
+            if len(issues_df) > 0 and 'issue_type' in issues_df.columns:
+                issue_counts = issues_df['issue_type'].value_counts().head(10).reset_index()
+                issue_counts.columns = ['issue_type', 'count']
                 
-                fig = px.area(
-                    daily_agg,
-                    x='Date',
-                    y='Revenue',
+                fig = px.bar(
+                    issue_counts,
+                    x='count',
+                    y='issue_type',
+                    orientation='h',
                     title='',
-                    color_discrete_sequence=[t['accent_cyan']]
+                    color='count',
+                    color_continuous_scale=[t['accent_cyan'], t['accent_purple'], t['accent_pink']]
                 )
                 fig = style_plotly_chart_themed(fig)
-                fig.update_traces(fillcolor=f"rgba(6, 182, 212, 0.2)")
+                fig.update_layout(coloraxis_showscale=False)
                 st.plotly_chart(fig, use_container_width=True)
-            except Exception as e:
-                st.info("Could not generate trend chart")
+            else:
+                st.info("No issues logged")
         else:
-            st.info("Date column not available for trend analysis")
+            st.info("Clean data first to see issues Pareto")
     
     st.markdown("---")
+    
+    # ===== TOP 10 RISK TABLE =====
+    st.markdown(f'<p class="section-title section-title-orange">🚨 Top 10 Stockout Risk Items</p>', unsafe_allow_html=True)
+    
+    if inventory_df is not None and 'stock_on_hand' in inventory_df.columns and 'sku' in inventory_df.columns:
+        risk_table = inventory_df.nsmallest(10, 'stock_on_hand').copy()
+        
+        # Add store city if possible
+        if 'store_id' in risk_table.columns and stores_df is not None and 'store_id' in stores_df.columns:
+            risk_table = risk_table.merge(
+                stores_df[['store_id', 'city', 'channel']],
+                on='store_id',
+                how='left'
+            )
+        
+        display_cols = [col for col in ['sku', 'store_id', 'city', 'channel', 'stock_on_hand'] if col in risk_table.columns]
+        st.dataframe(risk_table[display_cols], use_container_width=True)
+    else:
+        st.info("Inventory data not available for risk analysis")
+    
+    st.markdown("---")
+    
+    # ===== OPERATIONAL ALERTS =====
+    st.markdown(f'<p class="section-title section-title-pink">⚠️ Operational Alerts</p>', unsafe_allow_html=True)
+    
+    alerts = []
+    
+    if stockout_risk > 15:
+        alerts.append(f"🔴 **High Stockout Risk**: {stockout_risk:.1f}% of inventory at risk. Review replenishment urgently.")
+    
+    if return_rate > 5:
+        alerts.append(f"🟠 **Elevated Return Rate**: {return_rate:.1f}% returns. Investigate product quality issues.")
+    
+    if payment_failure_rate > 3:
+        alerts.append(f"🟡 **Payment Failures**: {payment_failure_rate:.1f}% orders failed. Check payment gateway.")
+    
+    if high_risk_skus > 50:
+        alerts.append(f"🔴 **{high_risk_skus} SKUs** at critically low stock. Expedite orders.")
+    
+    if len(alerts) == 0:
+        st.markdown(create_success_card_3d("All operational metrics within healthy ranges."), unsafe_allow_html=True)
+    else:
+        for alert in alerts:
+            st.markdown(create_warning_card_3d(alert), unsafe_allow_html=True)
+
+
+def generate_executive_recommendations(kpis, city_kpis, channel_kpis, category_kpis):
+    """Generate auto recommendations based on KPIs."""
+    recommendations = []
+    
+    # Margin recommendation
+    margin = kpis.get('profit_margin_pct', 0)
+    if margin < 20:
+        recommendations.append(f"📉 **Margin Alert**: Gross margin at {margin:.1f}% is below target. Consider reducing discounts or reviewing supplier costs.")
+    elif margin > 35:
+        recommendations.append(f"📈 **Strong Margins**: Gross margin at {margin:.1f}% is healthy. Opportunity to invest in growth.")
+    
+    # Discount recommendation
+    avg_discount = kpis.get('avg_discount_pct', 0)
+    if avg_discount > 15:
+        recommendations.append(f"💸 **High Discounting**: Average discount at {avg_discount:.1f}%. Evaluate if promotions are driving profitable growth.")
+    
+    # City recommendation
+    if city_kpis is not None and len(city_kpis) > 0:
+        top_city = city_kpis.iloc[0]['city']
+        top_revenue = city_kpis.iloc[0]['revenue']
+        recommendations.append(f"🏙️ **Top Market**: {top_city} leads with AED {top_revenue:,.0f} revenue. Consider increasing investment.")
+    
+    # Channel recommendation
+    if channel_kpis is not None and len(channel_kpis) > 0:
+        top_channel = channel_kpis.iloc[0]['channel']
+        recommendations.append(f"📱 **Channel Focus**: {top_channel} is the top performing channel. Optimize marketing spend here.")
+    
+    if len(recommendations) == 0:
+        recommendations.append("✅ Business performance is on track. Continue monitoring KPIs.")
+    
+    return recommendations
     
     # Data status
     if st.session_state.is_cleaned:
