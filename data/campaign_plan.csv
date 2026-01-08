@@ -1,0 +1,11 @@
+campaign_id,start_date,end_date,city,channel,category,discount_pct,promo_budget_aed
+CAMP_001,2026-01-11,2026-01-19,Dubai,All,Electronics,20,100000
+CAMP_002,2026-01-10,2026-01-17,Abu Dhabi,All,Fashion,25,75000
+CAMP_003,2026-01-07,2026-01-20,Sharjah,All,Grocery,15,50000
+CAMP_004,2026-01-09,2026-01-22,All,App,Beauty,30,60000
+CAMP_005,2026-01-09,2026-01-18,All,Marketplace,All,35,150000
+CAMP_006,2026-01-12,2026-01-23,All,Web,Sports,20,40000
+CAMP_007,2026-01-11,2026-01-24,All,All,All,25,200000
+CAMP_008,2026-01-12,2026-01-21,Dubai,Web,Home & Garden,15,80000
+CAMP_009,2026-01-10,2026-01-13,All,App,Electronics,40,120000
+CAMP_010,2026-01-11,2026-01-17,All,All,All,10,50000

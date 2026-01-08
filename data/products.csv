@@ -1,0 +1,301 @@
+product_id,category,brand,base_price_aed,unit_cost_aed,tax_rate,launch_flag
+PROD_00001,Sports,Nike,89.02,42.95,0.05,Regular
+PROD_00002,Sports,Nike,1366.33,912.24,0.05,New
+PROD_00003,Home & Garden,IKEA,118.5,55.17,0.05,Regular
+PROD_00004,Electronics,LG,3608.5,2202.62,0.05,Regular
+PROD_00005,Home & Garden,ACE,856.23,565.79,0.05,Regular
+PROD_00006,Fashion,Gap,543.36,242.69,0.05,Regular
+PROD_00007,Grocery,Almarai,23.09,9.91,0.05,Regular
+PROD_00008,Beauty,MAC,649.56,402.03,0.05,Regular
+PROD_00009,Home & Garden,IKEA,1669.56,1083.25,0.05,Regular
+PROD_00010,Grocery,Lipton,42.5,17.89,0.05,Regular
+PROD_00011,Grocery,Almarai,171.79,113.37,0.05,Regular
+PROD_00012,Home & Garden,Pottery Barn,2507.31,1125.27,0.05,Regular
+PROD_00013,Sports,Puma,1415.57,856.51,0.05,New
+PROD_00014,Sports,Adidas,1086.91,514.59,0.05,Regular
+PROD_00015,Grocery,Masafi,139.19,64.85,0.05,Regular
+PROD_00016,Electronics,LG,4126.83,2647.42,0.05,Regular
+PROD_00017,Electronics,LG,4574.37,2608.1,0.05,Regular
+PROD_00018,Fashion,Uniqlo,623.67,420.58,0.05,Regular
+PROD_00019,Grocery,Nestle,53.09,30.18,0.05,Regular
+PROD_00020,Beauty,Nivea,720.3,374.43,0.05,Regular
+PROD_00021,Fashion,Uniqlo,181.82,75.3,0.05,New
+PROD_00022,Sports,Adidas,1592.48,838.68,0.05,New
+PROD_00023,Home & Garden,ACE,2988.48,1669.77,0.05,Regular
+PROD_00024,Electronics,Apple,3440.38,1930.37,0.05,Regular
+PROD_00025,Sports,Puma,258.64,137.19,0.05,Regular
+PROD_00026,Sports,Decathlon,556.24,306.03,0.05,Regular
+PROD_00027,Electronics,Huawei,4224.18,2333.01,0.05,Regular
+PROD_00028,Grocery,Al Ain,36.5,25.04,0.05,Regular
+PROD_00029,Electronics,Lenovo,2494.17,1081.37,0.05,Regular
+PROD_00030,Grocery,Nestle,16.3,10.81,0.05,Regular
+PROD_00031,Electronics,HP,4098.51,2841.89,0.05,Regular
+PROD_00032,Fashion,Nike,1006.64,688.6,0.05,Regular
+PROD_00033,Beauty,Olay,493.14,339.93,0.05,Regular
+PROD_00034,Sports,Decathlon,434.26,214.31,0.05,Regular
+PROD_00035,Sports,Puma,898.68,499.01,0.05,New
+PROD_00036,Fashion,H&M,540.22,311.43,0.05,Regular
+PROD_00037,Fashion,Zara,152.94,90.13,0.05,Regular
+PROD_00038,Electronics,Lenovo,447.2,210.81,0.05,Regular
+PROD_00039,Fashion,Nike,1098.86,730.43,0.05,Regular
+PROD_00040,Fashion,Uniqlo,1220.87,558.09,0.05,New
+PROD_00041,Home & Garden,PanEmirates,1288.03,695.67,0.05,Regular
+PROD_00042,Sports,Decathlon,1968.96,845.72,0.05,Regular
+PROD_00043,Grocery,Al Ain,173.03,82.12,0.05,Regular
+PROD_00044,Home & Garden,HomeBox,1282.99,620.41,0.05,Regular
+PROD_00045,Electronics,HP,4059.31,2666.11,0.05,New
+PROD_00046,Sports,Reebok,1678.61,1159.41,0.05,Regular
+PROD_00047,Fashion,Nike,639.3,348.04,0.05,Regular
+PROD_00048,Electronics,Sony,1956.97,1361.25,0.05,Regular
+PROD_00049,Home & Garden,PanEmirates,1286.33,883.96,0.05,Regular
+PROD_00050,Beauty,Neutrogena,580.36,259.1,0.05,Regular
+PROD_00051,Electronics,Samsung,3765.08,1570.6,0.05,Regular
+PROD_00052,Beauty,Olay,434.28,181.12,0.05,Regular
+PROD_00053,Fashion,H&M,912.8,550.02,0.05,Regular
+PROD_00054,Electronics,LG,2936.7,1209.69,0.05,New
+PROD_00055,Sports,Reebok,1147.84,568.08,0.05,Regular
+PROD_00056,Sports,Decathlon,655.8,314.58,0.05,New
+PROD_00057,Sports,Puma,936.16,635.38,0.05,Regular
+PROD_00058,Electronics,HP,3143.68,1788.43,0.05,New
+PROD_00059,Beauty,Maybelline,414.59,182.31,0.05,Regular
+PROD_00060,Electronics,LG,1910.68,854.69,0.05,Regular
+PROD_00061,Sports,Puma,1238.89,862.48,0.05,Regular
+PROD_00062,Electronics,Huawei,4665.6,2011.23,0.05,Regular
+PROD_00063,Grocery,Almarai,178.49,111.15,0.05,Regular
+PROD_00064,Grocery,Lipton,46.07,23.17,0.05,Regular
+PROD_00065,Grocery,Lipton,100.26,67.33,0.05,Regular
+PROD_00066,Electronics,Dell,4163.81,1720.59,0.05,Regular
+PROD_00067,Fashion,Puma,284.29,151.4,0.05,Regular
+PROD_00068,Beauty,Loreal,107.26,73.31,0.05,Regular
+PROD_00069,Fashion,Zara,1260.16,724.28,0.05,New
+PROD_00070,Fashion,Zara,496.97,332.82,0.05,Regular
+PROD_00071,Electronics,Lenovo,1129.38,536.3,0.05,New
+PROD_00072,Beauty,Olay,336.97,197.53,0.05,Regular
+PROD_00073,Fashion,Nike,1465.5,942.66,0.05,Regular
+PROD_00074,Electronics,Sony,3709.17,1853.31,0.05,Regular
+PROD_00075,Sports,Skechers,1480.71,702.52,0.05,Regular
+PROD_00076,Sports,Nike,789.78,325.09,0.05,Regular
+PROD_00077,Fashion,Uniqlo,557.0,359.91,0.05,Regular
+PROD_00078,Fashion,Zara,1007.05,523.2,0.05,Regular
+PROD_00079,Electronics,Huawei,1820.62,,0.05,Regular
+PROD_00080,Beauty,MAC,752.6,327.08,0.05,Regular
+PROD_00081,Fashion,Puma,105.47,61.06,0.05,Regular
+PROD_00082,Grocery,Heinz,123.21,68.19,0.05,Regular
+PROD_00083,Beauty,Maybelline,218.68,133.97,0.05,New
+PROD_00084,Beauty,Neutrogena,581.16,,0.05,Regular
+PROD_00085,Grocery,Heinz,18.64,11.17,0.05,Regular
+PROD_00086,Grocery,Masafi,170.36,104.93,0.05,Regular
+PROD_00087,Grocery,Masafi,84.64,44.07,0.05,Regular
+PROD_00088,Fashion,Adidas,659.65,449.95,0.05,Regular
+PROD_00089,Fashion,Puma,638.81,415.3,0.05,Regular
+PROD_00090,Fashion,Gap,1189.35,692.2,0.05,Regular
+PROD_00091,Home & Garden,Danube,2036.61,1126.96,0.05,Regular
+PROD_00092,Sports,Adidas,1331.35,645.89,0.05,Regular
+PROD_00093,Beauty,MAC,92.84,,0.05,Regular
+PROD_00094,Grocery,Nestle,162.28,72.09,0.05,New
+PROD_00095,Home & Garden,ACE,2553.72,1077.28,0.05,Regular
+PROD_00096,Sports,Reebok,421.09,256.4,0.05,Regular
+PROD_00097,Fashion,Nike,1001.28,402.18,0.05,Regular
+PROD_00098,Electronics,Dell,1172.32,751.73,0.05,Regular
+PROD_00099,Home & Garden,IKEA,1685.5,1138.12,0.05,New
+PROD_00100,Fashion,Uniqlo,1017.99,708.9,0.05,Regular
+PROD_00101,Home & Garden,ACE,2450.57,1636.02,0.05,Regular
+PROD_00102,Beauty,Nivea,719.82,448.52,0.05,Regular
+PROD_00103,Grocery,Al Ain,53.21,31.46,0.05,Regular
+PROD_00104,Beauty,Nivea,508.86,245.46,0.05,New
+PROD_00105,Grocery,Nestle,57.98,28.75,0.05,Regular
+PROD_00106,Fashion,Nike,385.33,234.35,0.05,Regular
+PROD_00107,Electronics,Dell,2097.24,1180.29,0.05,Regular
+PROD_00108,Fashion,Gap,614.74,387.86,0.05,Regular
+PROD_00109,Electronics,Dell,2437.2,1664.17,0.05,Regular
+PROD_00110,Home & Garden,Danube,1628.52,1010.32,0.05,Regular
+PROD_00111,Fashion,Uniqlo,368.16,195.4,0.05,New
+PROD_00112,Grocery,Masafi,137.43,71.64,0.05,Regular
+PROD_00113,Home & Garden,HomeBox,2942.74,1648.63,0.05,Regular
+PROD_00114,Beauty,Dove,537.14,228.38,0.05,Regular
+PROD_00115,Home & Garden,HomeBox,179.35,92.14,0.05,Regular
+PROD_00116,Grocery,Kelloggs,153.44,78.83,0.05,Regular
+PROD_00117,Home & Garden,PanEmirates,2509.69,1357.97,0.05,Regular
+PROD_00118,Electronics,Lenovo,1198.69,504.15,0.05,Regular
+PROD_00119,Electronics,Samsung,4753.1,2185.51,0.05,New
+PROD_00120,Fashion,Adidas,233.02,140.01,0.05,Regular
+PROD_00121,Fashion,Uniqlo,1064.22,670.53,0.05,Regular
+PROD_00122,Beauty,Neutrogena,580.32,367.54,0.05,Regular
+PROD_00123,Grocery,Almarai,117.84,79.97,0.05,Regular
+PROD_00124,Home & Garden,Danube,2826.17,1298.62,0.05,Regular
+PROD_00125,Sports,Adidas,239.73,151.45,0.05,Regular
+PROD_00126,Beauty,Olay,114.42,79.54,0.05,Regular
+PROD_00127,Grocery,Lipton,88.53,45.25,0.05,Regular
+PROD_00128,Grocery,Almarai,170.67,110.37,0.05,New
+PROD_00129,Grocery,Masafi,178.86,96.21,0.05,Regular
+PROD_00130,Fashion,Puma,943.07,637.41,0.05,Regular
+PROD_00131,Home & Garden,Danube,2482.43,1434.21,0.05,Regular
+PROD_00132,Fashion,H&M,454.45,243.24,0.05,Regular
+PROD_00133,Beauty,Dove,541.19,271.09,0.05,Regular
+PROD_00134,Grocery,Nestle,100.07,50.68,0.05,Regular
+PROD_00135,Grocery,Lipton,141.73,68.44,0.05,New
+PROD_00136,Fashion,H&M,399.97,208.76,0.05,Regular
+PROD_00137,Fashion,Uniqlo,986.56,539.89,0.05,Regular
+PROD_00138,Electronics,Huawei,1185.82,720.43,0.05,Regular
+PROD_00139,Beauty,MAC,389.14,217.64,0.05,Regular
+PROD_00140,Sports,Reebok,688.35,420.48,0.05,Regular
+PROD_00141,Grocery,Nestle,28.53,13.06,0.05,New
+PROD_00142,Beauty,Olay,558.33,255.41,0.05,Regular
+PROD_00143,Grocery,Masafi,119.97,75.35,0.05,Regular
+PROD_00144,Electronics,LG,1551.61,788.63,0.05,Regular
+PROD_00145,Sports,Reebok,288.1,119.17,0.05,New
+PROD_00146,Grocery,Masafi,189.1,111.83,0.05,Regular
+PROD_00147,Electronics,Samsung,2912.91,1575.36,0.05,Regular
+PROD_00148,Fashion,Zara,416.09,274.0,0.05,New
+PROD_00149,Electronics,Dell,2509.56,1438.24,0.05,Regular
+PROD_00150,Fashion,Nike,1226.16,839.6,0.05,New
+PROD_00151,Fashion,H&M,859.21,450.96,0.05,Regular
+PROD_00152,Beauty,Maybelline,625.04,321.34,0.05,Regular
+PROD_00153,Grocery,Al Ain,119.76,63.31,0.05,Regular
+PROD_00154,Electronics,Apple,4743.19,2192.95,0.05,Regular
+PROD_00155,Sports,Nike,347.83,157.27,0.05,New
+PROD_00156,Electronics,Dell,2307.47,1334.05,0.05,Regular
+PROD_00157,Fashion,Puma,1075.09,656.77,0.05,Regular
+PROD_00158,Sports,Adidas,1850.87,1177.8,0.05,Regular
+PROD_00159,Sports,Skechers,1869.99,986.5,0.05,Regular
+PROD_00160,Sports,Adidas,1820.49,1179.66,0.05,New
+PROD_00161,Fashion,Puma,912.81,590.84,0.05,Regular
+PROD_00162,Home & Garden,IKEA,1422.03,698.54,0.05,Regular
+PROD_00163,Grocery,Lipton,110.3,58.61,0.05,Regular
+PROD_00164,Home & Garden,Pottery Barn,987.3,469.08,0.05,New
+PROD_00165,Sports,Skechers,1726.61,994.76,0.05,New
+PROD_00166,Sports,Skechers,568.24,234.15,0.05,Regular
+PROD_00167,Home & Garden,ACE,1964.98,1326.01,0.05,Regular
+PROD_00168,Beauty,Nivea,515.13,282.04,0.05,New
+PROD_00169,Grocery,Heinz,70.0,42.07,0.05,Regular
+PROD_00170,Grocery,Heinz,140.27,68.24,0.05,Regular
+PROD_00171,Beauty,Loreal,374.76,185.26,0.05,Regular
+PROD_00172,Home & Garden,ACE,2480.03,992.87,0.05,Regular
+PROD_00173,Home & Garden,Danube,190.99,106.1,0.05,Regular
+PROD_00174,Home & Garden,Pottery Barn,1342.86,557.94,0.05,Regular
+PROD_00175,Fashion,Puma,685.27,417.65,0.05,New
+PROD_00176,Sports,Reebok,1606.65,984.77,0.05,Regular
+PROD_00177,Electronics,Dell,556.73,388.42,0.05,Regular
+PROD_00178,Home & Garden,IKEA,1953.7,871.72,0.05,Regular
+PROD_00179,Grocery,Lipton,142.56,74.79,0.05,Regular
+PROD_00180,Home & Garden,HomeBox,1386.66,614.83,0.05,Regular
+PROD_00181,Beauty,Dove,602.11,265.5,0.05,New
+PROD_00182,Home & Garden,PanEmirates,2804.72,1549.11,0.05,Regular
+PROD_00183,Grocery,Masafi,63.22,36.42,0.05,Regular
+PROD_00184,Home & Garden,HomeBox,1356.25,739.57,0.05,Regular
+PROD_00185,Beauty,Nivea,375.17,186.28,0.05,Regular
+PROD_00186,Sports,Adidas,1160.72,545.62,0.05,Regular
+PROD_00187,Electronics,Lenovo,3749.06,2292.81,0.05,Regular
+PROD_00188,Home & Garden,Pottery Barn,2383.41,1419.57,0.05,Regular
+PROD_00189,Electronics,Sony,2561.23,1477.97,0.05,Regular
+PROD_00190,Home & Garden,IKEA,1592.07,855.07,0.05,Regular
+PROD_00191,Home & Garden,Pottery Barn,2910.77,1229.65,0.05,Regular
+PROD_00192,Grocery,Kelloggs,126.54,65.71,0.05,New
+PROD_00193,Grocery,Al Ain,136.5,,0.05,Regular
+PROD_00194,Sports,Decathlon,1779.38,972.23,0.05,Regular
+PROD_00195,Beauty,Loreal,203.12,122.95,0.05,Regular
+PROD_00196,Fashion,H&M,679.26,291.76,0.05,Regular
+PROD_00197,Electronics,HP,915.19,448.3,0.05,New
+PROD_00198,Grocery,Al Ain,15.94,8.09,0.05,Regular
+PROD_00199,Fashion,Gap,870.6,555.23,0.05,Regular
+PROD_00200,Electronics,Dell,3136.58,1481.25,0.05,Regular
+PROD_00201,Fashion,Adidas,718.67,342.23,0.05,Regular
+PROD_00202,Electronics,HP,4515.93,2724.38,0.05,Regular
+PROD_00203,Home & Garden,PanEmirates,2963.33,1451.28,0.05,Regular
+PROD_00204,Sports,Puma,935.4,458.94,0.05,Regular
+PROD_00205,Home & Garden,IKEA,734.5,419.82,0.05,Regular
+PROD_00206,Sports,Puma,83.0,53.87,0.05,Regular
+PROD_00207,Electronics,Samsung,4562.02,2844.66,0.05,Regular
+PROD_00208,Grocery,Al Ain,160.78,93.59,0.05,Regular
+PROD_00209,Sports,Adidas,1256.95,758.35,0.05,Regular
+PROD_00210,Sports,Decathlon,1683.14,990.48,0.05,Regular
+PROD_00211,Sports,Nike,645.51,343.57,0.05,Regular
+PROD_00212,Sports,Adidas,216.66,105.85,0.05,Regular
+PROD_00213,Fashion,Adidas,241.63,135.75,0.05,Regular
+PROD_00214,Beauty,Dove,732.52,475.51,0.05,Regular
+PROD_00215,Home & Garden,PanEmirates,2247.28,1127.27,0.05,New
+PROD_00216,Electronics,Sony,3795.34,1775.02,0.05,Regular
+PROD_00217,Sports,UnderArmour,1935.85,1241.61,0.05,Regular
+PROD_00218,Home & Garden,IKEA,815.44,356.41,0.05,Regular
+PROD_00219,Sports,Decathlon,553.84,284.84,0.05,Regular
+PROD_00220,Grocery,Almarai,136.59,73.96,0.05,Regular
+PROD_00221,Beauty,MAC,733.9,342.3,0.05,New
+PROD_00222,Home & Garden,Pottery Barn,927.5,484.61,0.05,New
+PROD_00223,Electronics,Huawei,4980.04,2165.5,0.05,Regular
+PROD_00224,Beauty,Maybelline,323.14,165.22,0.05,Regular
+PROD_00225,Sports,Reebok,861.49,536.43,0.05,Regular
+PROD_00226,Home & Garden,Pottery Barn,324.09,177.21,0.05,Regular
+PROD_00227,Grocery,Almarai,139.6,64.94,0.05,Regular
+PROD_00228,Fashion,Levis,194.06,117.54,0.05,Regular
+PROD_00229,Sports,Puma,158.68,76.61,0.05,Regular
+PROD_00230,Home & Garden,IKEA,1998.42,1184.09,0.05,Regular
+PROD_00231,Electronics,Samsung,3955.29,1871.13,0.05,New
+PROD_00232,Beauty,Maybelline,73.52,46.28,0.05,Regular
+PROD_00233,Fashion,Adidas,526.41,233.87,0.05,Regular
+PROD_00234,Electronics,Huawei,4306.19,1909.39,0.05,New
+PROD_00235,Grocery,Al Ain,39.03,23.35,0.05,New
+PROD_00236,Electronics,Lenovo,3970.92,1871.81,0.05,Regular
+PROD_00237,Fashion,Puma,125.98,78.42,0.05,Regular
+PROD_00238,Sports,Nike,973.44,616.58,0.05,Regular
+PROD_00239,Electronics,HP,2568.81,1756.1,0.05,New
+PROD_00240,Sports,Reebok,631.2,374.3,0.05,New
+PROD_00241,Home & Garden,Danube,1296.03,560.39,0.05,Regular
+PROD_00242,Home & Garden,IKEA,2700.82,1341.32,0.05,New
+PROD_00243,Fashion,Puma,955.26,549.86,0.05,Regular
+PROD_00244,Home & Garden,ACE,1605.75,860.87,0.05,Regular
+PROD_00245,Electronics,Apple,4278.68,2546.99,0.05,Regular
+PROD_00246,Sports,Skechers,461.45,247.09,0.05,Regular
+PROD_00247,Grocery,Al Ain,93.43,49.03,0.05,New
+PROD_00248,Home & Garden,PanEmirates,2005.37,1027.33,0.05,Regular
+PROD_00249,Home & Garden,IKEA,300.94,128.08,0.05,Regular
+PROD_00250,Sports,Decathlon,770.39,338.23,0.05,New
+PROD_00251,Beauty,Dove,277.12,121.01,0.05,Regular
+PROD_00252,Sports,Skechers,868.96,586.33,0.05,New
+PROD_00253,Grocery,Lipton,65.93,28.42,0.05,Regular
+PROD_00254,Fashion,Uniqlo,375.16,162.24,0.05,Regular
+PROD_00255,Grocery,Almarai,153.71,87.96,0.05,Regular
+PROD_00256,Beauty,Olay,658.37,384.54,0.05,Regular
+PROD_00257,Electronics,Huawei,241.87,116.58,0.05,Regular
+PROD_00258,Grocery,Kelloggs,6.19,4.09,0.05,Regular
+PROD_00259,Home & Garden,IKEA,451.37,266.29,0.05,New
+PROD_00260,Sports,Reebok,461.66,242.81,0.05,Regular
+PROD_00261,Grocery,Kelloggs,145.71,92.24,0.05,Regular
+PROD_00262,Electronics,Samsung,862.34,540.11,0.05,New
+PROD_00263,Electronics,Huawei,2271.25,1197.41,0.05,Regular
+PROD_00264,Home & Garden,PanEmirates,670.24,371.11,0.05,Regular
+PROD_00265,Electronics,Huawei,3423.27,1978.45,0.05,Regular
+PROD_00266,Grocery,Almarai,48.0,33.38,0.05,New
+PROD_00267,Fashion,Puma,1420.72,895.34,0.05,Regular
+PROD_00268,Grocery,Kelloggs,28.4,15.6,0.05,Regular
+PROD_00269,Fashion,Gap,822.24,385.66,0.05,Regular
+PROD_00270,Sports,Skechers,734.17,381.12,0.05,Regular
+PROD_00271,Home & Garden,IKEA,1395.47,590.78,0.05,Regular
+PROD_00272,Home & Garden,ACE,1231.14,728.89,0.05,Regular
+PROD_00273,Home & Garden,IKEA,2899.61,1309.35,0.05,Regular
+PROD_00274,Home & Garden,Pottery Barn,2761.72,1177.71,0.05,Regular
+PROD_00275,Fashion,Gap,903.86,503.62,0.05,Regular
+PROD_00276,Grocery,Masafi,71.21,35.6,0.05,Regular
+PROD_00277,Beauty,Neutrogena,108.94,60.24,0.05,Regular
+PROD_00278,Grocery,Kelloggs,146.84,94.81,0.05,Regular
+PROD_00279,Fashion,H&M,262.34,120.46,0.05,Regular
+PROD_00280,Sports,Nike,387.21,244.66,0.05,Regular
+PROD_00281,Beauty,Olay,471.99,285.24,0.05,Regular
+PROD_00282,Sports,Decathlon,1973.6,980.81,0.05,Regular
+PROD_00283,Grocery,Nestle,90.75,49.07,0.05,Regular
+PROD_00284,Grocery,Lipton,15.95,8.81,0.05,Regular
+PROD_00285,Home & Garden,IKEA,198.96,129.23,0.05,New
+PROD_00286,Electronics,Dell,2367.29,1340.58,0.05,Regular
+PROD_00287,Electronics,HP,4554.34,2602.79,0.05,Regular
+PROD_00288,Beauty,Nivea,411.07,282.54,0.05,Regular
+PROD_00289,Grocery,Masafi,21.44,12.73,0.05,New
+PROD_00290,Sports,UnderArmour,1982.33,1104.6,0.05,Regular
+PROD_00291,Grocery,Kelloggs,184.0,94.99,0.05,Regular
+PROD_00292,Sports,Reebok,142.64,84.05,0.05,Regular
+PROD_00293,Grocery,Almarai,113.8,58.72,0.05,Regular
+PROD_00294,Sports,Reebok,1751.63,875.83,0.05,Regular
+PROD_00295,Fashion,Levis,499.84,298.31,0.05,Regular
+PROD_00296,Fashion,H&M,498.89,255.93,0.05,Regular
+PROD_00297,Fashion,H&M,986.74,520.03,0.05,Regular
+PROD_00298,Grocery,Kelloggs,40.15,18.64,0.05,Regular
+PROD_00299,Home & Garden,HomeBox,702.83,310.14,0.05,New
+PROD_00300,Electronics,Samsung,3343.45,2216.43,0.05,Regular
