@@ -1,6 +1,6 @@
 # ============================================================================
 # UAE Promo Pulse Simulator + Data Rescue Dashboard
-# PREMIUM ENHANCED VERSION v3.1 - Fixed Visibility + All Features
+# ULTRA PREMIUM VERSION v4.0 - Full Animation Pack
 # ============================================================================
 
 import streamlit as st
@@ -55,10 +55,12 @@ THEMES = {
         'gradient_1': 'rgba(6, 182, 212, 0.08)',
         'gradient_2': 'rgba(139, 92, 246, 0.08)',
         'gradient_3': 'rgba(236, 72, 153, 0.05)',
+        'glass_bg': 'rgba(22, 22, 31, 0.7)',
+        'glass_border': 'rgba(255, 255, 255, 0.1)',
     },
     'light': {
-        'bg_primary': '#ffffff',
-        'bg_secondary': '#f8fafc',
+        'bg_primary': '#f8fafc',
+        'bg_secondary': '#ffffff',
         'bg_card': '#ffffff',
         'bg_card_hover': '#f1f5f9',
         'text_primary': '#0f172a',
@@ -68,19 +70,24 @@ THEMES = {
         'gradient_1': 'rgba(6, 182, 212, 0.05)',
         'gradient_2': 'rgba(139, 92, 246, 0.05)',
         'gradient_3': 'rgba(236, 72, 153, 0.03)',
+        'glass_bg': 'rgba(255, 255, 255, 0.7)',
+        'glass_border': 'rgba(0, 0, 0, 0.1)',
     }
 }
 
 current_theme = THEMES[st.session_state.theme]
 
 # ============================================================================
-# PREMIUM CSS WITH THEME SUPPORT - FIXED VISIBILITY
+# ULTRA PREMIUM CSS - FULL ANIMATION PACK
 # ============================================================================
 
 st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
     
+    /* ============================================ */
+    /* CSS VARIABLES                                */
+    /* ============================================ */
     :root {{
         --bg-primary: {current_theme['bg_primary']};
         --bg-secondary: {current_theme['bg_secondary']};
@@ -90,6 +97,8 @@ st.markdown(f"""
         --text-secondary: {current_theme['text_secondary']};
         --text-muted: {current_theme['text_muted']};
         --border-color: {current_theme['border_color']};
+        --glass-bg: {current_theme['glass_bg']};
+        --glass-border: {current_theme['glass_border']};
         
         --accent-cyan: #06b6d4;
         --accent-blue: #3b82f6;
@@ -103,53 +112,375 @@ st.markdown(f"""
         --shadow-sm: 0 2px 8px rgba(0, 0, 0, {'0.1' if st.session_state.theme == 'light' else '0.3'});
         --shadow-md: 0 4px 16px rgba(0, 0, 0, {'0.12' if st.session_state.theme == 'light' else '0.4'});
         --shadow-lg: 0 8px 32px rgba(0, 0, 0, {'0.15' if st.session_state.theme == 'light' else '0.5'});
+        --shadow-glow-cyan: 0 0 30px rgba(6, 182, 212, 0.4);
+        --shadow-glow-purple: 0 0 30px rgba(139, 92, 246, 0.4);
+        --shadow-glow-pink: 0 0 30px rgba(236, 72, 153, 0.4);
     }}
     
-    /* ANIMATIONS */
+    /* ============================================ */
+    /* KEYFRAME ANIMATIONS                          */
+    /* ============================================ */
+    
+    /* Fade In Up - Staggered Entry */
     @keyframes fadeInUp {{
-        from {{ opacity: 0; transform: translateY(20px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
+        from {{
+            opacity: 0;
+            transform: translateY(30px);
+        }}
+        to {{
+            opacity: 1;
+            transform: translateY(0);
+        }}
     }}
     
-    @keyframes pulse {{
-        0%, 100% {{ box-shadow: 0 0 20px rgba(6, 182, 212, 0.3); }}
-        50% {{ box-shadow: 0 0 40px rgba(6, 182, 212, 0.6); }}
+    /* Fade In Scale - Pop Effect */
+    @keyframes fadeInScale {{
+        0% {{
+            opacity: 0;
+            transform: scale(0.9);
+        }}
+        50% {{
+            transform: scale(1.02);
+        }}
+        100% {{
+            opacity: 1;
+            transform: scale(1);
+        }}
     }}
     
+    /* Blur to Sharp */
+    @keyframes blurToSharp {{
+        from {{
+            opacity: 0;
+            filter: blur(10px);
+            transform: translateY(20px);
+        }}
+        to {{
+            opacity: 1;
+            filter: blur(0);
+            transform: translateY(0);
+        }}
+    }}
+    
+    /* Slide In Left */
+    @keyframes slideInLeft {{
+        from {{
+            opacity: 0;
+            transform: translateX(-50px);
+        }}
+        to {{
+            opacity: 1;
+            transform: translateX(0);
+        }}
+    }}
+    
+    /* Slide In Right */
+    @keyframes slideInRight {{
+        from {{
+            opacity: 0;
+            transform: translateX(50px);
+        }}
+        to {{
+            opacity: 1;
+            transform: translateX(0);
+        }}
+    }}
+    
+    /* Pulse Glow */
+    @keyframes pulseGlow {{
+        0%, 100% {{
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+        }}
+        50% {{
+            box-shadow: 0 0 40px rgba(6, 182, 212, 0.6), 0 0 60px rgba(139, 92, 246, 0.3);
+        }}
+    }}
+    
+    /* Breathing Pulse - Status Dots */
+    @keyframes breathe {{
+        0%, 100% {{
+            transform: scale(1);
+            opacity: 1;
+        }}
+        50% {{
+            transform: scale(1.2);
+            opacity: 0.7;
+        }}
+    }}
+    
+    /* Shimmer Effect */
     @keyframes shimmer {{
-        0% {{ background-position: -1000px 0; }}
-        100% {{ background-position: 1000px 0; }}
+        0% {{
+            background-position: -1000px 0;
+        }}
+        100% {{
+            background-position: 1000px 0;
+        }}
     }}
     
-    @keyframes float {{
-        0%, 100% {{ transform: translateY(0px); }}
-        50% {{ transform: translateY(-10px); }}
-    }}
-    
+    /* Gradient Flow - Moving Gradient */
     @keyframes gradientFlow {{
-        0% {{ background-position: 0% 50%; }}
-        50% {{ background-position: 100% 50%; }}
-        100% {{ background-position: 0% 50%; }}
+        0% {{
+            background-position: 0% 50%;
+        }}
+        50% {{
+            background-position: 100% 50%;
+        }}
+        100% {{
+            background-position: 0% 50%;
+        }}
     }}
     
-    /* HIDE DEFAULTS */
+    /* Rotating Border Gradient */
+    @keyframes rotateBorder {{
+        0% {{
+            transform: rotate(0deg);
+        }}
+        100% {{
+            transform: rotate(360deg);
+        }}
+    }}
+    
+    /* Float Animation */
+    @keyframes float {{
+        0%, 100% {{
+            transform: translateY(0px) rotate(0deg);
+        }}
+        33% {{
+            transform: translateY(-10px) rotate(1deg);
+        }}
+        66% {{
+            transform: translateY(-5px) rotate(-1deg);
+        }}
+    }}
+    
+    /* Floating Orbs */
+    @keyframes floatOrb {{
+        0%, 100% {{
+            transform: translate(0, 0) scale(1);
+            opacity: 0.3;
+        }}
+        25% {{
+            transform: translate(10px, -20px) scale(1.1);
+            opacity: 0.5;
+        }}
+        50% {{
+            transform: translate(-5px, -35px) scale(1);
+            opacity: 0.3;
+        }}
+        75% {{
+            transform: translate(-15px, -20px) scale(0.9);
+            opacity: 0.4;
+        }}
+    }}
+    
+    /* Ripple Effect */
+    @keyframes ripple {{
+        0% {{
+            transform: scale(0);
+            opacity: 0.5;
+        }}
+        100% {{
+            transform: scale(4);
+            opacity: 0;
+        }}
+    }}
+    
+    /* Glitch Effect */
+    @keyframes glitch {{
+        0%, 90%, 100% {{
+            transform: translate(0);
+        }}
+        91% {{
+            transform: translate(-2px, 1px);
+        }}
+        92% {{
+            transform: translate(2px, -1px);
+        }}
+        93% {{
+            transform: translate(-1px, 2px);
+        }}
+        94% {{
+            transform: translate(1px, -2px);
+        }}
+    }}
+    
+    /* Typing Cursor */
+    @keyframes blink {{
+        0%, 100% {{
+            opacity: 1;
+        }}
+        50% {{
+            opacity: 0;
+        }}
+    }}
+    
+    /* Number Count Up Pulse */
+    @keyframes countPulse {{
+        0% {{
+            transform: scale(1);
+        }}
+        50% {{
+            transform: scale(1.05);
+            text-shadow: 0 0 20px currentColor;
+        }}
+        100% {{
+            transform: scale(1);
+        }}
+    }}
+    
+    /* Underline Slide */
+    @keyframes underlineSlide {{
+        from {{
+            transform: scaleX(0);
+            transform-origin: left;
+        }}
+        to {{
+            transform: scaleX(1);
+            transform-origin: left;
+        }}
+    }}
+    
+    /* Background Mesh */
+    @keyframes meshMove {{
+        0%, 100% {{
+            transform: translate(0%, 0%) rotate(0deg);
+        }}
+        25% {{
+            transform: translate(5%, 5%) rotate(90deg);
+        }}
+        50% {{
+            transform: translate(0%, 10%) rotate(180deg);
+        }}
+        75% {{
+            transform: translate(-5%, 5%) rotate(270deg);
+        }}
+    }}
+    
+    /* Shake Animation */
+    @keyframes shake {{
+        0%, 100% {{ transform: translateX(0); }}
+        10%, 30%, 50%, 70%, 90% {{ transform: translateX(-5px); }}
+        20%, 40%, 60%, 80% {{ transform: translateX(5px); }}
+    }}
+    
+    /* ============================================ */
+    /* HIDE DEFAULTS                                */
+    /* ============================================ */
     #MainMenu {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     header {{visibility: hidden;}}
     
-    /* MAIN BACKGROUND */
+    /* ============================================ */
+    /* GLOBAL TRANSITIONS FOR THEME TOGGLE          */
+    /* ============================================ */
+    *, *::before, *::after {{
+        transition: background-color 0.4s ease, 
+                    border-color 0.4s ease, 
+                    color 0.3s ease,
+                    box-shadow 0.3s ease;
+    }}
+    
+    /* ============================================ */
+    /* MAIN BACKGROUND WITH ANIMATED GRADIENT       */
+    /* ============================================ */
     .stApp {{
         background: var(--bg-primary);
         font-family: 'Inter', sans-serif;
         min-height: 100vh;
-        transition: background 0.3s ease;
+        position: relative;
+        overflow-x: hidden;
     }}
     
-    /* SIDEBAR */
+    /* Animated Background Gradient Overlay */
+    .stApp::before {{
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(ellipse at 20% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+            radial-gradient(ellipse at 40% 60%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+        background-size: 200% 200%;
+        animation: gradientFlow 15s ease infinite;
+        pointer-events: none;
+        z-index: 0;
+    }}
+    
+    /* Grain/Noise Texture Overlay */
+    .stApp::after {{
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        opacity: {'0.02' if st.session_state.theme == 'dark' else '0.015'};
+        pointer-events: none;
+        z-index: 0;
+    }}
+    
+    /* ============================================ */
+    /* FLOATING ORBS BACKGROUND                     */
+    /* ============================================ */
+    .floating-orbs {{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 0;
+    }}
+    
+    .orb {{
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(40px);
+        animation: floatOrb 20s ease-in-out infinite;
+    }}
+    
+    .orb-1 {{
+        width: 300px;
+        height: 300px;
+        background: rgba(6, 182, 212, 0.15);
+        top: 10%;
+        left: 10%;
+        animation-delay: 0s;
+    }}
+    
+    .orb-2 {{
+        width: 400px;
+        height: 400px;
+        background: rgba(139, 92, 246, 0.12);
+        top: 50%;
+        right: 10%;
+        animation-delay: -5s;
+    }}
+    
+    .orb-3 {{
+        width: 250px;
+        height: 250px;
+        background: rgba(236, 72, 153, 0.1);
+        bottom: 10%;
+        left: 30%;
+        animation-delay: -10s;
+    }}
+    
+    /* ============================================ */
+    /* SIDEBAR WITH GLASSMORPHISM                   */
+    /* ============================================ */
     [data-testid="stSidebar"] {{
-        background: var(--bg-secondary);
-        border-right: 1px solid var(--border-color);
-        transition: background 0.3s ease;
+        background: var(--glass-bg) !important;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-right: 1px solid var(--glass-border);
+        animation: slideInLeft 0.6s ease-out;
     }}
     
     [data-testid="stSidebar"]::before {{
@@ -159,39 +490,51 @@ st.markdown(f"""
         right: 0;
         width: 3px;
         height: 100%;
-        background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink));
-        opacity: 0.7;
+        background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink), var(--accent-cyan));
+        background-size: 100% 300%;
+        animation: gradientFlow 5s ease infinite;
     }}
     
-    /* PREMIUM CONTAINER */
+    /* ============================================ */
+    /* PREMIUM CONTAINER WITH GLASSMORPHISM         */
+    /* ============================================ */
     .premium-container {{
-        background: var(--bg-card);
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border-radius: 20px;
         padding: 32px;
         margin: 24px 0;
-        border: 1px solid var(--border-color);
+        border: 1px solid var(--glass-border);
         box-shadow: var(--shadow-md);
-        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+        animation: fadeInUp 0.6s ease-out backwards;
     }}
     
     .premium-container:hover {{
-        box-shadow: var(--shadow-lg);
-        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg), var(--shadow-glow-cyan);
+        transform: translateY(-4px);
+        border-color: rgba(6, 182, 212, 0.3);
     }}
     
-    /* HERO SECTION */
+    /* ============================================ */
+    /* HERO SECTION WITH ANIMATIONS                 */
+    /* ============================================ */
     .hero-premium {{
         background: linear-gradient(135deg, 
             {current_theme['gradient_1']} 0%, 
             {current_theme['gradient_2']} 50%, 
             {current_theme['gradient_3']} 100%);
+        backdrop-filter: blur(20px);
         border-radius: 28px;
         padding: 64px 48px;
         margin-bottom: 48px;
-        border: 2px solid var(--border-color);
+        border: 1px solid var(--glass-border);
         position: relative;
         overflow: hidden;
-        animation: fadeInUp 0.8s ease-out;
+        animation: blurToSharp 1s ease-out;
+        z-index: 1;
     }}
     
     .hero-premium::before {{
@@ -201,15 +544,27 @@ st.markdown(f"""
         left: -50%;
         width: 200%;
         height: 200%;
-        background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
-        animation: float 8s ease-in-out infinite;
+        background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 50%);
+        animation: float 10s ease-in-out infinite;
     }}
     
+    .hero-premium::after {{
+        content: '';
+        position: absolute;
+        bottom: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 50%);
+        animation: float 12s ease-in-out infinite reverse;
+    }}
+    
+    /* Animated Gradient Title */
     .hero-title-premium {{
         font-size: 4.5rem;
         font-weight: 900;
-        background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 40%, #8b5cf6 70%, #ec4899 100%);
-        background-size: 200% 200%;
+        background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 25%, #8b5cf6 50%, #ec4899 75%, #06b6d4 100%);
+        background-size: 300% 300%;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -218,49 +573,88 @@ st.markdown(f"""
         z-index: 1;
         line-height: 1.1;
         letter-spacing: -2px;
-        animation: gradientFlow 4s ease infinite;
+        animation: gradientFlow 4s ease infinite, fadeInUp 0.8s ease-out;
+    }}
+    
+    /* Subtle Glitch on Hover */
+    .hero-title-premium:hover {{
+        animation: gradientFlow 4s ease infinite, glitch 0.3s ease;
     }}
     
     /* ============================================ */
-    /* METRIC CARDS - FIXED VISIBILITY VERSION     */
+    /* METRIC CARDS - ULTRA PREMIUM                 */
     /* ============================================ */
     .metric-card-premium {{
-        background: var(--bg-card);
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border-radius: 16px;
         padding: 18px 16px;
-        border: 1px solid var(--border-color);
+        border: 1px solid var(--glass-border);
         box-shadow: var(--shadow-sm);
-        transition: all 0.3s ease;
         min-height: 130px;
         max-height: 150px;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         position: relative;
-        overflow: visible;
+        overflow: hidden;
+        z-index: 1;
+        
+        /* Staggered animation - use inline style for delay */
+        animation: fadeInScale 0.5s ease-out backwards;
+        
+        /* 3D Transform Setup */
+        transform-style: preserve-3d;
+        perspective: 1000px;
     }}
     
+    /* Animated Border Gradient */
     .metric-card-premium::before {{
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple), var(--accent-pink), var(--accent-cyan));
+        background-size: 400% 400%;
+        border-radius: 18px;
+        z-index: -1;
         opacity: 0;
-        transition: opacity 0.3s ease;
-        border-radius: 16px 16px 0 0;
+        transition: opacity 0.4s ease;
+        animation: gradientFlow 3s ease infinite;
+    }}
+    
+    /* Shimmer Effect Overlay */
+    .metric-card-premium::after {{
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.1),
+            transparent
+        );
+        transition: left 0.6s ease;
     }}
     
     .metric-card-premium:hover {{
-        transform: translateY(-4px);
-        border-color: var(--accent-cyan);
-        box-shadow: var(--shadow-md);
+        transform: translateY(-8px) rotateX(5deg) rotateY(-5deg);
+        box-shadow: var(--shadow-lg), var(--shadow-glow-cyan);
+        border-color: transparent;
     }}
     
     .metric-card-premium:hover::before {{
         opacity: 1;
+    }}
+    
+    .metric-card-premium:hover::after {{
+        left: 100%;
     }}
     
     .metric-label-premium {{
@@ -275,6 +669,7 @@ st.markdown(f"""
         text-overflow: ellipsis;
     }}
     
+    /* Value with shimmer on hover */
     .metric-value-premium {{
         font-size: 1.4rem;
         font-weight: 800;
@@ -283,6 +678,12 @@ st.markdown(f"""
         line-height: 1.3;
         word-wrap: break-word;
         overflow-wrap: break-word;
+        position: relative;
+    }}
+    
+    /* Number pulse animation on load */
+    .metric-value-premium.animate {{
+        animation: countPulse 0.6s ease-out;
     }}
     
     .metric-delta {{
@@ -294,29 +695,52 @@ st.markdown(f"""
         margin-top: 4px;
     }}
     
-    /* Responsive metric values */
+    /* Delta arrow animation */
+    .metric-delta .arrow {{
+        display: inline-block;
+        animation: float 2s ease-in-out infinite;
+    }}
+    
+    /* Responsive */
     @media (max-width: 1400px) {{
-        .metric-value-premium {{
-            font-size: 1.25rem;
-        }}
-        .metric-label-premium {{
-            font-size: 0.6rem;
-        }}
+        .metric-value-premium {{ font-size: 1.25rem; }}
+        .metric-label-premium {{ font-size: 0.6rem; }}
     }}
     
     @media (max-width: 1200px) {{
-        .metric-value-premium {{
-            font-size: 1.1rem;
-        }}
+        .metric-value-premium {{ font-size: 1.1rem; }}
     }}
     
-    @media (max-width: 992px) {{
-        .metric-value-premium {{
-            font-size: 1rem;
-        }}
+    /* ============================================ */
+    /* STATUS INDICATORS - BREATHING DOTS           */
+    /* ============================================ */
+    .status-dot {{
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: breathe 2s ease-in-out infinite;
+        box-shadow: 0 0 10px currentColor;
     }}
     
-    /* PAGE TITLES */
+    .status-dot.green {{
+        background: var(--accent-green);
+        color: var(--accent-green);
+    }}
+    
+    .status-dot.red {{
+        background: var(--accent-red);
+        color: var(--accent-red);
+    }}
+    
+    .status-dot.orange {{
+        background: var(--accent-orange);
+        color: var(--accent-orange);
+    }}
+    
+    /* ============================================ */
+    /* PAGE TITLES WITH ANIMATIONS                  */
+    /* ============================================ */
     .page-title-premium {{
         font-size: 3.5rem;
         font-weight: 800;
@@ -324,6 +748,9 @@ st.markdown(f"""
         line-height: 1.1;
         letter-spacing: -1.5px;
         color: var(--text-primary);
+        animation: blurToSharp 0.8s ease-out;
+        position: relative;
+        z-index: 1;
     }}
     
     .section-title-premium {{
@@ -334,86 +761,57 @@ st.markdown(f"""
         display: flex;
         align-items: center;
         gap: 12px;
+        animation: slideInLeft 0.6s ease-out backwards;
+        position: relative;
+        z-index: 1;
     }}
     
     .section-title-premium::after {{
         content: '';
         flex: 1;
         height: 2px;
-        background: linear-gradient(90deg, var(--border-color), transparent);
+        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple), transparent);
+        background-size: 200% 100%;
+        animation: gradientFlow 3s ease infinite;
     }}
     
-    /* FILTER CONTAINER - IN BODY */
-    .filter-container {{
-        background: var(--bg-card);
-        border-radius: 16px;
-        padding: 24px;
-        margin: 24px 0;
-        border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-sm);
-    }}
-    
-    .filter-header {{
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 16px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid var(--border-color);
-    }}
-    
-    .filter-title {{
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--text-primary);
-    }}
-    
-    /* CHART CONTAINER */
-    .chart-container {{
-        background: var(--bg-card);
-        border-radius: 16px;
-        padding: 20px;
-        margin: 16px 0;
-        border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-sm);
-        transition: all 0.3s ease;
-    }}
-    
-    .chart-container:hover {{
-        box-shadow: var(--shadow-md);
-    }}
-    
-    .chart-header {{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid var(--border-color);
-    }}
-    
-    .chart-title {{
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: var(--text-primary);
-    }}
-    
-    /* INSIGHT CARDS */
+    /* ============================================ */
+    /* INSIGHT CARDS WITH HOVER EFFECTS             */
+    /* ============================================ */
     .insight-premium {{
         background: linear-gradient(135deg, 
             rgba(139, 92, 246, {'0.08' if st.session_state.theme == 'dark' else '0.05'}) 0%, 
             rgba(236, 72, 153, {'0.08' if st.session_state.theme == 'dark' else '0.05'}) 100%);
+        backdrop-filter: blur(10px);
         border-radius: 16px;
         padding: 24px;
         border: 1px solid rgba(139, 92, 246, 0.2);
         margin: 16px 0;
-        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        animation: fadeInUp 0.6s ease-out backwards;
+    }}
+    
+    .insight-premium::before {{
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+        transition: left 0.5s ease;
     }}
     
     .insight-premium:hover {{
         transform: translateX(8px);
         border-color: var(--accent-purple);
-        box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2);
+        box-shadow: var(--shadow-glow-purple);
+    }}
+    
+    .insight-premium:hover::before {{
+        left: 100%;
     }}
     
     .insight-title-premium {{
@@ -432,29 +830,63 @@ st.markdown(f"""
         line-height: 1.7;
     }}
     
-    /* RECOMMENDATION BOX */
+    /* ============================================ */
+    /* RECOMMENDATION BOX                           */
+    /* ============================================ */
     .recommendation-premium {{
         background: linear-gradient(135deg, 
             rgba(16, 185, 129, {'0.12' if st.session_state.theme == 'dark' else '0.08'}) 0%, 
             rgba(6, 182, 212, {'0.12' if st.session_state.theme == 'dark' else '0.08'}) 100%);
+        backdrop-filter: blur(10px);
         border-radius: 20px;
         padding: 32px;
         border: 2px solid rgba(16, 185, 129, 0.3);
         margin: 24px 0;
         position: relative;
         overflow: hidden;
+        z-index: 1;
+        animation: fadeInScale 0.7s ease-out backwards;
     }}
     
     .recommendation-premium::before {{
         content: '💡';
         position: absolute;
-        top: 24px;
-        right: 24px;
+        top: 20px;
+        right: 20px;
         font-size: 3rem;
-        opacity: 0.3;
+        opacity: 0.2;
+        animation: float 4s ease-in-out infinite;
     }}
     
-    /* TABS */
+    .recommendation-premium:hover {{
+        border-color: var(--accent-green);
+        box-shadow: 0 8px 32px rgba(16, 185, 129, 0.25);
+    }}
+    
+    /* ============================================ */
+    /* CHART CONTAINER                              */
+    /* ============================================ */
+    .chart-container {{
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px);
+        border-radius: 16px;
+        padding: 20px;
+        margin: 16px 0;
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        z-index: 1;
+        animation: fadeInUp 0.6s ease-out backwards;
+    }}
+    
+    .chart-container:hover {{
+        box-shadow: var(--shadow-md);
+        border-color: rgba(6, 182, 212, 0.2);
+    }}
+    
+    /* ============================================ */
+    /* TABS WITH ANIMATIONS                         */
+    /* ============================================ */
     .stTabs [data-baseweb="tab-list"] {{
         gap: 12px;
         background: transparent;
@@ -462,20 +894,39 @@ st.markdown(f"""
     }}
     
     .stTabs [data-baseweb="tab"] {{
-        background: var(--bg-card);
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
         border-radius: 12px 12px 0 0;
         color: var(--text-secondary);
         padding: 14px 28px;
-        border: 1px solid var(--border-color);
+        border: 1px solid var(--glass-border);
         border-bottom: none;
         font-weight: 600;
+        position: relative;
+        overflow: hidden;
         transition: all 0.3s ease;
+    }}
+    
+    /* Underline slide effect */
+    .stTabs [data-baseweb="tab"]::after {{
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
     }}
     
     .stTabs [data-baseweb="tab"]:hover {{
         background: var(--bg-card-hover);
-        border-color: var(--accent-cyan);
         transform: translateY(-3px);
+    }}
+    
+    .stTabs [data-baseweb="tab"]:hover::after {{
+        transform: scaleX(1);
     }}
     
     .stTabs [aria-selected="true"] {{
@@ -483,9 +934,12 @@ st.markdown(f"""
         color: white !important;
         border: none !important;
         box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+        animation: fadeInScale 0.3s ease-out;
     }}
     
-    /* BUTTONS */
+    /* ============================================ */
+    /* BUTTONS WITH RIPPLE EFFECT                   */
+    /* ============================================ */
     .stButton > button {{
         background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
         color: white;
@@ -494,9 +948,25 @@ st.markdown(f"""
         padding: 16px 36px;
         font-weight: 700;
         font-size: 1.05rem;
-        transition: all 0.3s ease;
         box-shadow: 0 6px 20px rgba(6, 182, 212, 0.3);
         letter-spacing: 0.5px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        z-index: 1;
+    }}
+    
+    .stButton > button::before {{
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
     }}
     
     .stButton > button:hover {{
@@ -505,83 +975,129 @@ st.markdown(f"""
         transform: translateY(-3px);
     }}
     
-    /* DOWNLOAD BUTTON */
+    .stButton > button:hover::before {{
+        width: 300px;
+        height: 300px;
+    }}
+    
+    .stButton > button:active {{
+        transform: translateY(-1px);
+    }}
+    
+    /* Download Button */
     .stDownloadButton > button {{
         background: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-teal) 100%);
         color: white;
         border: none;
         border-radius: 12px;
+        position: relative;
+        overflow: hidden;
     }}
     
-    /* ALERTS */
+    .stDownloadButton > button:hover {{
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        transform: translateY(-2px);
+    }}
+    
+    /* ============================================ */
+    /* ALERTS WITH ANIMATIONS                       */
+    /* ============================================ */
     .alert-info {{
         background: linear-gradient(135deg, 
             rgba(6, 182, 212, {'0.1' if st.session_state.theme == 'dark' else '0.08'}) 0%, 
             rgba(59, 130, 246, {'0.1' if st.session_state.theme == 'dark' else '0.08'}) 100%);
+        backdrop-filter: blur(8px);
         border-radius: 12px;
         padding: 20px 24px;
         border-left: 4px solid var(--accent-cyan);
         margin: 16px 0;
         color: var(--text-primary);
+        animation: slideInLeft 0.5s ease-out backwards;
+        position: relative;
+        z-index: 1;
     }}
     
     .alert-success {{
         background: linear-gradient(135deg, 
             rgba(16, 185, 129, {'0.1' if st.session_state.theme == 'dark' else '0.08'}) 0%, 
             rgba(20, 184, 166, {'0.1' if st.session_state.theme == 'dark' else '0.08'}) 100%);
+        backdrop-filter: blur(8px);
         border-radius: 12px;
         padding: 20px 24px;
         border-left: 4px solid var(--accent-green);
         margin: 16px 0;
         color: var(--text-primary);
+        animation: slideInLeft 0.5s ease-out backwards;
+        position: relative;
+        z-index: 1;
     }}
     
     .alert-warning {{
         background: linear-gradient(135deg, 
             rgba(245, 158, 11, {'0.1' if st.session_state.theme == 'dark' else '0.08'}) 0%, 
             rgba(251, 146, 60, {'0.1' if st.session_state.theme == 'dark' else '0.08'}) 100%);
+        backdrop-filter: blur(8px);
         border-radius: 12px;
         padding: 20px 24px;
         border-left: 4px solid var(--accent-orange);
         margin: 16px 0;
         color: var(--text-primary);
+        animation: slideInLeft 0.5s ease-out backwards, shake 0.5s ease-out 0.5s;
+        position: relative;
+        z-index: 1;
     }}
     
     .alert-error {{
         background: linear-gradient(135deg, 
             rgba(239, 68, 68, {'0.1' if st.session_state.theme == 'dark' else '0.08'}) 0%, 
             rgba(236, 72, 153, {'0.1' if st.session_state.theme == 'dark' else '0.08'}) 100%);
+        backdrop-filter: blur(8px);
         border-radius: 12px;
         padding: 20px 24px;
         border-left: 4px solid var(--accent-red);
         margin: 16px 0;
         color: var(--text-primary);
+        animation: slideInLeft 0.5s ease-out backwards, shake 0.5s ease-out 0.3s;
+        position: relative;
+        z-index: 1;
     }}
     
-    /* DATAFRAME */
+    /* ============================================ */
+    /* DATAFRAME                                    */
+    /* ============================================ */
     .stDataFrame {{
         border-radius: 12px;
         overflow: hidden;
-        border: 1px solid var(--border-color);
+        border: 1px solid var(--glass-border);
+        animation: fadeInUp 0.6s ease-out backwards;
     }}
     
-    /* DIVIDER */
+    /* ============================================ */
+    /* DIVIDER                                      */
+    /* ============================================ */
     hr {{
         border: none;
         height: 1px;
-        background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+        background: linear-gradient(90deg, transparent, var(--accent-cyan), var(--accent-purple), transparent);
         margin: 40px 0;
+        animation: gradientFlow 4s ease infinite;
+        background-size: 200% 100%;
     }}
     
-    /* FOOTER */
+    /* ============================================ */
+    /* FOOTER WITH GRADIENT BORDER                  */
+    /* ============================================ */
     .footer-premium {{
-        background: var(--bg-secondary);
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
         padding: 48px;
         text-align: center;
-        border-top: 1px solid var(--border-color);
+        border-top: 1px solid var(--glass-border);
         margin-top: 80px;
         border-radius: 28px 28px 0 0;
         position: relative;
+        z-index: 1;
+        animation: fadeInUp 0.8s ease-out backwards;
     }}
     
     .footer-premium::before {{
@@ -591,28 +1107,200 @@ st.markdown(f"""
         left: 0;
         right: 0;
         height: 4px;
-        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple), var(--accent-pink));
+        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple), var(--accent-pink), var(--accent-cyan));
+        background-size: 200% 100%;
+        animation: gradientFlow 3s ease infinite;
     }}
     
-    /* EXPANDER */
+    /* ============================================ */
+    /* EXPANDER                                     */
+    /* ============================================ */
     .streamlit-expanderHeader {{
-        background: var(--bg-card) !important;
+        background: var(--glass-bg) !important;
+        backdrop-filter: blur(10px);
         border-radius: 12px !important;
         font-weight: 600 !important;
+        transition: all 0.3s ease;
     }}
     
-    /* SELECTBOX */
+    .streamlit-expanderHeader:hover {{
+        background: var(--bg-card-hover) !important;
+    }}
+    
+    /* ============================================ */
+    /* SELECTBOX & INPUTS                           */
+    /* ============================================ */
     .stSelectbox > div > div {{
-        background-color: var(--bg-card);
-        border-color: var(--border-color);
+        background-color: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border-color: var(--glass-border);
         border-radius: 10px;
+        transition: all 0.3s ease;
     }}
     
-    /* SLIDER */
+    .stSelectbox > div > div:hover {{
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+    }}
+    
+    /* ============================================ */
+    /* SLIDER                                       */
+    /* ============================================ */
     .stSlider > div > div > div > div {{
-        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)) !important;
+        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple)) !important;
+        background-size: 200% 100%;
+        animation: gradientFlow 3s ease infinite;
+    }}
+    
+    /* ============================================ */
+    /* NAVIGATION LINKS WITH UNDERLINE ANIMATION    */
+    /* ============================================ */
+    .nav-link {{
+        position: relative;
+        text-decoration: none;
+        color: var(--text-secondary);
+        padding: 8px 0;
+        transition: color 0.3s ease;
+    }}
+    
+    .nav-link::after {{
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+        transform: scaleX(0);
+        transform-origin: right;
+        transition: transform 0.3s ease;
+    }}
+    
+    .nav-link:hover {{
+        color: var(--accent-cyan);
+    }}
+    
+    .nav-link:hover::after {{
+        transform: scaleX(1);
+        transform-origin: left;
+    }}
+    
+    /* ============================================ */
+    /* STAGGERED ANIMATION DELAYS                   */
+    /* ============================================ */
+    .stagger-1 {{ animation-delay: 0.1s !important; }}
+    .stagger-2 {{ animation-delay: 0.2s !important; }}
+    .stagger-3 {{ animation-delay: 0.3s !important; }}
+    .stagger-4 {{ animation-delay: 0.4s !important; }}
+    .stagger-5 {{ animation-delay: 0.5s !important; }}
+    .stagger-6 {{ animation-delay: 0.6s !important; }}
+    .stagger-7 {{ animation-delay: 0.7s !important; }}
+    .stagger-8 {{ animation-delay: 0.8s !important; }}
+    
+    /* ============================================ */
+    /* LOADING SPINNER CUSTOM                       */
+    /* ============================================ */
+    .custom-spinner {{
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--glass-border);
+        border-top: 3px solid var(--accent-cyan);
+        border-radius: 50%;
+        animation: rotateBorder 1s linear infinite;
+    }}
+    
+    /* ============================================ */
+    /* TOOLTIP ANIMATIONS                           */
+    /* ============================================ */
+    [data-tooltip] {{
+        position: relative;
+    }}
+    
+    [data-tooltip]::after {{
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        padding: 8px 12px;
+        background: var(--bg-card);
+        color: var(--text-primary);
+        border-radius: 8px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-md);
+    }}
+    
+    [data-tooltip]:hover::after {{
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
+    }}
+    
+    /* ============================================ */
+    /* PROGRESS BAR ANIMATION                       */
+    /* ============================================ */
+    .progress-bar {{
+        height: 8px;
+        background: var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+    }}
+    
+    .progress-bar-fill {{
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+        background-size: 200% 100%;
+        animation: gradientFlow 2s ease infinite;
+        transition: width 0.5s ease;
+    }}
+    
+    /* ============================================ */
+    /* FEATURE CARD HOVER 3D                        */
+    /* ============================================ */
+    .feature-card {{
+        transform-style: preserve-3d;
+        perspective: 1000px;
+        transition: transform 0.5s ease;
+    }}
+    
+    .feature-card:hover {{
+        transform: rotateY(10deg) rotateX(5deg) translateZ(20px);
+    }}
+    
+    /* ============================================ */
+    /* REFLECTION EFFECT                            */
+    /* ============================================ */
+    .reflection {{
+        position: relative;
+    }}
+    
+    .reflection::after {{
+        content: '';
+        position: absolute;
+        bottom: -50%;
+        left: 0;
+        right: 0;
+        height: 50%;
+        background: linear-gradient(to bottom, 
+            rgba(var(--bg-card), 0.3), 
+            transparent);
+        transform: scaleY(-1);
+        opacity: 0.3;
+        filter: blur(5px);
+        pointer-events: none;
     }}
 </style>
+
+<!-- Floating Orbs Background -->
+<div class="floating-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
 """, unsafe_allow_html=True)
 
 # ============================================================================
@@ -651,7 +1339,7 @@ if 'cleaner_stats' not in st.session_state:
 # ============================================================================
 
 def format_currency(value, prefix="AED "):
-    """Format large currency values with K/M suffix for better readability."""
+    """Format large currency values with K/M suffix."""
     try:
         value = float(value)
         if value >= 1_000_000:
@@ -666,7 +1354,7 @@ def format_currency(value, prefix="AED "):
         return f"{prefix}0"
 
 def format_number(value):
-    """Format numbers with K/M suffix for better readability."""
+    """Format numbers with K/M suffix."""
     try:
         value = float(value)
         if value >= 1_000_000:
@@ -689,11 +1377,11 @@ def format_percentage(value):
         return "0%"
 
 # ============================================================================
-# HELPER FUNCTIONS - UI COMPONENTS
+# HELPER FUNCTIONS - UI COMPONENTS WITH STAGGERED ANIMATION
 # ============================================================================
 
-def create_metric_card_premium(label, value, delta=None, delta_type="positive", color="cyan"):
-    """Create premium metric card with fixed visibility."""
+def create_metric_card_premium(label, value, delta=None, delta_type="positive", color="cyan", stagger=1):
+    """Create premium metric card with staggered animation."""
     colors = {
         'cyan': '#06b6d4', 'blue': '#3b82f6', 'purple': '#8b5cf6',
         'pink': '#ec4899', 'green': '#10b981', 'orange': '#f59e0b',
@@ -705,25 +1393,24 @@ def create_metric_card_premium(label, value, delta=None, delta_type="positive", 
     if delta:
         delta_color = "#10b981" if delta_type == "positive" else "#ef4444"
         delta_icon = "↑" if delta_type == "positive" else "↓"
-        delta_html = f'<div class="metric-delta" style="color: {delta_color};">{delta_icon} {delta}</div>'
+        delta_html = f'<div class="metric-delta"><span class="arrow" style="color: {delta_color};">{delta_icon}</span> <span style="color: {delta_color};">{delta}</span></div>'
     else:
         delta_html = '<div style="height: 18px;"></div>'
     
-    # Truncate long labels
     display_label = label[:14] + ".." if len(label) > 14 else label
     
     return f"""
-    <div class="metric-card-premium">
+    <div class="metric-card-premium stagger-{stagger}" style="animation-delay: {stagger * 0.1}s;">
         <div class="metric-label-premium" title="{label}">{display_label}</div>
-        <div class="metric-value-premium" style="color: {accent};">{value}</div>
+        <div class="metric-value-premium animate" style="color: {accent};">{value}</div>
         {delta_html}
     </div>
     """
 
-def create_insight_card_premium(title, text):
-    """Create premium insight card."""
+def create_insight_card_premium(title, text, stagger=1):
+    """Create premium insight card with animation."""
     return f"""
-    <div class="insight-premium">
+    <div class="insight-premium stagger-{stagger}" style="animation-delay: {stagger * 0.15}s;">
         <div class="insight-title-premium">💡 {title}</div>
         <div class="insight-text-premium">{text}</div>
     </div>
@@ -739,13 +1426,23 @@ def create_recommendation_premium(title, items):
     </div>
     """
 
+def create_feature_card(icon, title, desc, color, stagger=1):
+    """Create animated feature card."""
+    return f"""
+    <div class="premium-container feature-card stagger-{stagger}" style="height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; animation-delay: {stagger * 0.15}s;">
+        <div style="font-size: 48px; margin-bottom: 12px; animation: float 3s ease-in-out infinite; animation-delay: {stagger * 0.2}s;">{icon}</div>
+        <div style="color: var(--accent-{color}); font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">{title}</div>
+        <div style="color: var(--text-secondary); font-size: 0.85rem;">{desc}</div>
+    </div>
+    """
+
 def get_plotly_template():
     """Get Plotly template based on theme."""
     return 'plotly_dark' if st.session_state.theme == 'dark' else 'plotly_white'
 
 def style_plotly_chart_themed(fig):
     """Style Plotly chart for current theme."""
-    bg_color = current_theme['bg_card']
+    bg_color = 'rgba(22, 22, 31, 0.5)' if st.session_state.theme == 'dark' else 'rgba(255, 255, 255, 0.5)'
     text_color = current_theme['text_primary']
     grid_color = current_theme['border_color']
     
@@ -761,7 +1458,7 @@ def style_plotly_chart_themed(fig):
     return fig
 
 def show_footer():
-    """Premium footer."""
+    """Premium footer with animations."""
     st.markdown("""
     <div class="footer-premium">
         <div style="color: var(--text-primary); font-size: 1.3rem; font-weight: 700; margin-bottom: 12px;">
@@ -771,12 +1468,14 @@ def show_footer():
             Advanced Data Rescue & Campaign Simulation
         </div>
         <div style="
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple), var(--accent-pink));
+            background-size: 300% 100%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             font-weight: 800;
             font-size: 1.15rem;
+            animation: gradientFlow 4s ease infinite;
         ">Kartik Joshi • Gagandeep Singh • Samuel Alex • Prem Kukreja</div>
     </div>
     """, unsafe_allow_html=True)
@@ -944,7 +1643,7 @@ def generate_recommendations(kpis, sim_results=None):
     return recommendations
 
 # ============================================================================
-# SIDEBAR
+# SIDEBAR WITH ANIMATIONS
 # ============================================================================
 
 with st.sidebar:
@@ -953,13 +1652,15 @@ with st.sidebar:
     with col1:
         st.markdown("""
         <div style="text-align: center; margin-top: -20px; padding-bottom: 15px;">
-            <div style="font-size: 48px; margin-bottom: 5px;">🛒</div>
+            <div style="font-size: 48px; margin-bottom: 5px; animation: float 3s ease-in-out infinite;">🛒</div>
             <div style="
                 font-size: 26px;
                 font-weight: 800;
-                background: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6);
+                background: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6, #ec4899);
+                background-size: 300% 100%;
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
+                animation: gradientFlow 4s ease infinite;
             ">Promo Pulse</div>
         </div>
         """, unsafe_allow_html=True)
@@ -982,23 +1683,23 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # Status
+    # Status with breathing dots
     st.markdown('<p style="color: #3b82f6; font-weight: 600; margin-bottom: 15px; letter-spacing: 1.2px; font-size: 0.85rem;">📡 STATUS</p>', unsafe_allow_html=True)
     
     data_loaded = st.session_state.data_loaded
     data_cleaned = st.session_state.is_cleaned
     
-    status_color_loaded = "#10b981" if data_loaded else "#ef4444"
-    status_color_cleaned = "#10b981" if data_cleaned else "#f59e0b" if data_loaded else "#ef4444"
+    status_class_loaded = "green" if data_loaded else "red"
+    status_class_cleaned = "green" if data_cleaned else ("orange" if data_loaded else "red")
     
     st.markdown(f"""
     <div class="premium-container" style="padding: 16px;">
-        <div style="display: flex; align-items: center; margin: 8px 0;">
-            <div style="width: 12px; height: 12px; border-radius: 50%; background: {status_color_loaded}; margin-right: 12px; box-shadow: 0 0 10px {status_color_loaded};"></div>
+        <div style="display: flex; align-items: center; margin: 10px 0;">
+            <div class="status-dot {status_class_loaded}" style="margin-right: 12px;"></div>
             <span style="color: var(--text-primary); font-size: 0.9rem;">Data Loaded</span>
         </div>
-        <div style="display: flex; align-items: center; margin: 8px 0;">
-            <div style="width: 12px; height: 12px; border-radius: 50%; background: {status_color_cleaned}; margin-right: 12px; box-shadow: 0 0 10px {status_color_cleaned};"></div>
+        <div style="display: flex; align-items: center; margin: 10px 0;">
+            <div class="status-dot {status_class_cleaned}" style="margin-right: 12px;"></div>
             <span style="color: var(--text-primary); font-size: 0.9rem;">Data Cleaned</span>
         </div>
     </div>
@@ -1009,16 +1710,16 @@ with st.sidebar:
 # ============================================================================
 
 def show_home_page():
-    """Premium home page."""
+    """Premium home page with all animations."""
     st.markdown("""
     <div class="hero-premium">
         <div style="text-align: center; position: relative; z-index: 1;">
-            <div style="margin-bottom: 24px;">
-                <span style="display: inline-block; padding: 12px 28px; background: linear-gradient(135deg, #06b6d4, #3b82f6); border-radius: 50px; color: white; font-size: 1rem; font-weight: 700; margin-right: 12px;">✨ Premium Analytics</span>
-                <span style="display: inline-block; padding: 12px 28px; background: linear-gradient(135deg, #8b5cf6, #ec4899); border-radius: 50px; color: white; font-size: 1rem; font-weight: 700;">🚀 v3.1</span>
+            <div style="margin-bottom: 24px; animation: fadeInUp 0.6s ease-out;">
+                <span style="display: inline-block; padding: 12px 28px; background: linear-gradient(135deg, #06b6d4, #3b82f6); border-radius: 50px; color: white; font-size: 1rem; font-weight: 700; margin-right: 12px; animation: pulseGlow 2s ease-in-out infinite;">✨ Premium Analytics</span>
+                <span style="display: inline-block; padding: 12px 28px; background: linear-gradient(135deg, #8b5cf6, #ec4899); border-radius: 50px; color: white; font-size: 1rem; font-weight: 700; animation: pulseGlow 2s ease-in-out infinite 0.5s;">🚀 v4.0</span>
             </div>
             <div class="hero-title-premium">Promo Pulse Simulator</div>
-            <p style="color: var(--text-secondary); font-size: 1.3rem; margin: 0; line-height: 1.6;">
+            <p style="color: var(--text-secondary); font-size: 1.3rem; margin: 0; line-height: 1.6; animation: fadeInUp 1s ease-out;">
                 Advanced Data Intelligence + Campaign Simulation Platform<br>
                 <span style="color: var(--accent-cyan); font-weight: 600;">UAE Omnichannel Retail Analytics</span>
             </p>
@@ -1031,21 +1732,15 @@ def show_home_page():
         
         col1, col2, col3, col4 = st.columns(4)
         features = [
-            ("📂", "Data Upload", "Multi-format ingestion", "cyan"),
-            ("🧹", "Data Rescue", "AI-powered cleaning", "blue"),
-            ("🎯", "Simulator", "What-if scenarios", "purple"),
-            ("📊", "Analytics", "Executive dashboards", "pink")
+            ("📂", "Data Upload", "Multi-format ingestion", "cyan", 1),
+            ("🧹", "Data Rescue", "AI-powered cleaning", "blue", 2),
+            ("🎯", "Simulator", "What-if scenarios", "purple", 3),
+            ("📊", "Analytics", "Executive dashboards", "pink", 4)
         ]
         
-        for col, (icon, title, desc, color) in zip([col1, col2, col3, col4], features):
+        for col, (icon, title, desc, color, stagger) in zip([col1, col2, col3, col4], features):
             with col:
-                st.markdown(f"""
-                <div class="premium-container" style="height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-                    <div style="font-size: 48px; margin-bottom: 12px;">{icon}</div>
-                    <div style="color: var(--accent-{color}); font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">{title}</div>
-                    <div style="color: var(--text-secondary); font-size: 0.85rem;">{desc}</div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(create_feature_card(icon, title, desc, color, stagger), unsafe_allow_html=True)
         
         st.markdown("---")
         st.markdown('<div class="alert-info"><strong>👈 Navigate to Data Upload</strong> to load your e-commerce data files.</div>', unsafe_allow_html=True)
@@ -1055,15 +1750,15 @@ def show_home_page():
         
         col1, col2, col3, col4 = st.columns(4)
         counts = [
-            ("Products", len(st.session_state.raw_products) if st.session_state.raw_products is not None else 0, "cyan"),
-            ("Stores", len(st.session_state.raw_stores) if st.session_state.raw_stores is not None else 0, "blue"),
-            ("Sales", len(st.session_state.raw_sales) if st.session_state.raw_sales is not None else 0, "purple"),
-            ("Inventory", len(st.session_state.raw_inventory) if st.session_state.raw_inventory is not None else 0, "pink")
+            ("Products", len(st.session_state.raw_products) if st.session_state.raw_products is not None else 0, "cyan", 1),
+            ("Stores", len(st.session_state.raw_stores) if st.session_state.raw_stores is not None else 0, "blue", 2),
+            ("Sales", len(st.session_state.raw_sales) if st.session_state.raw_sales is not None else 0, "purple", 3),
+            ("Inventory", len(st.session_state.raw_inventory) if st.session_state.raw_inventory is not None else 0, "pink", 4)
         ]
         
-        for col, (label, count, color) in zip([col1, col2, col3, col4], counts):
+        for col, (label, count, color, stagger) in zip([col1, col2, col3, col4], counts):
             with col:
-                st.markdown(create_metric_card_premium(label, format_number(count), color=color), unsafe_allow_html=True)
+                st.markdown(create_metric_card_premium(label, format_number(count), color=color, stagger=stagger), unsafe_allow_html=True)
         
         st.markdown("---")
         
@@ -1079,9 +1774,9 @@ def show_home_page():
 # ============================================================================
 
 def show_data_page():
-    """Data upload page."""
+    """Data upload page with animations."""
     st.markdown('<h1 class="page-title-premium" style="color: var(--accent-cyan);">📂 Data Upload</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem;">Upload your data files or load sample data</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem; animation: fadeInUp 0.5s ease-out;">Upload your data files or load sample data</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -1149,12 +1844,12 @@ def show_data_page():
                 if df is not None:
                     col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.markdown(create_metric_card_premium("Rows", format_number(len(df)), color="cyan"), unsafe_allow_html=True)
+                        st.markdown(create_metric_card_premium("Rows", format_number(len(df)), color="cyan", stagger=1), unsafe_allow_html=True)
                     with col2:
-                        st.markdown(create_metric_card_premium("Columns", str(len(df.columns)), color="blue"), unsafe_allow_html=True)
+                        st.markdown(create_metric_card_premium("Columns", str(len(df.columns)), color="blue", stagger=2), unsafe_allow_html=True)
                     with col3:
                         null_pct = (df.isnull().sum().sum() / (len(df) * len(df.columns)) * 100) if len(df) > 0 else 0
-                        st.markdown(create_metric_card_premium("Null %", f"{null_pct:.1f}%", color="orange"), unsafe_allow_html=True)
+                        st.markdown(create_metric_card_premium("Null %", f"{null_pct:.1f}%", color="orange", stagger=3), unsafe_allow_html=True)
                     st.markdown("<br>", unsafe_allow_html=True)
                     st.dataframe(df.head(100), use_container_width=True)
     
@@ -1165,9 +1860,9 @@ def show_data_page():
 # ============================================================================
 
 def show_cleaner_page():
-    """Data rescue page."""
+    """Data rescue page with animations."""
     st.markdown('<h1 class="page-title-premium" style="color: var(--accent-green);">🧹 Data Rescue Center</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem;">Detect issues and clean your data automatically</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem; animation: fadeInUp 0.5s ease-out;">Detect issues and clean your data automatically</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -1180,16 +1875,16 @@ def show_cleaner_page():
     
     col1, col2, col3 = st.columns(3)
     issue_types = [
-        ("Data Quality", ["Missing values", "Duplicates", "Nulls"], "cyan"),
-        ("Format Issues", ["Invalid timestamps", "Cities", "Case"], "purple"),
-        ("Value Issues", ["Outliers", "FK violations", "Categories"], "pink")
+        ("Data Quality", ["Missing values", "Duplicates", "Nulls"], "cyan", 1),
+        ("Format Issues", ["Invalid timestamps", "Cities", "Case"], "purple", 2),
+        ("Value Issues", ["Outliers", "FK violations", "Categories"], "pink", 3)
     ]
     
-    for col, (title, items, color) in zip([col1, col2, col3], issue_types):
+    for col, (title, items, color, stagger) in zip([col1, col2, col3], issue_types):
         with col:
             items_html = "".join([f"<li>{item}</li>" for item in items])
             st.markdown(f"""
-            <div class="premium-container">
+            <div class="premium-container stagger-{stagger}" style="animation-delay: {stagger * 0.15}s;">
                 <strong style="color: var(--accent-{color});">{title}</strong>
                 <ul style="color: var(--text-secondary); margin-bottom: 0; line-height: 2;">{items_html}</ul>
             </div>
@@ -1230,14 +1925,14 @@ def show_cleaner_page():
         stats = st.session_state.cleaner_stats
         if stats:
             col1, col2, col3, col4 = st.columns(4)
-            for col, (ds, color) in zip([col1, col2, col3, col4], 
-                                        [('products', 'cyan'), ('stores', 'blue'), ('sales', 'purple'), ('inventory', 'pink')]):
+            for col, (ds, color, stagger) in zip([col1, col2, col3, col4], 
+                                        [('products', 'cyan', 1), ('stores', 'blue', 2), ('sales', 'purple', 3), ('inventory', 'pink', 4)]):
                 with col:
                     before = stats.get(ds, {}).get('before', 0)
                     after = stats.get(ds, {}).get('after', 0)
                     delta = f"{before - after} fixed" if before > after else "Clean"
                     delta_type = "negative" if before > after else "positive"
-                    st.markdown(create_metric_card_premium(ds.title(), format_number(after), delta, delta_type, color), unsafe_allow_html=True)
+                    st.markdown(create_metric_card_premium(ds.title(), format_number(after), delta, delta_type, color, stagger), unsafe_allow_html=True)
         
         issues_df = st.session_state.issues_df
         if issues_df is not None and len(issues_df) > 0:
@@ -1285,9 +1980,9 @@ def show_cleaner_page():
 # ============================================================================
 
 def show_simulator_page():
-    """Simulator page."""
+    """Simulator page with animations."""
     st.markdown('<h1 class="page-title-premium" style="color: var(--accent-purple);">🎯 Promo Pulse Simulator</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem;">Run what-if discount scenarios with constraints</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem; animation: fadeInUp 0.5s ease-out;">Run what-if discount scenarios with constraints</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -1357,30 +2052,30 @@ def show_simulator_page():
         with col1:
             delta = f"{comparison.get('revenue_change_pct', 0):+.1f}%"
             delta_type = "positive" if comparison.get('revenue_change_pct', 0) > 0 else "negative"
-            st.markdown(create_metric_card_premium("Exp. Revenue", format_currency(outputs.get('expected_revenue', 0)), delta, delta_type, "cyan"), unsafe_allow_html=True)
+            st.markdown(create_metric_card_premium("Exp. Revenue", format_currency(outputs.get('expected_revenue', 0)), delta, delta_type, "cyan", 1), unsafe_allow_html=True)
         with col2:
             delta = f"{comparison.get('profit_change_pct', 0):+.1f}%"
             delta_type = "positive" if comparison.get('profit_change_pct', 0) > 0 else "negative"
-            st.markdown(create_metric_card_premium("Net Profit", format_currency(outputs.get('expected_net_profit', 0)), delta, delta_type, "green"), unsafe_allow_html=True)
+            st.markdown(create_metric_card_premium("Net Profit", format_currency(outputs.get('expected_net_profit', 0)), delta, delta_type, "green", 2), unsafe_allow_html=True)
         with col3:
             roi = outputs.get('roi_pct', 0)
-            st.markdown(create_metric_card_premium("ROI", f"{roi:.1f}%", color="green" if roi > 0 else "red"), unsafe_allow_html=True)
+            st.markdown(create_metric_card_premium("ROI", f"{roi:.1f}%", color="green" if roi > 0 else "red", stagger=3), unsafe_allow_html=True)
         with col4:
             budget_util = (outputs.get('promo_cost', 0) / promo_budget * 100) if promo_budget > 0 else 0
-            st.markdown(create_metric_card_premium("Budget Used", f"{budget_util:.1f}%", color="orange"), unsafe_allow_html=True)
+            st.markdown(create_metric_card_premium("Budget Used", f"{budget_util:.1f}%", color="orange", stagger=4), unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.markdown(create_metric_card_premium("Demand Lift", f"+{outputs.get('demand_lift_pct', 0):.1f}%", color="purple"), unsafe_allow_html=True)
+            st.markdown(create_metric_card_premium("Demand Lift", f"+{outputs.get('demand_lift_pct', 0):.1f}%", color="purple", stagger=5), unsafe_allow_html=True)
         with col2:
             margin_val = outputs.get('expected_margin_pct', 0)
-            st.markdown(create_metric_card_premium("Exp. Margin", f"{margin_val:.1f}%", color="green" if margin_val >= margin_floor else "orange"), unsafe_allow_html=True)
+            st.markdown(create_metric_card_premium("Exp. Margin", f"{margin_val:.1f}%", color="green" if margin_val >= margin_floor else "orange", stagger=6), unsafe_allow_html=True)
         with col3:
-            st.markdown(create_metric_card_premium("Promo Cost", format_currency(outputs.get('promo_cost', 0)), color="orange"), unsafe_allow_html=True)
+            st.markdown(create_metric_card_premium("Promo Cost", format_currency(outputs.get('promo_cost', 0)), color="orange", stagger=7), unsafe_allow_html=True)
         with col4:
-            st.markdown(create_metric_card_premium("Exp. Orders", format_number(outputs.get('expected_orders', 0)), color="blue"), unsafe_allow_html=True)
+            st.markdown(create_metric_card_premium("Exp. Orders", format_number(outputs.get('expected_orders', 0)), color="blue", stagger=8), unsafe_allow_html=True)
         
         if violations:
             st.markdown("---")
@@ -1499,38 +2194,38 @@ def show_dashboard_page():
     show_footer()
 
 def show_executive_view(sales_df, stores_df, products_df, kpis, sim):
-    """Executive dashboard view."""
+    """Executive dashboard view with animations."""
     st.markdown('<div class="section-title-premium">💼 Executive Summary</div>', unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         revenue = kpis.get('net_revenue', kpis.get('total_revenue', 0))
-        st.markdown(create_metric_card_premium("Net Revenue", format_currency(revenue), "+12.5%", "positive", "cyan"), unsafe_allow_html=True)
+        st.markdown(create_metric_card_premium("Net Revenue", format_currency(revenue), "+12.5%", "positive", "cyan", 1), unsafe_allow_html=True)
     with col2:
         margin = kpis.get('profit_margin_pct', 0)
-        st.markdown(create_metric_card_premium("Gross Margin", f"{margin:.1f}%", "+2.3%", "positive", "green"), unsafe_allow_html=True)
+        st.markdown(create_metric_card_premium("Gross Margin", f"{margin:.1f}%", "+2.3%", "positive", "green", 2), unsafe_allow_html=True)
     with col3:
         orders = kpis.get('total_orders', 0)
-        st.markdown(create_metric_card_premium("Total Orders", format_number(orders), "+8.7%", "positive", "purple"), unsafe_allow_html=True)
+        st.markdown(create_metric_card_premium("Total Orders", format_number(orders), "+8.7%", "positive", "purple", 3), unsafe_allow_html=True)
     with col4:
         aov = kpis.get('avg_order_value', 0)
-        st.markdown(create_metric_card_premium("Avg Order", format_currency(aov), "-1.2%", "negative", "pink"), unsafe_allow_html=True)
+        st.markdown(create_metric_card_premium("Avg Order", format_currency(aov), "-1.2%", "negative", "pink", 4), unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         profit = kpis.get('total_profit', 0)
-        st.markdown(create_metric_card_premium("Profit Proxy", format_currency(profit), color="green"), unsafe_allow_html=True)
+        st.markdown(create_metric_card_premium("Profit Proxy", format_currency(profit), color="green", stagger=5), unsafe_allow_html=True)
     with col2:
         discount = kpis.get('avg_discount_pct', 0)
-        st.markdown(create_metric_card_premium("Avg Discount", f"{discount:.1f}%", color="orange"), unsafe_allow_html=True)
+        st.markdown(create_metric_card_premium("Avg Discount", f"{discount:.1f}%", color="orange", stagger=6), unsafe_allow_html=True)
     with col3:
         return_rate = kpis.get('return_rate_pct', 0)
-        st.markdown(create_metric_card_premium("Return Rate", f"{return_rate:.1f}%", color="pink"), unsafe_allow_html=True)
+        st.markdown(create_metric_card_premium("Return Rate", f"{return_rate:.1f}%", color="pink", stagger=7), unsafe_allow_html=True)
     with col4:
         products = kpis.get('unique_products', 0)
-        st.markdown(create_metric_card_premium("Products", format_number(products), color="blue"), unsafe_allow_html=True)
+        st.markdown(create_metric_card_premium("Products", format_number(products), color="blue", stagger=8), unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -1595,7 +2290,7 @@ def show_executive_view(sales_df, stores_df, products_df, kpis, sim):
         cols = st.columns(2)
         for i, (title, text) in enumerate(insights):
             with cols[i % 2]:
-                st.markdown(create_insight_card_premium(title, text), unsafe_allow_html=True)
+                st.markdown(create_insight_card_premium(title, text, stagger=i+1), unsafe_allow_html=True)
     
     st.markdown("---")
     st.markdown('<div class="section-title-premium">📋 Strategic Recommendations</div>', unsafe_allow_html=True)
@@ -1604,7 +2299,7 @@ def show_executive_view(sales_df, stores_df, products_df, kpis, sim):
     st.markdown(create_recommendation_premium("Action Items for Leadership", recommendations), unsafe_allow_html=True)
 
 def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim):
-    """Manager dashboard view."""
+    """Manager dashboard view with animations."""
     st.markdown('<div class="section-title-premium">⚙️ Operations Dashboard</div>', unsafe_allow_html=True)
     
     stockout = sim.calculate_stockout_risk(inventory_df) if inventory_df is not None else {'stockout_risk_pct': 0, 'low_stock_items': 0}
@@ -1613,16 +2308,16 @@ def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim)
     with col1:
         risk_pct = stockout.get('stockout_risk_pct', 0)
         color = "red" if risk_pct > 15 else "green"
-        st.markdown(create_metric_card_premium("Stockout Risk", f"{risk_pct:.1f}%", color=color), unsafe_allow_html=True)
+        st.markdown(create_metric_card_premium("Stockout Risk", f"{risk_pct:.1f}%", color=color, stagger=1), unsafe_allow_html=True)
     with col2:
         return_rate = kpis.get('return_rate_pct', 0)
-        st.markdown(create_metric_card_premium("Return Rate", f"{return_rate:.1f}%", color="orange"), unsafe_allow_html=True)
+        st.markdown(create_metric_card_premium("Return Rate", f"{return_rate:.1f}%", color="orange", stagger=2), unsafe_allow_html=True)
     with col3:
         pf_rate = kpis.get('payment_failure_rate_pct', 0)
-        st.markdown(create_metric_card_premium("Payment Fail", f"{pf_rate:.1f}%", color="red" if pf_rate > 5 else "green"), unsafe_allow_html=True)
+        st.markdown(create_metric_card_premium("Payment Fail", f"{pf_rate:.1f}%", color="red" if pf_rate > 5 else "green", stagger=3), unsafe_allow_html=True)
     with col4:
         low_stock = stockout.get('low_stock_items', 0)
-        st.markdown(create_metric_card_premium("Low Stock SKUs", format_number(low_stock), color="purple"), unsafe_allow_html=True)
+        st.markdown(create_metric_card_premium("Low Stock SKUs", format_number(low_stock), color="purple", stagger=4), unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -1676,9 +2371,9 @@ def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim)
 # ============================================================================
 
 def show_advanced_eda_page():
-    """Advanced EDA page."""
+    """Advanced EDA page with animations."""
     st.markdown('<h1 class="page-title-premium" style="color: var(--accent-purple);">🔬 Advanced EDA</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem;">Deep-dive analytics: cohorts, segmentation, price elasticity</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: var(--text-secondary); font-size: 1.1rem; animation: fadeInUp 0.5s ease-out;">Deep-dive analytics: cohorts, segmentation, price elasticity</p>', unsafe_allow_html=True)
     
     if not st.session_state.data_loaded:
         st.markdown('<div class="alert-warning">⚠️ Please load data first.</div>', unsafe_allow_html=True)
@@ -1712,7 +2407,7 @@ def show_advanced_eda_page():
         st.plotly_chart(fig, use_container_width=True)
         
         avg_m1 = cohort_data.iloc[:, 1].mean() if cohort_data.shape[1] > 1 else 0
-        st.markdown(create_insight_card_premium("Retention Insight", f"Average 1-month retention is {avg_m1:.1f}%. Consider 30-day engagement campaigns."), unsafe_allow_html=True)
+        st.markdown(create_insight_card_premium("Retention Insight", f"Average 1-month retention is {avg_m1:.1f}%. Consider 30-day engagement campaigns.", 1), unsafe_allow_html=True)
     else:
         st.info("Insufficient data for cohort analysis.")
     
@@ -1799,7 +2494,7 @@ def show_advanced_eda_page():
         optimal_discount = elasticity_data.iloc[optimal_idx]['discount_bin']
         optimal_qty = elasticity_data.iloc[optimal_idx]['avg_qty_per_order']
         
-        st.markdown(create_insight_card_premium("Optimal Discount", f"The {optimal_discount} range shows highest avg quantity ({optimal_qty:.2f} units). This is your discount sweet spot."), unsafe_allow_html=True)
+        st.markdown(create_insight_card_premium("Optimal Discount", f"The {optimal_discount} range shows highest avg quantity ({optimal_qty:.2f} units). This is your discount sweet spot.", 2), unsafe_allow_html=True)
     else:
         st.info("Unable to calculate price elasticity.")
     
