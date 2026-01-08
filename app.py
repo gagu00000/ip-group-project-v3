@@ -460,31 +460,6 @@ if 'is_cleaned' not in st.session_state:
 if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
 
-    # ============================================================================
-# SIDEBAR NAVIGATION
-# ============================================================================
-
-with st.sidebar:
-    # Logo and Title
-    col1, col2 = st.columns([3, 1])
-    
-    with col1:
-        st.markdown("""
-        <div style="text-align: center; margin-top: -20px; padding-bottom: 15px;">
-            <div style="font-size: 48px; margin-bottom: 5px; animation: float 3s ease-in-out infinite;">🛒</div>
-            <div class="gradient-text" style="font-size: 26px; font-weight: 800;">UAE Pulse</div>
-            <div style="color: var(--text-muted); font-size: 13px;">Simulator + Data Rescue</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        # Theme toggle button
-        theme_icon = "🌙" if st.session_state.theme == 'light' else "☀️"
-        if st.button(theme_icon, key='theme_toggle', help="Toggle Theme"):
-            toggle_theme()
-            st.rerun()
-    
-    st.markdown("---")
     
     # Navigation
     st.markdown('<p style="color: var(--accent-pink); font-weight: 600; margin-bottom: 15px; letter-spacing: 1.2px; font-size: 0.85rem;">📍 NAVIGATION</p>', unsafe_allow_html=True)
