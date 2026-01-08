@@ -1,6 +1,6 @@
 # ============================================================================
 # UAE Promo Pulse Simulator + Data Rescue Dashboard
-# Main Streamlit Application - COMPLETE REFINED VERSION
+# Main Streamlit Application - COMPLETE REFINED VERSION v2.1
 # ============================================================================
 
 import streamlit as st
@@ -464,43 +464,6 @@ st.markdown("""
         line-height: 1.7;
     }
     
-    /* ===== VIEW TOGGLE ===== */
-    .view-toggle-container {
-        background: linear-gradient(135deg, #16161f 0%, #1a1a24 100%);
-        border-radius: 16px;
-        padding: 8px;
-        display: inline-flex;
-        gap: 8px;
-        border: 1px solid var(--border-color);
-        margin-bottom: 25px;
-    }
-    
-    .view-toggle-btn {
-        padding: 12px 28px;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border: none;
-    }
-    
-    .view-toggle-active {
-        background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-        color: white;
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
-    }
-    
-    .view-toggle-inactive {
-        background: transparent;
-        color: var(--text-secondary);
-    }
-    
-    .view-toggle-inactive:hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--text-primary);
-    }
-    
     /* ===== INSIGHT CARD ===== */
     .insight-card {
         background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(236, 72, 153, 0.12) 100%);
@@ -668,7 +631,7 @@ st.markdown("""
     .risk-high { color: #ef4444; font-weight: 700; }
     .risk-medium { color: #f59e0b; font-weight: 600; }
     .risk-low { color: #10b981; font-weight: 500; }
-    
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -774,6 +737,56 @@ def show_footer():
     </div>
     """, unsafe_allow_html=True)
 
+def generate_insights(kpis, city_kpis=None, channel_kpis=None, cat_kpis=None):
+    """Generate business insights based on KPIs."""
+    insights = []
+    
+    # Revenue insight
+    if kpis.get('total_revenue', 0) > 0:
+        aov = kpis.get('avg_order_value', 0)
+        if aov > 500:
+            insights.append(("High-Value Customers", f"Average order value is AED {aov:,.0f}, indicating premium customer segment. Consider upselling strategies."))
+        elif aov < 200:
+            insights.append(("Growth Opportunity", f"Average order value is AED {aov:,.0f}. Bundle offers could increase basket size by 15-25%."))
+    
+    # Margin insight
+    margin = kpis.get('profit_margin_pct', 0)
+    if margin > 25:
+        insights.append(("Strong Margins", f"Profit margin at {margin:.1f}% is healthy. Room for strategic discounts without hurting profitability."))
+    elif margin < 15:
+        insights.append(("Margin Alert", f"Profit margin at {margin:.1f}% is below industry benchmark. Review pricing strategy and costs."))
+    
+    # Return rate insight
+    return_rate = kpis.get('return_rate_pct', 0)
+    if return_rate > 10:
+        insights.append(("High Returns", f"Return rate of {return_rate:.1f}% is above normal. Investigate product quality or description accuracy."))
+    elif return_rate < 3:
+        insights.append(("Excellent Quality", f"Low return rate of {return_rate:.1f}% indicates high customer satisfaction."))
+    
+    # City insight
+    if city_kpis is not None and len(city_kpis) > 0:
+        top_city = city_kpis.iloc[0]['city'] if 'city' in city_kpis.columns else None
+        if top_city:
+            top_revenue = city_kpis.iloc[0]['revenue']
+            total_revenue = city_kpis['revenue'].sum()
+            pct = (top_revenue / total_revenue * 100) if total_revenue > 0 else 0
+            insights.append(("Market Concentration", f"{top_city} contributes {pct:.0f}% of total revenue. {'Diversify to reduce risk.' if pct > 50 else 'Healthy market distribution.'}"))
+    
+    # Category insight
+    if cat_kpis is not None and len(cat_kpis) > 0:
+        top_cat = cat_kpis.iloc[0]
+        if 'category' in cat_kpis.columns and 'profit_margin_pct' in cat_kpis.columns:
+            insights.append(("Top Category", f"{top_cat['category']} leads with {top_cat.get('profit_margin_pct', 0):.1f}% margin. Focus promotional efforts here for maximum ROI."))
+    
+    # Discount insight
+    avg_discount = kpis.get('avg_discount_pct', 0)
+    if avg_discount > 20:
+        insights.append(("Heavy Discounting", f"Average discount of {avg_discount:.1f}% may be eroding margins. Consider value-based pricing."))
+    elif avg_discount < 5:
+        insights.append(("Discount Opportunity", f"Low discount rate of {avg_discount:.1f}% suggests room for targeted promotions to boost volume."))
+    
+    return insights[:5]  # Return top 5 insights
+
 def generate_executive_recommendations(kpis, sim_results=None):
     """Generate auto recommendations for Executive view."""
     recommendations = []
@@ -861,10 +874,10 @@ if 'is_cleaned' not in st.session_state:
     st.session_state.is_cleaned = False
 if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
-if 'dashboard_view' not in st.session_state:
-    st.session_state.dashboard_view = 'Executive'
 if 'sim_results' not in st.session_state:
     st.session_state.sim_results = None
+if 'cleaner_stats' not in st.session_state:
+    st.session_state.cleaner_stats = None
 
 # ============================================================================
 # SIDEBAR NAVIGATION & FILTERS
@@ -900,7 +913,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-  # ===== GLOBAL FILTERS (5 Required) =====
+    # ===== GLOBAL FILTERS (5 Required) - FIXED VERSION =====
     if st.session_state.data_loaded:
         st.markdown('<p style="color: #06b6d4; font-weight: 600; margin-bottom: 15px; letter-spacing: 1.2px; font-size: 0.85rem;">🎛️ GLOBAL FILTERS</p>', unsafe_allow_html=True)
         
@@ -1045,14 +1058,14 @@ def apply_filters(sales_df, stores_df, products_df):
     return filtered_sales
 
 # ============================================================================
-# PAGE: HOME
+# PAGE: HOME (ORIGINAL CONTENT PRESERVED)
 # ============================================================================
 
 def show_home_page():
     """Display the home page."""
     
     if not st.session_state.data_loaded:
-        # Hero section
+        # ===== HERO SECTION (NO DATA LOADED) - ORIGINAL CONTENT =====
         st.markdown("""
         <div style="
             background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(236, 72, 153, 0.15) 100%);
@@ -1100,51 +1113,166 @@ def show_home_page():
         </div>
         """, unsafe_allow_html=True)
         
-        # Feature cards
+        # ===== FEATURE CARDS =====
         st.markdown('<p class="section-title section-title-purple">✨ Key Features</p>', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
         
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.markdown(create_feature_card("🧹", "Data Rescue", "Fix 15+ types of data issues automatically", "cyan"), unsafe_allow_html=True)
+            st.markdown(create_feature_card(
+                "📂", "Data Upload", 
+                "Upload and preview your e-commerce CSV files with instant validation",
+                "cyan"
+            ), unsafe_allow_html=True)
+        
         with col2:
-            st.markdown(create_feature_card("🎯", "Simulator", "What-if discount scenarios with constraints", "blue"), unsafe_allow_html=True)
+            st.markdown(create_feature_card(
+                "🧹", "Data Rescue", 
+                "Detect & auto-fix 15+ types of data quality issues",
+                "blue"
+            ), unsafe_allow_html=True)
+        
         with col3:
-            st.markdown(create_feature_card("👔", "Executive View", "Strategic KPIs & recommendations", "purple"), unsafe_allow_html=True)
+            st.markdown(create_feature_card(
+                "🎯", "Simulator", 
+                "Run what-if scenarios and forecast campaign ROI",
+                "purple"
+            ), unsafe_allow_html=True)
+        
         with col4:
-            st.markdown(create_feature_card("⚙️", "Manager View", "Operational risks & stockout alerts", "pink"), unsafe_allow_html=True)
-    
-    else:
-        # Data loaded - show quick stats
+            st.markdown(create_feature_card(
+                "📊", "Dashboard", 
+                "Executive & Manager views with real-time KPIs",
+                "pink"
+            ), unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # ===== WORKFLOW SECTION =====
+        st.markdown('<p class="section-title section-title-teal">🔄 How It Works</p>', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            <div class="info-card">
+                <h4 style="color: #06b6d4; margin-top: 0; font-size: 1.1rem;">📥 Phase 1: Data Rescue Toolkit</h4>
+                <ul style="color: #94a3b8; margin-bottom: 0; font-size: 0.95rem; line-height: 1.8;">
+                    <li>Upload dirty/raw datasets (CSV)</li>
+                    <li>Automatic validation & issue detection</li>
+                    <li>Clean data with documented fixes</li>
+                    <li>Download issues log & cleaned data</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("""
+            <div class="info-card" style="border-left-color: #8b5cf6;">
+                <h4 style="color: #8b5cf6; margin-top: 0; font-size: 1.1rem;">🎯 Phase 2: Promo Pulse Simulator</h4>
+                <ul style="color: #94a3b8; margin-bottom: 0; font-size: 0.95rem; line-height: 1.8;">
+                    <li>Set discount %, budget & margin floor</li>
+                    <li>Target by city, channel, category</li>
+                    <li>See projected ROI & demand lift</li>
+                    <li>Constraint violation warnings</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # ===== GETTING STARTED =====
+        st.markdown('<p class="section-title section-title-orange">🚀 Get Started</p>', unsafe_allow_html=True)
+        
         st.markdown("""
-        <div style="text-align: center; margin-bottom: 30px;">
-            <div style="font-size: 42px; margin-bottom: 10px;">🛒</div>
-            <div style="font-size: 48px; font-weight: 800; color: #06b6d4; margin-bottom: 10px;">Promo Pulse Simulator</div>
-            <p style="color: #94a3b8; font-size: 1.1rem;">Data loaded and ready for analysis</p>
+        <div class="info-card" style="border-left-color: #f59e0b; text-align: center;">
+            <p style="color: #e2e8f0; font-size: 1.1rem; margin: 0;">
+                👈 Use the sidebar to navigate to <strong style="color: #06b6d4;">📂 Data Upload</strong> and load your data files.
+            </p>
         </div>
         """, unsafe_allow_html=True)
         
-        sales_df = st.session_state.clean_sales if st.session_state.is_cleaned else st.session_state.raw_sales
-        products_df = st.session_state.clean_products if st.session_state.is_cleaned else st.session_state.raw_products
+    else:
+        # ===== DATA LOADED - SIMPLE STATUS VIEW (NO INSIGHTS HERE) =====
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 40px; padding: 30px 0;">
+            <div style="font-size: 56px; margin-bottom: 15px;">🛒</div>
+            <div style="
+                font-size: 52px;
+                font-weight: 800;
+                background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin-bottom: 15px;
+                line-height: 1.2;
+            ">Promo Pulse Simulator</div>
+            <p style="color: #94a3b8; font-size: 1.15rem; margin: 0;">Data Rescue + Campaign Simulation Dashboard</p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        sim = Simulator()
-        kpis = sim.calculate_overall_kpis(sales_df, products_df)
+        # ===== QUICK STATUS CARDS =====
+        st.markdown('<p class="section-title section-title-cyan">📡 Current Status</p>', unsafe_allow_html=True)
         
         col1, col2, col3, col4 = st.columns(4)
         
-        with col1:
-            st.markdown(create_metric_card("Net Revenue", f"AED {kpis.get('net_revenue', kpis.get('total_revenue', 0)):,.0f}", color="cyan"), unsafe_allow_html=True)
-        with col2:
-            st.markdown(create_metric_card("Gross Margin %", f"{kpis.get('profit_margin_pct', 0):.1f}%", color="green"), unsafe_allow_html=True)
-        with col3:
-            st.markdown(create_metric_card("Total Orders", f"{kpis.get('total_orders', 0):,}", color="blue"), unsafe_allow_html=True)
-        with col4:
-            st.markdown(create_metric_card("Return Rate", f"{kpis.get('return_rate_pct', 0):.1f}%", color="orange"), unsafe_allow_html=True)
+        # Get counts
+        products_count = len(st.session_state.raw_products) if st.session_state.raw_products is not None else 0
+        stores_count = len(st.session_state.raw_stores) if st.session_state.raw_stores is not None else 0
+        sales_count = len(st.session_state.raw_sales) if st.session_state.raw_sales is not None else 0
+        inventory_count = len(st.session_state.raw_inventory) if st.session_state.raw_inventory is not None else 0
         
+        with col1:
+            st.markdown(create_metric_card("Products", f"{products_count:,}", color="cyan"), unsafe_allow_html=True)
+        with col2:
+            st.markdown(create_metric_card("Stores", f"{stores_count:,}", color="blue"), unsafe_allow_html=True)
+        with col3:
+            st.markdown(create_metric_card("Sales Records", f"{sales_count:,}", color="purple"), unsafe_allow_html=True)
+        with col4:
+            st.markdown(create_metric_card("Inventory", f"{inventory_count:,}", color="pink"), unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # ===== STATUS MESSAGES =====
         if st.session_state.is_cleaned:
-            st.markdown(create_success_card("Data cleaned and validated. Ready for simulation!"), unsafe_allow_html=True)
+            st.markdown(create_success_card("Data has been cleaned and validated. Ready for simulation and analysis!"), unsafe_allow_html=True)
         else:
-            st.markdown(create_warning_card("Data not yet cleaned. Go to 🧹 Data Rescue to fix issues."), unsafe_allow_html=True)
+            st.markdown(create_warning_card("Data loaded but not yet cleaned. Go to <strong>🧹 Data Rescue</strong> to validate and fix issues."), unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # ===== NEXT STEPS GUIDE =====
+        st.markdown('<p class="section-title section-title-purple">📋 Next Steps</p>', unsafe_allow_html=True)
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            step_status = "✅" if st.session_state.is_cleaned else "⏳"
+            st.markdown(f"""
+            <div class="info-card">
+                <h4 style="color: #06b6d4; margin-top: 0;">{step_status} Step 1: Clean Data</h4>
+                <p style="color: #94a3b8; margin-bottom: 0;">Go to <strong>🧹 Data Rescue</strong> to validate and fix data quality issues.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            step_status = "✅" if st.session_state.sim_results else "⏳"
+            st.markdown(f"""
+            <div class="info-card" style="border-left-color: #8b5cf6;">
+                <h4 style="color: #8b5cf6; margin-top: 0;">{step_status} Step 2: Run Simulation</h4>
+                <p style="color: #94a3b8; margin-bottom: 0;">Go to <strong>🎯 Simulator</strong> to test discount scenarios.</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown("""
+            <div class="info-card" style="border-left-color: #ec4899;">
+                <h4 style="color: #ec4899; margin-top: 0;">📊 Step 3: View Dashboard</h4>
+                <p style="color: #94a3b8; margin-bottom: 0;">Go to <strong>📊 Dashboard</strong> for Executive & Manager insights.</p>
+            </div>
+            """, unsafe_allow_html=True)
     
     show_footer()
 
@@ -1222,16 +1350,59 @@ def show_data_page():
         
         with tab1:
             if st.session_state.raw_products is not None:
-                st.dataframe(st.session_state.raw_products.head(100), use_container_width=True)
+                df = st.session_state.raw_products
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.markdown(create_metric_card("Rows", f"{len(df):,}", color="cyan"), unsafe_allow_html=True)
+                with col2:
+                    st.markdown(create_metric_card("Columns", f"{len(df.columns)}", color="blue"), unsafe_allow_html=True)
+                with col3:
+                    null_pct = (df.isnull().sum().sum() / (len(df) * len(df.columns)) * 100) if len(df) > 0 else 0
+                    st.markdown(create_metric_card("Null %", f"{null_pct:.1f}%", color="orange"), unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.dataframe(df.head(100), use_container_width=True)
+        
         with tab2:
             if st.session_state.raw_stores is not None:
-                st.dataframe(st.session_state.raw_stores.head(100), use_container_width=True)
+                df = st.session_state.raw_stores
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.markdown(create_metric_card("Rows", f"{len(df):,}", color="cyan"), unsafe_allow_html=True)
+                with col2:
+                    st.markdown(create_metric_card("Columns", f"{len(df.columns)}", color="blue"), unsafe_allow_html=True)
+                with col3:
+                    null_pct = (df.isnull().sum().sum() / (len(df) * len(df.columns)) * 100) if len(df) > 0 else 0
+                    st.markdown(create_metric_card("Null %", f"{null_pct:.1f}%", color="orange"), unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.dataframe(df.head(100), use_container_width=True)
+        
         with tab3:
             if st.session_state.raw_sales is not None:
-                st.dataframe(st.session_state.raw_sales.head(100), use_container_width=True)
+                df = st.session_state.raw_sales
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.markdown(create_metric_card("Rows", f"{len(df):,}", color="cyan"), unsafe_allow_html=True)
+                with col2:
+                    st.markdown(create_metric_card("Columns", f"{len(df.columns)}", color="blue"), unsafe_allow_html=True)
+                with col3:
+                    null_pct = (df.isnull().sum().sum() / (len(df) * len(df.columns)) * 100) if len(df) > 0 else 0
+                    st.markdown(create_metric_card("Null %", f"{null_pct:.1f}%", color="orange"), unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.dataframe(df.head(100), use_container_width=True)
+        
         with tab4:
             if st.session_state.raw_inventory is not None:
-                st.dataframe(st.session_state.raw_inventory.head(100), use_container_width=True)
+                df = st.session_state.raw_inventory
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.markdown(create_metric_card("Rows", f"{len(df):,}", color="cyan"), unsafe_allow_html=True)
+                with col2:
+                    st.markdown(create_metric_card("Columns", f"{len(df.columns)}", color="blue"), unsafe_allow_html=True)
+                with col3:
+                    null_pct = (df.isnull().sum().sum() / (len(df) * len(df.columns)) * 100) if len(df) > 0 else 0
+                    st.markdown(create_metric_card("Null %", f"{null_pct:.1f}%", color="orange"), unsafe_allow_html=True)
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.dataframe(df.head(100), use_container_width=True)
     
     show_footer()
 
@@ -1253,6 +1424,8 @@ def show_cleaner_page():
         return
     
     # Issue types
+    st.markdown('<p class="section-title section-title-cyan">🔍 Issues We Detect & Fix</p>', unsafe_allow_html=True)
+    
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -1325,9 +1498,47 @@ def show_cleaner_page():
         st.markdown("---")
         st.markdown('<p class="section-title section-title-blue">📊 Cleaning Results</p>', unsafe_allow_html=True)
         
+        stats = st.session_state.cleaner_stats
+        
+        if stats:
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                before = stats.get('products', {}).get('before', 0)
+                after = stats.get('products', {}).get('after', 0)
+                delta = f"{before - after} removed" if before > after else "No change"
+                delta_type = "negative" if before > after else "positive"
+                st.markdown(create_metric_card("Products", f"{after:,}", delta, delta_type, "cyan"), unsafe_allow_html=True)
+            
+            with col2:
+                before = stats.get('stores', {}).get('before', 0)
+                after = stats.get('stores', {}).get('after', 0)
+                delta = f"{before - after} removed" if before > after else "No change"
+                delta_type = "negative" if before > after else "positive"
+                st.markdown(create_metric_card("Stores", f"{after:,}", delta, delta_type, "blue"), unsafe_allow_html=True)
+            
+            with col3:
+                before = stats.get('sales', {}).get('before', 0)
+                after = stats.get('sales', {}).get('after', 0)
+                delta = f"{before - after} removed" if before > after else "No change"
+                delta_type = "negative" if before > after else "positive"
+                st.markdown(create_metric_card("Sales", f"{after:,}", delta, delta_type, "purple"), unsafe_allow_html=True)
+            
+            with col4:
+                before = stats.get('inventory', {}).get('before', 0)
+                after = stats.get('inventory', {}).get('after', 0)
+                delta = f"{before - after} removed" if before > after else "No change"
+                delta_type = "negative" if before > after else "positive"
+                st.markdown(create_metric_card("Inventory", f"{after:,}", delta, delta_type, "pink"), unsafe_allow_html=True)
+        
         issues_df = st.session_state.issues_df
         
         if issues_df is not None and len(issues_df) > 0:
+            st.markdown("---")
+            st.markdown('<p class="section-title section-title-teal">🔍 Issues Detected & Fixed</p>', unsafe_allow_html=True)
+            
+            st.markdown(create_success_card(f"Total {len(issues_df)} issues detected and fixed automatically!"), unsafe_allow_html=True)
+            
             col1, col2 = st.columns(2)
             
             with col1:
@@ -1343,7 +1554,7 @@ def show_cleaner_page():
                 st.plotly_chart(fig, use_container_width=True)
             
             with col2:
-                # Pareto chart (required)
+                # Pareto chart
                 issue_counts_sorted = issue_counts.sort_values('Count', ascending=False)
                 issue_counts_sorted['Cumulative %'] = (issue_counts_sorted['Count'].cumsum() / issue_counts_sorted['Count'].sum() * 100)
                 
@@ -1358,7 +1569,7 @@ def show_cleaner_page():
                 st.plotly_chart(fig, use_container_width=True)
             
             # Issues table + download
-            st.markdown('<p class="section-title section-title-teal">📋 Issues Log</p>', unsafe_allow_html=True)
+            st.markdown('<p class="section-title section-title-purple">📋 Issues Log</p>', unsafe_allow_html=True)
             st.dataframe(issues_df, use_container_width=True)
             
             # Download buttons
@@ -1419,11 +1630,11 @@ def show_simulator_page():
         categories = ['All']
         
         if stores_df is not None and 'city' in stores_df.columns:
-            cities += stores_df['city'].dropna().unique().tolist()
+            cities += [str(c) for c in stores_df['city'].dropna().unique().tolist()]
         if stores_df is not None and 'channel' in stores_df.columns:
-            channels += stores_df['channel'].dropna().unique().tolist()
+            channels += [str(c) for c in stores_df['channel'].dropna().unique().tolist()]
         if products_df is not None and 'category' in products_df.columns:
-            categories += products_df['category'].dropna().unique().tolist()
+            categories += [str(c) for c in products_df['category'].dropna().unique().tolist()]
         
         city = st.selectbox("Target City", cities, key='sim_city')
         channel = st.selectbox("Target Channel", channels, key='sim_channel')
@@ -1485,19 +1696,80 @@ def show_simulator_page():
             budget_util = (outputs.get('promo_cost', 0) / promo_budget * 100) if promo_budget > 0 else 0
             st.markdown(create_metric_card("Budget Used", f"{budget_util:.1f}%", color="orange"), unsafe_allow_html=True)
         
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown(create_metric_card("Demand Lift", f"+{outputs.get('demand_lift_pct', 0):.1f}%", color="purple"), unsafe_allow_html=True)
+        
+        with col2:
+            margin_result = outputs.get('expected_margin_pct', 0)
+            color = "green" if margin_result >= margin_floor else "orange"
+            st.markdown(create_metric_card("Exp. Margin", f"{margin_result:.1f}%", color=color), unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(create_metric_card("Promo Cost", f"AED {outputs.get('promo_cost', 0):,.0f}", color="orange"), unsafe_allow_html=True)
+        
+        with col4:
+            st.markdown(create_metric_card("Expected Orders", f"{outputs.get('expected_orders', 0):,}", color="blue"), unsafe_allow_html=True)
+        
         # Constraint violations
         if constraint_violations:
             st.markdown("---")
             st.markdown('<p class="section-title section-title-orange">⚠️ Constraint Violations</p>', unsafe_allow_html=True)
             for v in constraint_violations:
-                st.error(f"❌ {v['constraint']}: {v['message']}")
-                if 'top_contributors' in v:
+                st.error(f"❌ {v.get('constraint', 'Unknown')}: {v.get('message', 'No details')}")
+                if 'top_contributors' in v and v['top_contributors']:
                     st.markdown("**Top 10 Contributors:**")
-                    st.dataframe(pd.DataFrame(v['top_contributors']), use_container_width=True)
+                    st.dataframe(pd.DataFrame(v['top_contributors']).head(10), use_container_width=True)
         
         if warnings:
+            st.markdown("---")
             for w in warnings:
                 st.warning(w)
+        
+        if not warnings and not constraint_violations:
+            st.markdown("---")
+            st.success("✅ All metrics within acceptable range. Campaign looks healthy!")
+        
+        # Comparison chart
+        st.markdown("---")
+        st.markdown('<p class="section-title section-title-blue">📈 Baseline vs Campaign</p>', unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            comp_data = pd.DataFrame({
+                'Metric': ['Revenue', 'Profit'],
+                'Baseline': [comparison.get('baseline_revenue', 0), comparison.get('baseline_profit', 0)],
+                'Campaign': [outputs.get('expected_revenue', 0), outputs.get('expected_net_profit', 0)]
+            })
+            
+            fig = go.Figure()
+            fig.add_trace(go.Bar(name='Baseline', x=comp_data['Metric'], y=comp_data['Baseline'], marker_color='#3b82f6'))
+            fig.add_trace(go.Bar(name='Campaign', x=comp_data['Metric'], y=comp_data['Campaign'], marker_color='#06b6d4'))
+            fig = style_plotly_chart(fig)
+            fig.update_layout(barmode='group', title='Revenue & Profit Comparison')
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            orders_data = pd.DataFrame({
+                'Type': ['Baseline', 'Campaign'],
+                'Orders': [comparison.get('baseline_orders', 0), outputs.get('expected_orders', 0)]
+            })
+            
+            fig = px.bar(
+                orders_data,
+                x='Type',
+                y='Orders',
+                title='Orders Comparison',
+                color='Type',
+                color_discrete_sequence=['#8b5cf6', '#ec4899']
+            )
+            fig = style_plotly_chart(fig)
+            fig.update_layout(showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
     
     show_footer()
 
@@ -1520,10 +1792,10 @@ def show_dashboard_page():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         view = st.radio(
-            "Select View",
+            "Select Dashboard View",
             ["👔 Executive View", "⚙️ Manager View"],
             horizontal=True,
-            key='view_toggle'
+            key='dashboard_view_toggle'
         )
     st.markdown("---")
     
@@ -1546,11 +1818,11 @@ def show_dashboard_page():
     show_footer()
 
 def show_executive_view(sales_df, stores_df, products_df, kpis, sim):
-    """Executive View: Strategic KPIs and recommendations."""
+    """Executive View: Strategic KPIs, Insights, and Recommendations."""
     
     st.markdown('<p class="section-title section-title-cyan">💼 Executive Dashboard</p>', unsafe_allow_html=True)
     
-    # KPI Cards
+    # KPI Cards Row 1
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -1569,60 +1841,108 @@ def show_executive_view(sales_df, stores_df, products_df, kpis, sim):
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Charts (4 required)
+    # KPI Cards Row 2
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown(create_metric_card("Total Orders", f"{kpis.get('total_orders', 0):,}", color="blue"), unsafe_allow_html=True)
+    with col2:
+        st.markdown(create_metric_card("Avg Order Value", f"AED {kpis.get('avg_order_value', 0):,.0f}", color="teal"), unsafe_allow_html=True)
+    with col3:
+        st.markdown(create_metric_card("Avg Discount %", f"{kpis.get('avg_discount_pct', 0):.1f}%", color="orange"), unsafe_allow_html=True)
+    with col4:
+        st.markdown(create_metric_card("Return Rate %", f"{kpis.get('return_rate_pct', 0):.1f}%", color="pink"), unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Calculate dimension KPIs
+    city_kpis = sim.calculate_kpis_by_dimension(sales_df, stores_df, products_df, 'city')
+    channel_kpis = sim.calculate_kpis_by_dimension(sales_df, stores_df, products_df, 'channel')
+    cat_kpis = sim.calculate_kpis_by_dimension(sales_df, stores_df, products_df, 'category')
+    
+    # Charts Row 1
     col1, col2 = st.columns(2)
     
     with col1:
         # Chart 1: Revenue trend
         daily = sim.calculate_daily_trends(sales_df, products_df)
         if daily is not None and len(daily) > 0:
-            fig = px.area(daily, x='date', y='revenue', title='Net Revenue Trend',
+            fig = px.area(daily, x='date', y='revenue', title='📈 Net Revenue Trend',
                          color_discrete_sequence=['#06b6d4'])
             fig = style_plotly_chart(fig)
+            fig.update_traces(line=dict(width=3), fillcolor='rgba(6, 182, 212, 0.2)')
             st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No trend data available.")
     
     with col2:
-        # Chart 2: Revenue by city/channel
-        city_kpis = sim.calculate_kpis_by_dimension(sales_df, stores_df, products_df, 'city')
+        # Chart 2: Revenue by city
         if city_kpis is not None and len(city_kpis) > 0:
-            fig = px.bar(city_kpis, x='city', y='revenue', title='Revenue by City',
+            fig = px.bar(city_kpis, x='city', y='revenue', title='🏙️ Revenue by City',
                         color='city', color_discrete_sequence=['#06b6d4', '#3b82f6', '#8b5cf6'])
             fig = style_plotly_chart(fig)
             fig.update_layout(showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No city data available.")
     
+    # Charts Row 2
     col1, col2 = st.columns(2)
     
     with col1:
         # Chart 3: Margin by category
-        cat_kpis = sim.calculate_kpis_by_dimension(sales_df, stores_df, products_df, 'category')
         if cat_kpis is not None and len(cat_kpis) > 0:
-            fig = px.bar(cat_kpis, x='category', y='profit_margin_pct', title='Margin % by Category',
+            fig = px.bar(cat_kpis, x='category', y='profit_margin_pct', title='📦 Margin % by Category',
                         color='profit_margin_pct', color_continuous_scale=['#ef4444', '#f59e0b', '#10b981'])
             fig = style_plotly_chart(fig)
             fig.update_layout(coloraxis_showscale=False)
             st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No category data available.")
     
     with col2:
-        # Chart 4: Scenario impact (if sim run)
+        # Chart 4: Scenario impact or channel revenue
         if st.session_state.sim_results:
             comparison = st.session_state.sim_results.get('comparison', {})
+            sim_outputs = st.session_state.sim_results.get('outputs', {})
             impact_data = pd.DataFrame({
                 'Metric': ['Baseline Profit', 'Simulated Profit'],
-                'Value': [comparison.get('baseline_profit', 0), st.session_state.sim_results.get('outputs', {}).get('expected_net_profit', 0)]
+                'Value': [comparison.get('baseline_profit', 0), sim_outputs.get('expected_net_profit', 0)]
             })
-            fig = px.bar(impact_data, x='Metric', y='Value', title='Scenario Impact: Profit',
+            fig = px.bar(impact_data, x='Metric', y='Value', title='🎯 Scenario Impact: Profit',
                         color='Metric', color_discrete_sequence=['#3b82f6', '#10b981'])
             fig = style_plotly_chart(fig)
             fig.update_layout(showlegend=False)
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("Run simulation to see scenario impact chart.")
+            if channel_kpis is not None and len(channel_kpis) > 0:
+                fig = px.pie(channel_kpis, values='revenue', names='channel', title='📱 Revenue by Channel',
+                            color_discrete_sequence=['#10b981', '#f59e0b', '#ec4899'], hole=0.45)
+                fig = style_plotly_chart(fig)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Run simulation to see scenario impact chart.")
     
-    # Recommendation Box (required)
     st.markdown("---")
+    
+    # ===== KEY BUSINESS INSIGHTS =====
+    st.markdown('<p class="section-title section-title-purple">💡 Key Business Insights</p>', unsafe_allow_html=True)
+    
+    insights = generate_insights(kpis, city_kpis, channel_kpis, cat_kpis)
+    
+    if insights:
+        for title, text in insights:
+            st.markdown(create_insight_card(title, text), unsafe_allow_html=True)
+    else:
+        st.markdown(create_info_card("Analyze more data to generate business insights."), unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # ===== RECOMMENDATION BOX =====
+    st.markdown('<p class="section-title section-title-green">📋 Strategic Recommendations</p>', unsafe_allow_html=True)
+    
     recommendations = generate_executive_recommendations(kpis, st.session_state.sim_results)
-    st.markdown(create_recommendation_box("Strategic Recommendations", recommendations), unsafe_allow_html=True)
+    st.markdown(create_recommendation_box("Action Items for Leadership", recommendations), unsafe_allow_html=True)
 
 def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim):
     """Manager View: Operational KPIs and risks."""
@@ -1647,9 +1967,9 @@ def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim)
     with col4:
         st.markdown(create_metric_card("High-Risk SKUs", f"{stockout.get('low_stock_items', 0):,}", color="purple"), unsafe_allow_html=True)
     
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("---")
     
-    # Charts (4 required)
+    # Charts
     col1, col2 = st.columns(2)
     
     with col1:
@@ -1666,16 +1986,16 @@ def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim)
                 }).reset_index()
                 risk_by_city['risk_pct'] = risk_by_city['at_risk'] * 100
                 
-                fig = px.bar(risk_by_city, x='city', y='risk_pct', title='Stockout Risk % by City',
+                fig = px.bar(risk_by_city, x='city', y='risk_pct', title='🏙️ Stockout Risk % by City',
                             color='risk_pct', color_continuous_scale=['#10b981', '#f59e0b', '#ef4444'])
                 fig = style_plotly_chart(fig)
                 fig.update_layout(coloraxis_showscale=False)
                 st.plotly_chart(fig, use_container_width=True)
-            except:
+            except Exception as e:
                 st.info("Unable to calculate stockout by city.")
     
     with col2:
-        # Chart 2: Top 10 risk items (sortable table)
+        # Chart 2: Top 10 risk items
         if inventory_df is not None:
             try:
                 inv_copy = inventory_df.copy()
@@ -1684,8 +2004,8 @@ def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim)
                 inv_copy['risk_score'] = inv_copy['reorder_point'] - inv_copy['stock_on_hand']
                 top_risk = inv_copy.nlargest(10, 'risk_score')[['product_id', 'store_id', 'stock_on_hand', 'risk_score']]
                 
-                st.markdown("**Top 10 Stockout Risk Items**")
-                st.dataframe(top_risk, use_container_width=True)
+                st.markdown("**📋 Top 10 Stockout Risk Items**")
+                st.dataframe(top_risk, use_container_width=True, height=300)
             except:
                 st.info("Unable to calculate top risk items.")
     
@@ -1694,7 +2014,7 @@ def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim)
     with col1:
         # Chart 3: Inventory distribution
         if inventory_df is not None and 'stock_on_hand' in inventory_df.columns:
-            fig = px.histogram(inventory_df, x='stock_on_hand', nbins=50, title='Stock Level Distribution',
+            fig = px.histogram(inventory_df, x='stock_on_hand', nbins=50, title='📦 Stock Level Distribution',
                              color_discrete_sequence=['#8b5cf6'])
             fig = style_plotly_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
@@ -1706,7 +2026,7 @@ def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim)
             issue_counts = issues_df['issue_type'].value_counts().head(10).reset_index()
             issue_counts.columns = ['Issue Type', 'Count']
             
-            fig = px.bar(issue_counts, x='Issue Type', y='Count', title='Top Data Issues',
+            fig = px.bar(issue_counts, x='Issue Type', y='Count', title='🔍 Top Data Issues',
                         color='Count', color_continuous_scale=['#06b6d4', '#ec4899'])
             fig = style_plotly_chart(fig)
             fig.update_layout(coloraxis_showscale=False)
@@ -1714,11 +2034,13 @@ def show_manager_view(sales_df, stores_df, products_df, inventory_df, kpis, sim)
         else:
             st.info("Run Data Rescue to see issues distribution.")
     
-    # Operational Alerts
     st.markdown("---")
+    
+    # Operational Alerts
+    st.markdown('<p class="section-title section-title-pink">🚨 Operational Alerts</p>', unsafe_allow_html=True)
+    
     alerts = generate_manager_alerts(stockout, kpis, st.session_state.issues_df)
     
-    st.markdown('<p class="section-title section-title-pink">🚨 Operational Alerts</p>', unsafe_allow_html=True)
     for alert in alerts:
         if "CRITICAL" in alert or "🔴" in alert:
             st.markdown(create_error_card(alert), unsafe_allow_html=True)
@@ -1814,10 +2136,9 @@ def show_faculty_test_page():
                 st.session_state.data_loaded = True
                 st.session_state.is_cleaned = False
                 
-                # Run validation
+                # Validation
                 st.markdown('<p class="section-title section-title-green">🔍 Validation Results</p>', unsafe_allow_html=True)
                 
-                cleaner = DataCleaner()
                 issues = []
                 
                 # Check for nulls
