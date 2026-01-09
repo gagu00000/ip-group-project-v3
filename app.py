@@ -15,8 +15,8 @@ from typing import Optional, Tuple, Dict, List, Any
 
 
 # TO:
-from modules.data_cleaner import DataCleaner
-from modules.simulator import Simulator
+from modules import DataCleaner
+from modules import Simulator
 
 # ============================================================================
 # PAGE CONFIGURATION
