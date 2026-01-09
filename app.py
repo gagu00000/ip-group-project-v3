@@ -1172,6 +1172,788 @@ def show_data_page():
     
     show_footer()
 
+# ============================================================================
+# DATA CLEANER MODULE
+# Handles data validation, cleaning, and issue logging
+# ============================================================================
+
+import pandas as pd
+import numpy as np
+from typing import Optional, Tuple, List, Dict, Any
+import re
+from datetime import datetime
+
+class DataCleaner:
+    """
+    Data Cleaner class for retail data validation and cleaning.
+    Detects and fixes: missing values, duplicates, outliers, text issues, FK violations.
+    """
+    
+    def __init__(self):
+        """Initialize the DataCleaner with empty stats and issues log."""
+        self.stats = {
+            'missing_values_fixed': 0,
+            'duplicates_removed': 0,
+            'outliers_fixed': 0,
+            'text_standardized': 0,
+            'negative_values_fixed': 0,
+            'fk_violations_fixed': 0,
+            'whitespace_fixed': 0,
+            'total_issues': 0
+        }
+        self.issues_log: List[Dict[str, Any]] = []
+    
+    def log_issue(self, table: str, column: str, issue_type: str, 
+                  row_index: Any = None, original_value: Any = None, 
+                  fixed_value: Any = None, description: str = ""):
+        """Log an issue found during cleaning."""
+        self.issues_log.append({
+            'table': table,
+            'column': column,
+            'issue_type': issue_type,
+            'row_index': row_index,
+            'original_value': str(original_value)[:100] if original_value is not None else None,
+            'fixed_value': str(fixed_value)[:100] if fixed_value is not None else None,
+            'description': description,
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+        self.stats['total_issues'] += 1
+    
+    def get_issues_df(self) -> pd.DataFrame:
+        """Return issues log as a DataFrame."""
+        if len(self.issues_log) == 0:
+            return pd.DataFrame({
+                'table': ['None'],
+                'column': ['None'],
+                'issue_type': ['None'],
+                'description': ['No issues found']
+            })
+        return pd.DataFrame(self.issues_log)
+    
+    # =========================================================================
+    # CORE CLEANING METHODS
+    # =========================================================================
+    
+    def fix_missing_values(self, df: pd.DataFrame, table_name: str) -> pd.DataFrame:
+        """Fix missing values based on column type."""
+        if df is None or len(df) == 0:
+            return df
+        
+        df = df.copy()
+        
+        for col in df.columns:
+            missing_count = df[col].isna().sum()
+            
+            if missing_count > 0:
+                # Determine fill strategy based on column type and name
+                if df[col].dtype in ['float64', 'int64']:
+                    # Numeric columns - use median
+                    median_val = df[col].median()
+                    if pd.isna(median_val):
+                        median_val = 0
+                    df[col] = df[col].fillna(median_val)
+                    self.log_issue(table_name, col, 'missing_value', 
+                                  description=f"Filled {missing_count} missing values with median: {median_val}")
+                elif df[col].dtype == 'object':
+                    # String columns - use mode or 'Unknown'
+                    mode_val = df[col].mode()
+                    fill_val = mode_val.iloc[0] if len(mode_val) > 0 else 'Unknown'
+                    df[col] = df[col].fillna(fill_val)
+                    self.log_issue(table_name, col, 'missing_value',
+                                  description=f"Filled {missing_count} missing values with: {fill_val}")
+                else:
+                    # Other types - forward fill then backward fill
+                    df[col] = df[col].ffill().bfill()
+                    self.log_issue(table_name, col, 'missing_value',
+                                  description=f"Filled {missing_count} missing values with ffill/bfill")
+                
+                self.stats['missing_values_fixed'] += missing_count
+        
+        return df
+    
+    def remove_duplicates(self, df: pd.DataFrame, table_name: str, 
+                         subset: Optional[List[str]] = None) -> pd.DataFrame:
+        """Remove duplicate rows."""
+        if df is None or len(df) == 0:
+            return df
+        
+        df = df.copy()
+        initial_count = len(df)
+        
+        if subset:
+            # Only consider specified columns for duplicate detection
+            valid_subset = [col for col in subset if col in df.columns]
+            if valid_subset:
+                df = df.drop_duplicates(subset=valid_subset, keep='first')
+        else:
+            df = df.drop_duplicates(keep='first')
+        
+        duplicates_removed = initial_count - len(df)
+        
+        if duplicates_removed > 0:
+            self.log_issue(table_name, 'all', 'duplicate',
+                          description=f"Removed {duplicates_removed} duplicate rows")
+            self.stats['duplicates_removed'] += duplicates_removed
+        
+        return df.reset_index(drop=True)
+    
+    def fix_outliers_iqr(self, df: pd.DataFrame, table_name: str, 
+                        columns: Optional[List[str]] = None,
+                        multiplier: float = 1.5) -> pd.DataFrame:
+        """Fix outliers using IQR method - cap at boundaries."""
+        if df is None or len(df) == 0:
+            return df
+        
+        df = df.copy()
+        
+        # Get numeric columns
+        if columns:
+            numeric_cols = [col for col in columns if col in df.columns and df[col].dtype in ['float64', 'int64']]
+        else:
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        
+        for col in numeric_cols:
+            Q1 = df[col].quantile(0.25)
+            Q3 = df[col].quantile(0.75)
+            IQR = Q3 - Q1
+            
+            lower_bound = Q1 - multiplier * IQR
+            upper_bound = Q3 + multiplier * IQR
+            
+            # Count outliers
+            outliers_low = (df[col] < lower_bound).sum()
+            outliers_high = (df[col] > upper_bound).sum()
+            total_outliers = outliers_low + outliers_high
+            
+            if total_outliers > 0:
+                # Cap outliers at boundaries
+                df[col] = df[col].clip(lower=lower_bound, upper=upper_bound)
+                self.log_issue(table_name, col, 'outlier',
+                              description=f"Capped {total_outliers} outliers (low: {outliers_low}, high: {outliers_high})")
+                self.stats['outliers_fixed'] += total_outliers
+        
+        return df
+    
+    def standardize_text(self, df: pd.DataFrame, table_name: str,
+                        columns: Optional[List[str]] = None) -> pd.DataFrame:
+        """Standardize text columns - trim whitespace, title case for names."""
+        if df is None or len(df) == 0:
+            return df
+        
+        df = df.copy()
+        
+        # Get string columns
+        if columns:
+            text_cols = [col for col in columns if col in df.columns and df[col].dtype == 'object']
+        else:
+            text_cols = df.select_dtypes(include=['object']).columns.tolist()
+        
+        for col in text_cols:
+            original = df[col].copy()
+            
+            # Strip whitespace
+            df[col] = df[col].astype(str).str.strip()
+            
+            # Replace multiple spaces with single space
+            df[col] = df[col].str.replace(r'\s+', ' ', regex=True)
+            
+            # Title case for name-like columns
+            name_indicators = ['name', 'city', 'category', 'channel', 'brand']
+            if any(indicator in col.lower() for indicator in name_indicators):
+                df[col] = df[col].str.title()
+            
+            # Replace 'nan' and 'None' strings
+            df[col] = df[col].replace(['nan', 'None', 'NaN', 'none', 'NULL', 'null'], 'Unknown')
+            
+            # Count changes
+            changes = (original.astype(str) != df[col]).sum()
+            
+            if changes > 0:
+                self.log_issue(table_name, col, 'text_standardization',
+                              description=f"Standardized {changes} text values")
+                self.stats['text_standardized'] += changes
+                self.stats['whitespace_fixed'] += changes
+        
+        return df
+    
+    def fix_negative_values(self, df: pd.DataFrame, table_name: str,
+                           columns: Optional[List[str]] = None) -> pd.DataFrame:
+        """Fix negative values in columns that should be positive."""
+        if df is None or len(df) == 0:
+            return df
+        
+        df = df.copy()
+        
+        # Columns that should never be negative
+        positive_indicators = ['price', 'qty', 'quantity', 'cost', 'stock', 'amount', 'revenue', 'sales']
+        
+        if columns:
+            check_cols = columns
+        else:
+            check_cols = [col for col in df.columns 
+                         if any(ind in col.lower() for ind in positive_indicators)
+                         and df[col].dtype in ['float64', 'int64']]
+        
+        for col in check_cols:
+            if col in df.columns and df[col].dtype in ['float64', 'int64']:
+                negative_count = (df[col] < 0).sum()
+                
+                if negative_count > 0:
+                    # Convert negatives to absolute values
+                    df[col] = df[col].abs()
+                    self.log_issue(table_name, col, 'negative_value',
+                                  description=f"Converted {negative_count} negative values to positive")
+                    self.stats['negative_values_fixed'] += negative_count
+        
+        return df
+    
+    def validate_foreign_keys(self, df: pd.DataFrame, table_name: str,
+                             fk_column: str, reference_df: pd.DataFrame,
+                             pk_column: str) -> pd.DataFrame:
+        """Validate and fix foreign key references."""
+        if df is None or reference_df is None:
+            return df
+        if fk_column not in df.columns or pk_column not in reference_df.columns:
+            return df
+        
+        df = df.copy()
+        
+        valid_keys = set(reference_df[pk_column].dropna().unique())
+        invalid_mask = ~df[fk_column].isin(valid_keys) & df[fk_column].notna()
+        invalid_count = invalid_mask.sum()
+        
+        if invalid_count > 0:
+            # Log the invalid references
+            self.log_issue(table_name, fk_column, 'fk_violation',
+                          description=f"Found {invalid_count} invalid foreign key references")
+            self.stats['fk_violations_fixed'] += invalid_count
+            
+            # Option: Remove rows with invalid FKs or mark them
+            # Here we'll keep them but could filter: df = df[~invalid_mask]
+        
+        return df
+    
+    # =========================================================================
+    # TABLE-SPECIFIC CLEANING METHODS
+    # =========================================================================
+    
+    def clean_products(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Clean products table."""
+        if df is None:
+            return None
+        
+        table_name = 'products'
+        
+        # Remove duplicates based on SKU
+        if 'sku' in df.columns:
+            df = self.remove_duplicates(df, table_name, subset=['sku'])
+        else:
+            df = self.remove_duplicates(df, table_name)
+        
+        # Fix missing values
+        df = self.fix_missing_values(df, table_name)
+        
+        # Standardize text
+        df = self.standardize_text(df, table_name)
+        
+        # Fix negative prices and costs
+        price_cols = [col for col in df.columns if 'price' in col.lower() or 'cost' in col.lower()]
+        df = self.fix_negative_values(df, table_name, columns=price_cols)
+        
+        # Fix outliers in price columns
+        df = self.fix_outliers_iqr(df, table_name, columns=price_cols)
+        
+        return df
+    
+    def clean_stores(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Clean stores table."""
+        if df is None:
+            return None
+        
+        table_name = 'stores'
+        
+        # Remove duplicates based on store_id
+        if 'store_id' in df.columns:
+            df = self.remove_duplicates(df, table_name, subset=['store_id'])
+        else:
+            df = self.remove_duplicates(df, table_name)
+        
+        # Fix missing values
+        df = self.fix_missing_values(df, table_name)
+        
+        # Standardize text (city, channel names)
+        df = self.standardize_text(df, table_name)
+        
+        return df
+    
+    def clean_sales(self, df: pd.DataFrame, products_df: pd.DataFrame = None, 
+                   stores_df: pd.DataFrame = None) -> pd.DataFrame:
+        """Clean sales table."""
+        if df is None:
+            return None
+        
+        table_name = 'sales'
+        
+        # Remove exact duplicates
+        df = self.remove_duplicates(df, table_name)
+        
+        # Fix missing values
+        df = self.fix_missing_values(df, table_name)
+        
+        # Fix negative values in quantity and price columns
+        qty_price_cols = [col for col in df.columns 
+                         if any(x in col.lower() for x in ['qty', 'quantity', 'price', 'amount'])]
+        df = self.fix_negative_values(df, table_name, columns=qty_price_cols)
+        
+        # Fix outliers
+        df = self.fix_outliers_iqr(df, table_name, columns=qty_price_cols)
+        
+        # Validate foreign keys
+        if products_df is not None and 'sku' in df.columns:
+            df = self.validate_foreign_keys(df, table_name, 'sku', products_df, 'sku')
+        
+        if stores_df is not None and 'store_id' in df.columns:
+            df = self.validate_foreign_keys(df, table_name, 'store_id', stores_df, 'store_id')
+        
+        # Standardize text columns
+        df = self.standardize_text(df, table_name)
+        
+        # Parse dates
+        if 'order_time' in df.columns:
+            try:
+                df['order_time'] = pd.to_datetime(df['order_time'], errors='coerce')
+            except:
+                pass
+        
+        return df
+    
+    def clean_inventory(self, df: pd.DataFrame, products_df: pd.DataFrame = None,
+                       stores_df: pd.DataFrame = None) -> pd.DataFrame:
+        """Clean inventory table."""
+        if df is None:
+            return None
+        
+        table_name = 'inventory'
+        
+        # Remove duplicates (SKU + Store combination)
+        if 'sku' in df.columns and 'store_id' in df.columns:
+            df = self.remove_duplicates(df, table_name, subset=['sku', 'store_id'])
+        else:
+            df = self.remove_duplicates(df, table_name)
+        
+        # Fix missing values
+        df = self.fix_missing_values(df, table_name)
+        
+        # Fix negative stock values
+        stock_cols = [col for col in df.columns if 'stock' in col.lower() or 'qty' in col.lower()]
+        df = self.fix_negative_values(df, table_name, columns=stock_cols)
+        
+        # Fix outliers
+        df = self.fix_outliers_iqr(df, table_name, columns=stock_cols)
+        
+        # Validate foreign keys
+        if products_df is not None and 'sku' in df.columns:
+            df = self.validate_foreign_keys(df, table_name, 'sku', products_df, 'sku')
+        
+        if stores_df is not None and 'store_id' in df.columns:
+            df = self.validate_foreign_keys(df, table_name, 'store_id', stores_df, 'store_id')
+        
+        return df
+    
+    # =========================================================================
+    # MAIN CLEANING METHOD
+    # =========================================================================
+    
+    def clean_all(self, products_df: pd.DataFrame = None, stores_df: pd.DataFrame = None,
+                  sales_df: pd.DataFrame = None, inventory_df: pd.DataFrame = None) -> Tuple:
+        """
+        Clean all tables and return cleaned DataFrames.
+        
+        Returns:
+            Tuple of (clean_products, clean_stores, clean_sales, clean_inventory)
+        """
+        # Reset stats and issues log
+        self.stats = {
+            'missing_values_fixed': 0,
+            'duplicates_removed': 0,
+            'outliers_fixed': 0,
+            'text_standardized': 0,
+            'negative_values_fixed': 0,
+            'fk_violations_fixed': 0,
+            'whitespace_fixed': 0,
+            'total_issues': 0
+        }
+        self.issues_log = []
+        
+        # Clean in order: products/stores first (master data), then transactional data
+        clean_products = self.clean_products(products_df)
+        clean_stores = self.clean_stores(stores_df)
+        clean_sales = self.clean_sales(sales_df, clean_products, clean_stores)
+        clean_inventory = self.clean_inventory(inventory_df, clean_products, clean_stores)
+        
+        return clean_products, clean_stores, clean_sales, clean_inventory
+
+# ============================================================================
+# SIMULATOR MODULE
+# Handles KPI calculations and business simulations
+# ============================================================================
+
+import pandas as pd
+import numpy as np
+from typing import Optional, Dict, List, Any
+
+class Simulator:
+    """
+    Business Simulator class for calculating KPIs and running what-if scenarios.
+    """
+    
+    def __init__(self):
+        """Initialize the Simulator."""
+        pass
+    
+    def calculate_overall_kpis(self, sales_df: pd.DataFrame, 
+                               products_df: pd.DataFrame = None) -> Dict[str, Any]:
+        """
+        Calculate overall business KPIs from sales data.
+        
+        Args:
+            sales_df: Sales DataFrame
+            products_df: Products DataFrame for cost data
+            
+        Returns:
+            Dictionary of KPI values
+        """
+        kpis = {
+            'total_revenue': 0,
+            'net_revenue': 0,
+            'total_cogs': 0,
+            'total_profit': 0,
+            'profit_margin_pct': 0,
+            'avg_order_value': 0,
+            'total_orders': 0,
+            'total_quantity': 0,
+            'avg_discount_pct': 0,
+            'refund_amount': 0,
+            'return_rate_pct': 0
+        }
+        
+        if sales_df is None or len(sales_df) == 0:
+            return kpis
+        
+        try:
+            # Calculate total revenue
+            if 'selling_price_aed' in sales_df.columns and 'qty' in sales_df.columns:
+                qty = pd.to_numeric(sales_df['qty'], errors='coerce').fillna(0)
+                price = pd.to_numeric(sales_df['selling_price_aed'], errors='coerce').fillna(0)
+                kpis['total_revenue'] = (qty * price).sum()
+            elif 'selling_price_aed' in sales_df.columns:
+                kpis['total_revenue'] = pd.to_numeric(sales_df['selling_price_aed'], errors='coerce').fillna(0).sum()
+            
+            # Calculate refunds (from returned/refunded orders)
+            if 'order_status' in sales_df.columns:
+                refund_mask = sales_df['order_status'].str.lower().isin(['returned', 'refunded', 'cancelled'])
+                if 'selling_price_aed' in sales_df.columns:
+                    refund_price = pd.to_numeric(sales_df.loc[refund_mask, 'selling_price_aed'], errors='coerce').fillna(0)
+                    if 'qty' in sales_df.columns:
+                        refund_qty = pd.to_numeric(sales_df.loc[refund_mask, 'qty'], errors='coerce').fillna(0)
+                        kpis['refund_amount'] = (refund_qty * refund_price).sum()
+                    else:
+                        kpis['refund_amount'] = refund_price.sum()
+            
+            # Net revenue
+            kpis['net_revenue'] = kpis['total_revenue'] - kpis['refund_amount']
+            
+            # Calculate COGS
+            if products_df is not None and 'sku' in sales_df.columns and 'sku' in products_df.columns:
+                # Find cost column
+                cost_col = None
+                for col in ['cost_price_aed', 'cost_price', 'cost', 'cogs']:
+                    if col in products_df.columns:
+                        cost_col = col
+                        break
+                
+                if cost_col:
+                    merged = sales_df.merge(products_df[['sku', cost_col]], on='sku', how='left')
+                    cost = pd.to_numeric(merged[cost_col], errors='coerce').fillna(0)
+                    if 'qty' in merged.columns:
+                        qty = pd.to_numeric(merged['qty'], errors='coerce').fillna(0)
+                        kpis['total_cogs'] = (qty * cost).sum()
+                    else:
+                        kpis['total_cogs'] = cost.sum()
+            
+            # Calculate profit
+            kpis['total_profit'] = kpis['net_revenue'] - kpis['total_cogs']
+            
+            # Profit margin percentage
+            if kpis['net_revenue'] > 0:
+                kpis['profit_margin_pct'] = (kpis['total_profit'] / kpis['net_revenue']) * 100
+            
+            # Total orders (unique order_ids)
+            if 'order_id' in sales_df.columns:
+                kpis['total_orders'] = sales_df['order_id'].nunique()
+            else:
+                kpis['total_orders'] = len(sales_df)
+            
+            # Total quantity
+            if 'qty' in sales_df.columns:
+                kpis['total_quantity'] = pd.to_numeric(sales_df['qty'], errors='coerce').fillna(0).sum()
+            
+            # Average order value
+            if kpis['total_orders'] > 0:
+                kpis['avg_order_value'] = kpis['total_revenue'] / kpis['total_orders']
+            
+            # Average discount percentage
+            if 'discount_pct' in sales_df.columns:
+                kpis['avg_discount_pct'] = pd.to_numeric(sales_df['discount_pct'], errors='coerce').fillna(0).mean()
+            elif 'discount' in sales_df.columns:
+                kpis['avg_discount_pct'] = pd.to_numeric(sales_df['discount'], errors='coerce').fillna(0).mean()
+            
+            # Return rate
+            if 'order_status' in sales_df.columns:
+                total = len(sales_df)
+                returns = sales_df['order_status'].str.lower().isin(['returned', 'refunded']).sum()
+                kpis['return_rate_pct'] = (returns / total * 100) if total > 0 else 0
+        
+        except Exception as e:
+            print(f"Error calculating KPIs: {str(e)}")
+        
+        return kpis
+    
+    def calculate_kpis_by_dimension(self, sales_df: pd.DataFrame,
+                                    stores_df: pd.DataFrame = None,
+                                    products_df: pd.DataFrame = None,
+                                    dimension: str = 'city') -> pd.DataFrame:
+        """
+        Calculate KPIs grouped by a dimension (city, channel, category).
+        
+        Args:
+            sales_df: Sales DataFrame
+            stores_df: Stores DataFrame
+            products_df: Products DataFrame
+            dimension: Dimension to group by ('city', 'channel', 'category')
+            
+        Returns:
+            DataFrame with KPIs by dimension
+        """
+        if sales_df is None or len(sales_df) == 0:
+            return pd.DataFrame()
+        
+        try:
+            df = sales_df.copy()
+            
+            # Merge with stores for city/channel
+            if dimension in ['city', 'channel'] and stores_df is not None:
+                if 'store_id' in df.columns and 'store_id' in stores_df.columns:
+                    store_cols = ['store_id']
+                    if 'city' in stores_df.columns:
+                        store_cols.append('city')
+                    if 'channel' in stores_df.columns:
+                        store_cols.append('channel')
+                    df = df.merge(stores_df[store_cols], on='store_id', how='left')
+            
+            # Merge with products for category
+            if dimension == 'category' and products_df is not None:
+                if 'sku' in df.columns and 'sku' in products_df.columns:
+                    product_cols = ['sku']
+                    if 'category' in products_df.columns:
+                        product_cols.append('category')
+                    if 'cost_price_aed' in products_df.columns:
+                        product_cols.append('cost_price_aed')
+                    df = df.merge(products_df[product_cols], on='sku', how='left')
+            
+            # Check if dimension column exists
+            if dimension not in df.columns:
+                return pd.DataFrame()
+            
+            # Calculate revenue per row
+            if 'selling_price_aed' in df.columns and 'qty' in df.columns:
+                df['_revenue'] = (
+                    pd.to_numeric(df['qty'], errors='coerce').fillna(0) * 
+                    pd.to_numeric(df['selling_price_aed'], errors='coerce').fillna(0)
+                )
+            elif 'selling_price_aed' in df.columns:
+                df['_revenue'] = pd.to_numeric(df['selling_price_aed'], errors='coerce').fillna(0)
+            else:
+                df['_revenue'] = 0
+            
+            # Calculate COGS if cost data available
+            if 'cost_price_aed' in df.columns and 'qty' in df.columns:
+                df['_cogs'] = (
+                    pd.to_numeric(df['qty'], errors='coerce').fillna(0) * 
+                    pd.to_numeric(df['cost_price_aed'], errors='coerce').fillna(0)
+                )
+            else:
+                df['_cogs'] = 0
+            
+            # Group by dimension
+            grouped = df.groupby(dimension).agg({
+                '_revenue': 'sum',
+                '_cogs': 'sum'
+            }).reset_index()
+            
+            grouped.columns = [dimension, 'revenue', 'cogs']
+            
+            # Calculate profit and margin
+            grouped['profit'] = grouped['revenue'] - grouped['cogs']
+            grouped['margin_pct'] = np.where(
+                grouped['revenue'] > 0,
+                (grouped['profit'] / grouped['revenue']) * 100,
+                0
+            )
+            
+            # Sort by revenue descending
+            grouped = grouped.sort_values('revenue', ascending=False)
+            
+            return grouped
+        
+        except Exception as e:
+            print(f"Error calculating KPIs by dimension: {str(e)}")
+            return pd.DataFrame()
+    
+    def simulate_scenario(self, sales_df: pd.DataFrame, products_df: pd.DataFrame = None,
+                         price_change_pct: float = 0, discount_change_pct: float = 0,
+                         demand_change_pct: float = 0) -> Dict[str, Any]:
+        """
+        Simulate a business scenario with parameter changes.
+        
+        Args:
+            sales_df: Base sales DataFrame
+            products_df: Products DataFrame
+            price_change_pct: Percentage change in prices
+            discount_change_pct: Percentage change in discounts
+            demand_change_pct: Percentage change in demand/quantity
+            
+        Returns:
+            Dictionary with simulated KPIs
+        """
+        # Get baseline KPIs
+        baseline = self.calculate_overall_kpis(sales_df, products_df)
+        
+        # Apply simple simulation logic
+        price_multiplier = 1 + (price_change_pct / 100)
+        discount_impact = 1 - (discount_change_pct / 100) * 0.5
+        demand_multiplier = 1 + (demand_change_pct / 100)
+        
+        simulated = {
+            'baseline_revenue': baseline['total_revenue'],
+            'simulated_revenue': baseline['total_revenue'] * price_multiplier * discount_impact * demand_multiplier,
+            'baseline_margin_pct': baseline['profit_margin_pct'],
+            'simulated_margin_pct': baseline['profit_margin_pct'] + (price_change_pct * 0.5) - (discount_change_pct * 0.3),
+            'revenue_change_pct': 0,
+            'margin_change_pct': 0
+        }
+        
+        # Calculate changes
+        if baseline['total_revenue'] > 0:
+            simulated['revenue_change_pct'] = (
+                (simulated['simulated_revenue'] - simulated['baseline_revenue']) / 
+                simulated['baseline_revenue'] * 100
+            )
+        
+        simulated['margin_change_pct'] = simulated['simulated_margin_pct'] - simulated['baseline_margin_pct']
+        
+        return simulated
+    
+    def get_top_products(self, sales_df: pd.DataFrame, products_df: pd.DataFrame = None,
+                        n: int = 10, metric: str = 'revenue') -> pd.DataFrame:
+        """
+        Get top N products by a metric.
+        
+        Args:
+            sales_df: Sales DataFrame
+            products_df: Products DataFrame
+            n: Number of top products to return
+            metric: Metric to sort by ('revenue', 'quantity', 'profit')
+            
+        Returns:
+            DataFrame of top products
+        """
+        if sales_df is None or len(sales_df) == 0 or 'sku' not in sales_df.columns:
+            return pd.DataFrame()
+        
+        try:
+            df = sales_df.copy()
+            
+            # Calculate revenue
+            if 'selling_price_aed' in df.columns and 'qty' in df.columns:
+                df['_revenue'] = (
+                    pd.to_numeric(df['qty'], errors='coerce').fillna(0) * 
+                    pd.to_numeric(df['selling_price_aed'], errors='coerce').fillna(0)
+                )
+            else:
+                df['_revenue'] = 0
+            
+            df['_qty'] = pd.to_numeric(df.get('qty', 0), errors='coerce').fillna(0)
+            
+            # Group by SKU
+            grouped = df.groupby('sku').agg({
+                '_revenue': 'sum',
+                '_qty': 'sum'
+            }).reset_index()
+            
+            grouped.columns = ['sku', 'revenue', 'quantity']
+            
+            # Merge with products for names
+            if products_df is not None and 'sku' in products_df.columns:
+                name_col = 'product_name' if 'product_name' in products_df.columns else 'name'
+                if name_col in products_df.columns:
+                    grouped = grouped.merge(products_df[['sku', name_col]], on='sku', how='left')
+            
+            # Sort and return top N
+            sort_col = 'revenue' if metric == 'revenue' else 'quantity'
+            return grouped.sort_values(sort_col, ascending=False).head(n)
+        
+        except Exception as e:
+            print(f"Error getting top products: {str(e)}")
+            return pd.DataFrame()
+    
+    def calculate_inventory_metrics(self, inventory_df: pd.DataFrame,
+                                   sales_df: pd.DataFrame = None) -> Dict[str, Any]:
+        """
+        Calculate inventory-related metrics.
+        
+        Args:
+            inventory_df: Inventory DataFrame
+            sales_df: Sales DataFrame for velocity calculations
+            
+        Returns:
+            Dictionary of inventory metrics
+        """
+        metrics = {
+            'total_stock': 0,
+            'low_stock_count': 0,
+            'out_of_stock_count': 0,
+            'stockout_risk_pct': 0,
+            'avg_stock_per_sku': 0
+        }
+        
+        if inventory_df is None or len(inventory_df) == 0:
+            return metrics
+        
+        try:
+            stock_col = None
+            for col in ['stock_on_hand', 'stock', 'quantity', 'qty']:
+                if col in inventory_df.columns:
+                    stock_col = col
+                    break
+            
+            if stock_col:
+                stock = pd.to_numeric(inventory_df[stock_col], errors='coerce').fillna(0)
+                
+                metrics['total_stock'] = stock.sum()
+                metrics['low_stock_count'] = (stock < 10).sum()
+                metrics['out_of_stock_count'] = (stock == 0).sum()
+                metrics['avg_stock_per_sku'] = stock.mean()
+                
+                total_items = len(inventory_df)
+                if total_items > 0:
+                    metrics['stockout_risk_pct'] = (metrics['low_stock_count'] / total_items) * 100
+        
+        except Exception as e:
+            print(f"Error calculating inventory metrics: {str(e)}")
+        
+        return metrics
+
 
 # ============================================================================
 # PAGE: CLEANER (FIX 1: KPI Cards Visible)
