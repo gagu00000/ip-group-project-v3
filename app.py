@@ -13,9 +13,10 @@ import io
 import re
 from typing import Optional, Tuple, Dict, List, Any
 
-# Import custom modules
-from data_cleaner import DataCleaner
-from simulator import Simulator
+
+# TO:
+from modules.data_cleaner import DataCleaner
+from modules.simulator import Simulator
 
 # ============================================================================
 # PAGE CONFIGURATION
