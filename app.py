@@ -2869,12 +2869,6 @@ with st.sidebar:
     
     t = get_theme()
     
-    # FIX 2: Different gradient for light vs dark mode
-    if st.session_state.theme == 'dark':
-        title_gradient = f"linear-gradient(135deg, {t['accent_cyan']}, {t['accent_blue']}, {t['accent_purple']})"
-    else:
-        title_gradient = f"linear-gradient(135deg, {t['accent_purple']}, {t['accent_pink']}, {t['accent_red']})"
-    
     st.markdown(f"""
     <div style="text-align: center; margin-top: 10px; padding-bottom: 15px;">
         <div style="font-size: 48px; margin-bottom: 5px;">🛒</div>
