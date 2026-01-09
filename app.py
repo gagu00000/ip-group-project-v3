@@ -2708,7 +2708,7 @@ def generate_executive_recommendations(kpis, city_kpis, channel_kpis, category_k
     show_footer()
 
 # ============================================================================
-# PAGE: CLEANER
+# PAGE: CLEANER (FIXED)
 # ============================================================================
 
 def show_cleaner_page():
@@ -2778,10 +2778,10 @@ def show_cleaner_page():
                     cleaner = DataCleaner()
                     
                     clean_products, clean_stores, clean_sales, clean_inventory = cleaner.clean_all(
-                        st.session_state.raw_products.copy(),
-                        st.session_state.raw_stores.copy(),
-                        st.session_state.raw_sales.copy(),
-                        st.session_state.raw_inventory.copy()
+                        st.session_state.raw_products.copy() if st.session_state.raw_products is not None else None,
+                        st.session_state.raw_stores.copy() if st.session_state.raw_stores is not None else None,
+                        st.session_state.raw_sales.copy() if st.session_state.raw_sales is not None else None,
+                        st.session_state.raw_inventory.copy() if st.session_state.raw_inventory is not None else None
                     )
                     
                     st.session_state.clean_products = clean_products
@@ -2790,7 +2790,6 @@ def show_cleaner_page():
                     st.session_state.clean_inventory = clean_inventory
                     st.session_state.issues_df = cleaner.get_issues_df()
                     st.session_state.cleaner_stats = cleaner.stats
-                    st.session_state.cleaning_report = cleaner.cleaning_report
                     st.session_state.is_cleaned = True
                     
                     st.success("✅ Data cleaning complete!")
@@ -2807,63 +2806,195 @@ def show_cleaner_page():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.markdown(create_metric_card_3d("Missing Fixed", f"{stats.get('missing_values_fixed', 0):,}", color="cyan", delay=0.1), unsafe_allow_html=True)
+            st.markdown(create_metric_card_3d(
+                "Missing Fixed", 
+                f"{stats.get('missing_values_fixed', 0):,}", 
+                color="cyan", delay=0.1
+            ), unsafe_allow_html=True)
         
         with col2:
-            st.markdown(create_metric_card_3d("Duplicates Removed", f"{stats.get('duplicates_removed', 0):,}", color="blue", delay=0.2), unsafe_allow_html=True)
+            st.markdown(create_metric_card_3d(
+                "Duplicates Removed", 
+                f"{stats.get('duplicates_removed', 0):,}", 
+                color="blue", delay=0.2
+            ), unsafe_allow_html=True)
         
         with col3:
-            st.markdown(create_metric_card_3d("Outliers Fixed", f"{stats.get('outliers_fixed', 0):,}", color="purple", delay=0.3), unsafe_allow_html=True)
+            st.markdown(create_metric_card_3d(
+                "Outliers Fixed", 
+                f"{stats.get('outliers_fixed', 0):,}", 
+                color="purple", delay=0.3
+            ), unsafe_allow_html=True)
         
         with col4:
-            st.markdown(create_metric_card_3d("Text Standardized", f"{stats.get('text_standardized', 0):,}", color="pink", delay=0.4), unsafe_allow_html=True)
+            st.markdown(create_metric_card_3d(
+                "Text Standardized", 
+                f"{stats.get('text_standardized', 0):,}", 
+                color="pink", delay=0.4
+            ), unsafe_allow_html=True)
         
         # Issues chart
         issues_df = st.session_state.issues_df
         
-        if len(issues_df) > 0 and not (len(issues_df) == 1 and issues_df.iloc[0]['issue_type'] == 'None'):
-            st.markdown("---")
-            st.markdown(f'<p class="section-title section-title-orange">🔍 Issues Breakdown</p>', unsafe_allow_html=True)
+        if issues_df is not None and len(issues_df) > 0:
+            # Check if it's not just "None" issues
+            has_real_issues = not (len(issues_df) == 1 and issues_df.iloc[0].get('issue_type', '') == 'None')
             
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                issue_counts = issues_df.groupby('issue_type').size().reset_index(name='count')
+            if has_real_issues:
+                st.markdown("---")
+                st.markdown(f'<p class="section-title section-title-orange">🔍 Issues Breakdown</p>', unsafe_allow_html=True)
                 
-                fig = px.bar(
-                    issue_counts,
-                    x='count',
-                    y='issue_type',
-                    orientation='h',
-                    title='Issues by Type',
-                    color='count',
-                    color_continuous_scale=[t['accent_cyan'], t['accent_purple'], t['accent_pink']]
-                )
-                fig = style_plotly_chart_themed(fig)
-                fig.update_layout(coloraxis_showscale=False)
-                st.plotly_chart(fig, use_container_width=True)
-            
-            with col2:
-                table_counts = issues_df.groupby('table').size().reset_index(name='count')
+                col1, col2 = st.columns(2)
                 
-                fig = px.pie(
-                    table_counts,
-                    values='count',
-                    names='table',
-                    title='Issues by Table',
-                    color_discrete_sequence=[t['accent_cyan'], t['accent_blue'], t['accent_purple'], t['accent_pink']],
-                    hole=0.45
-                )
-                fig = style_plotly_chart_themed(fig)
-                st.plotly_chart(fig, use_container_width=True)
-            
-            st.markdown(f'<p class="section-title section-title-purple">📋 Detailed Issues Log</p>', unsafe_allow_html=True)
-            st.dataframe(issues_df, use_container_width=True)
+                with col1:
+                    issue_counts = issues_df.groupby('issue_type').size().reset_index(name='count')
+                    issue_counts = issue_counts[issue_counts['issue_type'] != 'None']
+                    
+                    if len(issue_counts) > 0:
+                        fig = px.bar(
+                            issue_counts,
+                            x='count',
+                            y='issue_type',
+                            orientation='h',
+                            title='Issues by Type',
+                            color='count',
+                            color_continuous_scale=[t['accent_cyan'], t['accent_purple'], t['accent_pink']]
+                        )
+                        fig = style_plotly_chart_themed(fig)
+                        fig.update_layout(coloraxis_showscale=False)
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.info("No issues by type to display")
+                
+                with col2:
+                    if 'table' in issues_df.columns:
+                        table_counts = issues_df.groupby('table').size().reset_index(name='count')
+                        
+                        fig = px.pie(
+                            table_counts,
+                            values='count',
+                            names='table',
+                            title='Issues by Table',
+                            color_discrete_sequence=[t['accent_cyan'], t['accent_blue'], t['accent_purple'], t['accent_pink']],
+                            hole=0.45
+                        )
+                        fig = style_plotly_chart_themed(fig)
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.info("No table breakdown available")
+                
+                st.markdown(f'<p class="section-title section-title-purple">📋 Detailed Issues Log</p>', unsafe_allow_html=True)
+                st.dataframe(issues_df, use_container_width=True)
+            else:
+                st.markdown(create_success_card_3d("No major issues found! Your data is clean."), unsafe_allow_html=True)
         else:
-            st.markdown(create_success_card_3d("No major issues found! Your data is clean."), unsafe_allow_html=True)
+            st.markdown(create_success_card_3d("No issues detected. Your data is clean."), unsafe_allow_html=True)
+        
+        # ===== DATA COMPARISON: BEFORE vs AFTER =====
+        st.markdown("---")
+        st.markdown(f'<p class="section-title section-title-teal">📊 Before vs After Comparison</p>', unsafe_allow_html=True)
+        
+        tab1, tab2, tab3, tab4 = st.tabs(["📦 Products", "🏪 Stores", "🛒 Sales", "📋 Inventory"])
+        
+        with tab1:
+            if st.session_state.raw_products is not None and st.session_state.clean_products is not None:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f"**Before Cleaning** ({len(st.session_state.raw_products):,} rows)")
+                    st.dataframe(st.session_state.raw_products.head(50), use_container_width=True)
+                with col2:
+                    st.markdown(f"**After Cleaning** ({len(st.session_state.clean_products):,} rows)")
+                    st.dataframe(st.session_state.clean_products.head(50), use_container_width=True)
+            else:
+                st.info("Products data not available")
+        
+        with tab2:
+            if st.session_state.raw_stores is not None and st.session_state.clean_stores is not None:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f"**Before Cleaning** ({len(st.session_state.raw_stores):,} rows)")
+                    st.dataframe(st.session_state.raw_stores.head(50), use_container_width=True)
+                with col2:
+                    st.markdown(f"**After Cleaning** ({len(st.session_state.clean_stores):,} rows)")
+                    st.dataframe(st.session_state.clean_stores.head(50), use_container_width=True)
+            else:
+                st.info("Stores data not available")
+        
+        with tab3:
+            if st.session_state.raw_sales is not None and st.session_state.clean_sales is not None:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f"**Before Cleaning** ({len(st.session_state.raw_sales):,} rows)")
+                    st.dataframe(st.session_state.raw_sales.head(50), use_container_width=True)
+                with col2:
+                    st.markdown(f"**After Cleaning** ({len(st.session_state.clean_sales):,} rows)")
+                    st.dataframe(st.session_state.clean_sales.head(50), use_container_width=True)
+            else:
+                st.info("Sales data not available")
+        
+        with tab4:
+            if st.session_state.raw_inventory is not None and st.session_state.clean_inventory is not None:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown(f"**Before Cleaning** ({len(st.session_state.raw_inventory):,} rows)")
+                    st.dataframe(st.session_state.raw_inventory.head(50), use_container_width=True)
+                with col2:
+                    st.markdown(f"**After Cleaning** ({len(st.session_state.clean_inventory):,} rows)")
+                    st.dataframe(st.session_state.clean_inventory.head(50), use_container_width=True)
+            else:
+                st.info("Inventory data not available")
+        
+        # ===== DOWNLOAD CLEANED DATA =====
+        st.markdown("---")
+        st.markdown(f'<p class="section-title section-title-green">📥 Download Cleaned Data</p>', unsafe_allow_html=True)
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            if st.session_state.clean_products is not None:
+                csv = st.session_state.clean_products.to_csv(index=False)
+                st.download_button(
+                    "📦 Products CSV",
+                    csv,
+                    "clean_products.csv",
+                    "text/csv",
+                    use_container_width=True
+                )
+        
+        with col2:
+            if st.session_state.clean_stores is not None:
+                csv = st.session_state.clean_stores.to_csv(index=False)
+                st.download_button(
+                    "🏪 Stores CSV",
+                    csv,
+                    "clean_stores.csv",
+                    "text/csv",
+                    use_container_width=True
+                )
+        
+        with col3:
+            if st.session_state.clean_sales is not None:
+                csv = st.session_state.clean_sales.to_csv(index=False)
+                st.download_button(
+                    "🛒 Sales CSV",
+                    csv,
+                    "clean_sales.csv",
+                    "text/csv",
+                    use_container_width=True
+                )
+        
+        with col4:
+            if st.session_state.clean_inventory is not None:
+                csv = st.session_state.clean_inventory.to_csv(index=False)
+                st.download_button(
+                    "📋 Inventory CSV",
+                    csv,
+                    "clean_inventory.csv",
+                    "text/csv",
+                    use_container_width=True
+                )
     
     show_footer()
-
 # ============================================================================
 # PAGE: SIMULATOR
 # ============================================================================
