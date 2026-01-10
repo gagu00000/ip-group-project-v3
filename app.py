@@ -842,22 +842,36 @@ with st.sidebar:
 # PAGE: HOME
 # ============================================================================
 
+import streamlit.components.v1 as components
+
 def show_home_page():
     """Display home page with animated background."""
     
-    # Embedded Animation CSS + HTML inside hero
-    st.markdown("""
+    # Animated Hero using components.html (renders HTML directly)
+    hero_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
     <style>
-    /* Hero with embedded animation */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: transparent;
+    }
+    
     .animated-hero {
         position: relative;
-        background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.1) 50%, rgba(236, 72, 153, 0.05) 100%);
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(236, 72, 153, 0.08) 100%);
         border-radius: 24px;
-        padding: 60px 50px;
-        margin-bottom: 30px;
-        border: 1px solid rgba(148, 163, 184, 0.1);
+        padding: 50px 40px;
+        border: 1px solid rgba(148, 163, 184, 0.15);
         overflow: hidden;
-        min-height: 350px;
+        min-height: 320px;
     }
     
     .hero-content {
@@ -865,8 +879,21 @@ def show_home_page():
         z-index: 10;
     }
     
+    .hero-badge {
+        display: inline-block;
+        padding: 10px 22px;
+        background: linear-gradient(135deg, #06b6d4, #3b82f6);
+        border-radius: 50px;
+        color: white;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-right: 10px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+    }
+    
     .hero-title {
-        font-size: 3.5rem;
+        font-size: 3.2rem;
         font-weight: 900;
         background: linear-gradient(135deg, #f8fafc, #06b6d4, #8b5cf6, #ec4899);
         background-size: 300% 300%;
@@ -874,271 +901,151 @@ def show_home_page():
         -webkit-text-fill-color: transparent;
         background-clip: text;
         margin-bottom: 16px;
-        animation: gradientShift 5s ease infinite;
+        animation: gradientMove 5s ease infinite;
     }
     
-    @keyframes gradientShift {
+    @keyframes gradientMove {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
     }
     
     .hero-subtitle {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         color: #cbd5e1;
         max-width: 600px;
         line-height: 1.7;
     }
     
-    .hero-badge {
-        display: inline-block;
-        padding: 10px 24px;
-        background: linear-gradient(135deg, #06b6d4, #3b82f6);
-        border-radius: 50px;
-        color: white;
-        font-size: 0.9rem;
-        font-weight: 600;
-        margin-right: 12px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
-    }
-    
     /* Animated Orbs */
-    .anim-orb {
+    .orb {
         position: absolute;
         border-radius: 50%;
         filter: blur(60px);
-        animation: orbMove 15s ease-in-out infinite;
+        animation: orbFloat 20s ease-in-out infinite;
         pointer-events: none;
     }
     
-    .anim-orb-1 {
-        width: 300px;
-        height: 300px;
-        background: rgba(6, 182, 212, 0.4);
-        top: -100px;
-        left: -100px;
+    .orb-1 {
+        width: 280px;
+        height: 280px;
+        background: rgba(6, 182, 212, 0.5);
+        top: -80px;
+        left: -80px;
     }
     
-    .anim-orb-2 {
-        width: 250px;
-        height: 250px;
-        background: rgba(139, 92, 246, 0.4);
-        top: 50%;
-        right: -80px;
-        animation-delay: -5s;
+    .orb-2 {
+        width: 220px;
+        height: 220px;
+        background: rgba(139, 92, 246, 0.5);
+        top: 40%;
+        right: -60px;
+        animation-delay: -7s;
     }
     
-    .anim-orb-3 {
-        width: 200px;
-        height: 200px;
-        background: rgba(236, 72, 153, 0.3);
-        bottom: -80px;
-        left: 40%;
-        animation-delay: -10s;
+    .orb-3 {
+        width: 180px;
+        height: 180px;
+        background: rgba(236, 72, 153, 0.4);
+        bottom: -60px;
+        left: 35%;
+        animation-delay: -12s;
     }
     
-    @keyframes orbMove {
+    @keyframes orbFloat {
         0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(30px, -30px) scale(1.1); }
-        66% { transform: translate(-20px, 20px) scale(0.9); }
+        33% { transform: translate(40px, -40px) scale(1.1); }
+        66% { transform: translate(-30px, 30px) scale(0.9); }
     }
     
-    /* Floating Particles */
-    .anim-particles {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        overflow: hidden;
-    }
-    
-    .anim-dot {
+    /* Glowing Dots */
+    .dot {
         position: absolute;
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        animation: dotFloat 6s ease-in-out infinite;
+        animation: dotPulse 4s ease-in-out infinite;
+        pointer-events: none;
     }
     
-    .anim-dot-1 { left: 10%; top: 20%; background: #06b6d4; box-shadow: 0 0 15px #06b6d4; animation-delay: 0s; }
-    .anim-dot-2 { left: 25%; top: 60%; background: #8b5cf6; box-shadow: 0 0 15px #8b5cf6; animation-delay: 1s; }
-    .anim-dot-3 { left: 50%; top: 30%; background: #ec4899; box-shadow: 0 0 15px #ec4899; animation-delay: 2s; }
-    .anim-dot-4 { left: 70%; top: 70%; background: #10b981; box-shadow: 0 0 15px #10b981; animation-delay: 0.5s; }
-    .anim-dot-5 { left: 85%; top: 40%; background: #f59e0b; box-shadow: 0 0 15px #f59e0b; animation-delay: 1.5s; }
-    .anim-dot-6 { left: 15%; top: 80%; background: #06b6d4; box-shadow: 0 0 15px #06b6d4; animation-delay: 2.5s; }
-    .anim-dot-7 { left: 60%; top: 15%; background: #8b5cf6; box-shadow: 0 0 15px #8b5cf6; animation-delay: 3s; }
-    .anim-dot-8 { left: 90%; top: 85%; background: #ec4899; box-shadow: 0 0 15px #ec4899; animation-delay: 0.8s; }
+    .dot-1 { left: 10%; top: 25%; background: #06b6d4; box-shadow: 0 0 20px #06b6d4; }
+    .dot-2 { left: 25%; top: 70%; background: #8b5cf6; box-shadow: 0 0 20px #8b5cf6; animation-delay: 0.5s; }
+    .dot-3 { left: 55%; top: 20%; background: #ec4899; box-shadow: 0 0 20px #ec4899; animation-delay: 1s; }
+    .dot-4 { left: 75%; top: 60%; background: #10b981; box-shadow: 0 0 20px #10b981; animation-delay: 1.5s; }
+    .dot-5 { left: 90%; top: 35%; background: #f59e0b; box-shadow: 0 0 20px #f59e0b; animation-delay: 2s; }
+    .dot-6 { left: 40%; top: 85%; background: #06b6d4; box-shadow: 0 0 20px #06b6d4; animation-delay: 2.5s; }
     
-    @keyframes dotFloat {
-        0%, 100% { transform: translateY(0) scale(1); opacity: 0.8; }
-        50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+    @keyframes dotPulse {
+        0%, 100% { transform: scale(1); opacity: 0.6; }
+        50% { transform: scale(1.5); opacity: 1; }
     }
     
-    /* Shooting Star */
-    .anim-star {
+    /* Shooting Stars */
+    .star {
         position: absolute;
         width: 100px;
         height: 2px;
         background: linear-gradient(90deg, transparent, #06b6d4, transparent);
         transform: rotate(-45deg);
-        animation: starShoot 4s ease-in-out infinite;
+        animation: starShoot 5s ease-in-out infinite;
         opacity: 0;
         pointer-events: none;
     }
     
-    .anim-star-1 { top: 20%; left: 20%; animation-delay: 0s; }
-    .anim-star-2 { top: 50%; left: 60%; animation-delay: 2s; background: linear-gradient(90deg, transparent, #8b5cf6, transparent); }
-    .anim-star-3 { top: 70%; left: 40%; animation-delay: 3.5s; background: linear-gradient(90deg, transparent, #ec4899, transparent); }
+    .star-1 { top: 20%; left: 15%; }
+    .star-2 { top: 50%; left: 55%; animation-delay: 2s; background: linear-gradient(90deg, transparent, #8b5cf6, transparent); }
+    .star-3 { top: 75%; left: 35%; animation-delay: 4s; background: linear-gradient(90deg, transparent, #ec4899, transparent); }
     
     @keyframes starShoot {
         0% { transform: rotate(-45deg) translateX(0); opacity: 0; }
         5% { opacity: 1; }
-        15% { transform: rotate(-45deg) translateX(200px); opacity: 0; }
+        15% { transform: rotate(-45deg) translateX(250px); opacity: 0; }
         100% { opacity: 0; }
     }
     
     /* Pulse Rings */
-    .anim-ring {
+    .ring {
         position: absolute;
         border-radius: 50%;
         border: 2px solid;
-        animation: ringPulse 4s ease-out infinite;
+        animation: ringExpand 4s ease-out infinite;
         opacity: 0;
         pointer-events: none;
     }
     
-    .anim-ring-1 { width: 60px; height: 60px; top: 15%; left: 80%; border-color: #06b6d4; }
-    .anim-ring-2 { width: 50px; height: 50px; top: 70%; left: 15%; border-color: #8b5cf6; animation-delay: 1.5s; }
-    .anim-ring-3 { width: 70px; height: 70px; top: 45%; left: 90%; border-color: #ec4899; animation-delay: 3s; }
+    .ring-1 { width: 50px; height: 50px; top: 20%; right: 15%; border-color: #06b6d4; }
+    .ring-2 { width: 40px; height: 40px; bottom: 25%; left: 12%; border-color: #8b5cf6; animation-delay: 1.5s; }
+    .ring-3 { width: 60px; height: 60px; top: 60%; right: 30%; border-color: #ec4899; animation-delay: 3s; }
     
-    @keyframes ringPulse {
+    @keyframes ringExpand {
         0% { transform: scale(0.5); opacity: 0.8; }
-        100% { transform: scale(2); opacity: 0; }
-    }
-    
-    /* Feature Cards */
-    .feature-card-3d {
-        background: rgba(22, 22, 31, 0.95);
-        border-radius: 16px;
-        padding: 32px 24px;
-        border: 1px solid rgba(148, 163, 184, 0.1);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s ease;
-        height: 220px;
-        text-align: center;
-    }
-    .feature-card-3d:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 40px rgba(6, 182, 212, 0.2);
-        border-color: rgba(6, 182, 212, 0.3);
-    }
-    .feature-icon { font-size: 3rem; margin-bottom: 16px; }
-    .feature-title { font-size: 1.1rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
-    .feature-desc { font-size: 0.9rem; color: #64748b; }
-    
-    /* Metric Cards */
-    .metric-card-3d {
-        background: rgba(22, 22, 31, 0.95);
-        border-radius: 16px;
-        padding: 24px;
-        border: 1px solid rgba(148, 163, 184, 0.1);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s ease;
-        height: 140px;
-    }
-    .metric-card-3d:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-    }
-    .metric-label { font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-    .metric-value { font-size: 2rem; font-weight: 800; margin: 8px 0; }
-    .metric-value-cyan { color: #06b6d4; }
-    .metric-value-purple { color: #8b5cf6; }
-    .metric-value-pink { color: #ec4899; }
-    .metric-value-green { color: #10b981; }
-    .metric-value-blue { color: #3b82f6; }
-    .metric-value-orange { color: #f59e0b; }
-    
-    /* Info Cards */
-    .info-card {
-        background: rgba(22, 22, 31, 0.95);
-        border-radius: 12px;
-        padding: 20px;
-        border: 1px solid rgba(148, 163, 184, 0.1);
-        border-left: 4px solid #06b6d4;
-        margin: 12px 0;
-    }
-    .success-card {
-        background: rgba(16, 185, 129, 0.1);
-        border-radius: 12px;
-        padding: 20px;
-        border: 1px solid rgba(16, 185, 129, 0.2);
-        border-left: 4px solid #10b981;
-        margin: 12px 0;
-        color: #f8fafc;
-    }
-    
-    /* Section Title */
-    .section-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin-bottom: 20px;
-    }
-    .section-title-cyan { color: #06b6d4 !important; }
-    .section-title-purple { color: #8b5cf6 !important; }
-    .section-title-pink { color: #ec4899 !important; }
-    .section-title-blue { color: #3b82f6 !important; }
-    .section-title-green { color: #10b981 !important; }
-    
-    /* Footer */
-    .footer {
-        background: rgba(22, 22, 31, 0.95);
-        padding: 30px;
-        text-align: center;
-        border-top: 1px solid rgba(148, 163, 184, 0.1);
-        margin-top: 40px;
-        border-radius: 20px 20px 0 0;
-    }
-    .footer-title { color: #f8fafc; font-size: 1.1rem; font-weight: 700; }
-    .footer-names {
-        background: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-weight: 700;
+        100% { transform: scale(2.5); opacity: 0; }
     }
     </style>
-    
+    </head>
+    <body>
     <div class="animated-hero">
-        <!-- Animated Background Elements -->
-        <div class="anim-orb anim-orb-1"></div>
-        <div class="anim-orb anim-orb-2"></div>
-        <div class="anim-orb anim-orb-3"></div>
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
         
-        <div class="anim-particles">
-            <div class="anim-dot anim-dot-1"></div>
-            <div class="anim-dot anim-dot-2"></div>
-            <div class="anim-dot anim-dot-3"></div>
-            <div class="anim-dot anim-dot-4"></div>
-            <div class="anim-dot anim-dot-5"></div>
-            <div class="anim-dot anim-dot-6"></div>
-            <div class="anim-dot anim-dot-7"></div>
-            <div class="anim-dot anim-dot-8"></div>
-        </div>
+        <div class="dot dot-1"></div>
+        <div class="dot dot-2"></div>
+        <div class="dot dot-3"></div>
+        <div class="dot dot-4"></div>
+        <div class="dot dot-5"></div>
+        <div class="dot dot-6"></div>
         
-        <div class="anim-star anim-star-1"></div>
-        <div class="anim-star anim-star-2"></div>
-        <div class="anim-star anim-star-3"></div>
+        <div class="star star-1"></div>
+        <div class="star star-2"></div>
+        <div class="star star-3"></div>
         
-        <div class="anim-ring anim-ring-1"></div>
-        <div class="anim-ring anim-ring-2"></div>
-        <div class="anim-ring anim-ring-3"></div>
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
         
-        <!-- Hero Content -->
         <div class="hero-content">
-            <div style="margin-bottom: 20px;">
+            <div>
                 <span class="hero-badge">✨ UAE E-Commerce Analytics</span>
                 <span class="hero-badge" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">🚀 v3.1</span>
             </div>
@@ -1149,77 +1056,90 @@ def show_home_page():
             </p>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    </body>
+    </html>
+    """
     
-    # Features Section
-    st.markdown('<p class="section-title section-title-purple">✨ Powerful Features</p>', unsafe_allow_html=True)
+    # Render the animated hero
+    components.html(hero_html, height=380)
+    
+    # Rest of the page using regular Streamlit
+    st.markdown("### ✨ Powerful Features", unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
+    
     with col1:
         st.markdown("""
-        <div class="feature-card-3d">
-            <div class="feature-icon">📂</div>
-            <div class="feature-title">Data Upload</div>
-            <div class="feature-desc">Upload and preview your e-commerce CSV files</div>
+        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 30px 20px; text-align: center; border: 1px solid rgba(148,163,184,0.1); height: 200px;">
+            <div style="font-size: 2.5rem; margin-bottom: 12px;">📂</div>
+            <div style="font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">Data Upload</div>
+            <div style="font-size: 0.85rem; color: #64748b;">Upload and preview your e-commerce CSV files</div>
         </div>
         """, unsafe_allow_html=True)
+    
     with col2:
         st.markdown("""
-        <div class="feature-card-3d">
-            <div class="feature-icon">🧹</div>
-            <div class="feature-title">Data Rescue</div>
-            <div class="feature-desc">Detect & auto-fix 15+ data quality issues</div>
+        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 30px 20px; text-align: center; border: 1px solid rgba(148,163,184,0.1); height: 200px;">
+            <div style="font-size: 2.5rem; margin-bottom: 12px;">🧹</div>
+            <div style="font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">Data Rescue</div>
+            <div style="font-size: 0.85rem; color: #64748b;">Detect & auto-fix 15+ data quality issues</div>
         </div>
         """, unsafe_allow_html=True)
+    
     with col3:
         st.markdown("""
-        <div class="feature-card-3d">
-            <div class="feature-icon">🎯</div>
-            <div class="feature-title">Simulator</div>
-            <div class="feature-desc">Run what-if scenarios and forecast ROI</div>
+        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 30px 20px; text-align: center; border: 1px solid rgba(148,163,184,0.1); height: 200px;">
+            <div style="font-size: 2.5rem; margin-bottom: 12px;">🎯</div>
+            <div style="font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">Simulator</div>
+            <div style="font-size: 0.85rem; color: #64748b;">Run what-if scenarios and forecast ROI</div>
         </div>
         """, unsafe_allow_html=True)
+    
     with col4:
         st.markdown("""
-        <div class="feature-card-3d">
-            <div class="feature-icon">📊</div>
-            <div class="feature-title">Analytics</div>
-            <div class="feature-desc">Interactive dashboards with KPI tracking</div>
+        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 30px 20px; text-align: center; border: 1px solid rgba(148,163,184,0.1); height: 200px;">
+            <div style="font-size: 2.5rem; margin-bottom: 12px;">📊</div>
+            <div style="font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">Analytics</div>
+            <div style="font-size: 0.85rem; color: #64748b;">Interactive dashboards with KPI tracking</div>
         </div>
         """, unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
     # Stats Section
-    st.markdown('<p class="section-title section-title-cyan">📊 Platform Capabilities</p>', unsafe_allow_html=True)
+    st.markdown("### 📊 Platform Capabilities", unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
+    
     with col1:
         st.markdown("""
-        <div class="metric-card-3d">
-            <div class="metric-label">Data Issues Detected</div>
-            <div class="metric-value metric-value-cyan">15+</div>
+        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 24px; border: 1px solid rgba(148,163,184,0.1);">
+            <div style="font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Data Issues Detected</div>
+            <div style="font-size: 2rem; font-weight: 800; color: #06b6d4; margin: 8px 0;">15+</div>
         </div>
         """, unsafe_allow_html=True)
+    
     with col2:
         st.markdown("""
-        <div class="metric-card-3d">
-            <div class="metric-label">Auto-Fix Rules</div>
-            <div class="metric-value metric-value-purple">20+</div>
+        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 24px; border: 1px solid rgba(148,163,184,0.1);">
+            <div style="font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Auto-Fix Rules</div>
+            <div style="font-size: 2rem; font-weight: 800; color: #8b5cf6; margin: 8px 0;">20+</div>
         </div>
         """, unsafe_allow_html=True)
+    
     with col3:
         st.markdown("""
-        <div class="metric-card-3d">
-            <div class="metric-label">KPI Metrics</div>
-            <div class="metric-value metric-value-pink">25+</div>
+        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 24px; border: 1px solid rgba(148,163,184,0.1);">
+            <div style="font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">KPI Metrics</div>
+            <div style="font-size: 2rem; font-weight: 800; color: #ec4899; margin: 8px 0;">25+</div>
         </div>
         """, unsafe_allow_html=True)
+    
     with col4:
         st.markdown("""
-        <div class="metric-card-3d">
-            <div class="metric-label">Chart Types</div>
-            <div class="metric-value metric-value-green">12+</div>
+        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 24px; border: 1px solid rgba(148,163,184,0.1);">
+            <div style="font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Chart Types</div>
+            <div style="font-size: 2rem; font-weight: 800; color: #10b981; margin: 8px 0;">12+</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -1227,60 +1147,50 @@ def show_home_page():
     
     # Status Message
     if st.session_state.get('data_loaded', False):
-        st.markdown("""
-        <div class="success-card">
-            ✅ <strong>Data is loaded!</strong> Go to 📊 Dashboard to see your KPIs or 🎯 Simulator to run campaigns.
-        </div>
-        """, unsafe_allow_html=True)
+        st.success("✅ Data is loaded! Go to 📊 Dashboard to see your KPIs or 🎯 Simulator to run campaigns.")
     else:
-        st.markdown("""
-        <div class="info-card">
-            💡 <strong>Get started!</strong> Go to 📂 Data page to upload your files or load sample data.
-        </div>
-        """, unsafe_allow_html=True)
+        st.info("💡 **Get started!** Go to 📂 Data page to upload your files or load sample data.")
     
-    # Quick Start Guide
+    # Quick Start
     st.markdown("---")
-    st.markdown('<p class="section-title section-title-blue">🚀 Quick Start Guide</p>', unsafe_allow_html=True)
+    st.markdown("### 🚀 Quick Start Guide", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3)
+    
     with col1:
         st.markdown("""
-        <div class="info-card">
-            <h4 style="color: #06b6d4; margin-bottom: 12px;">Step 1: Load Data</h4>
-            <p style="color: #cbd5e1; font-size: 0.95rem;">
-                Upload your CSV files or use sample data to explore.
-            </p>
+        <div style="background: rgba(22,22,31,0.9); border-radius: 12px; padding: 20px; border-left: 4px solid #06b6d4;">
+            <h4 style="color: #06b6d4; margin-bottom: 10px;">Step 1: Load Data</h4>
+            <p style="color: #cbd5e1; font-size: 0.9rem;">Upload your CSV files or use sample data.</p>
         </div>
         """, unsafe_allow_html=True)
+    
     with col2:
         st.markdown("""
-        <div class="info-card" style="border-left-color: #8b5cf6;">
-            <h4 style="color: #8b5cf6; margin-bottom: 12px;">Step 2: Clean Data</h4>
-            <p style="color: #cbd5e1; font-size: 0.95rem;">
-                Run Data Rescue to auto-detect and fix issues.
-            </p>
+        <div style="background: rgba(22,22,31,0.9); border-radius: 12px; padding: 20px; border-left: 4px solid #8b5cf6;">
+            <h4 style="color: #8b5cf6; margin-bottom: 10px;">Step 2: Clean Data</h4>
+            <p style="color: #cbd5e1; font-size: 0.9rem;">Run Data Rescue to fix issues.</p>
         </div>
         """, unsafe_allow_html=True)
+    
     with col3:
         st.markdown("""
-        <div class="info-card" style="border-left-color: #ec4899;">
-            <h4 style="color: #ec4899; margin-bottom: 12px;">Step 3: Analyze</h4>
-            <p style="color: #cbd5e1; font-size: 0.95rem;">
-                View dashboards and run simulations.
-            </p>
+        <div style="background: rgba(22,22,31,0.9); border-radius: 12px; padding: 20px; border-left: 4px solid #ec4899;">
+            <h4 style="color: #ec4899; margin-bottom: 10px;">Step 3: Analyze</h4>
+            <p style="color: #cbd5e1; font-size: 0.9rem;">View dashboards and run simulations.</p>
         </div>
         """, unsafe_allow_html=True)
     
     # Footer
+    st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("""
-    <div class="footer">
-        <div class="footer-title">UAE Pulse Simulator</div>
+    <div style="background: rgba(22,22,31,0.9); padding: 30px; text-align: center; border-radius: 20px 20px 0 0; border-top: 1px solid rgba(148,163,184,0.1);">
+        <div style="color: #f8fafc; font-size: 1.1rem; font-weight: 700;">UAE Pulse Simulator</div>
         <p style="color: #64748b; margin: 8px 0;">Built with ❤️ by</p>
-        <div class="footer-names">Nabeel, Omar, Khalfan, Youssef, Abdul Rahman</div>
+        <div style="background: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700;">Nabeel, Omar, Khalfan, Youssef, Abdul Rahman</div>
     </div>
     """, unsafe_allow_html=True)
-
+    
 # ============================================================================
 # PAGE: DASHBOARD - COMPLETE WITH ALL CHARTS & INSIGHTS
 # ============================================================================
