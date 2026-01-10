@@ -1821,20 +1821,20 @@ def show_home_page():
     """Display the home page."""
     t = get_theme()
     
+    # Title color: White for dark theme, Black for light theme
+    title_color = "#FFFFFF" if st.session_state.theme == 'dark' else "#000000"
+    
     st.markdown(f"""
     <div style="text-align: center; padding: 60px 20px;">
         <div style="font-size: 80px; margin-bottom: 20px;">🛒</div>
         <h1 style="
             font-size: 3.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, {t['accent_cyan']}, {t['accent_blue']}, {t['accent_purple']});
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: {title_color};
             margin-bottom: 10px;
         ">UAE Pulse</h1>
         <p style="
-            color: #FFFFFF;
+            color: {t['text_secondary']};
             font-size: 1.4rem;
             margin-bottom: 40px;
         ">Promo Pulse Simulator + Data Rescue Center</p>
