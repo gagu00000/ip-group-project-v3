@@ -1,3 +1,4 @@
+
 """
 Simulator Module for UAE Pulse Dashboard
 Campaign simulation and KPI calculations
@@ -35,7 +36,7 @@ class Simulator:
     
     def _get_cost_column(self, df):
         """Find cost column."""
-        return self._find_column(df, ['cost_aed', 'cost', 'unit_cost', 'cost_price', 'purchase_price', 'buying_price'])
+        return self._find_column(df, ['unit_cost_aed', 'cost_aed', 'cost', 'unit_cost', 'cost_price', 'purchase_price', 'buying_price'])
     
     def _get_price_column(self, df):
         """Find selling price column."""
@@ -125,19 +126,35 @@ class Simulator:
             kpis['profit_margin_pct'] = (kpis['total_profit'] / kpis['total_revenue'] * 100) if kpis['total_revenue'] > 0 else 0
             
             # Return rate
-            if 'is_returned' in sales_df.columns:
-                returned = pd.to_numeric(sales_df['is_returned'], errors='coerce').fillna(0)
+            return_col = self._find_column(sales_df, ['return_flag', 'is_returned', 'returned', 'is_return'])
+            if return_col:
+                returned = pd.to_numeric(sales_df[return_col], errors='coerce').fillna(0)
                 kpis['return_rate_pct'] = float(returned.mean() * 100)
             else:
                 kpis['return_rate_pct'] = 0
+                # Refund Amount
+            if 'payment_status' in merged.columns:
+                refund_mask = merged['payment_status'].str.lower().str.contains('refund', na=False)
+                kpis['refund_amount'] = float(merged.loc[refund_mask, 'revenue'].sum())
+            else:
+                kpis['refund_amount'] = 0
             
-            # Discount
-            discount_col = self._find_column(sales_df, ['discount_pct', 'discount', 'discount_percent'])
-            if discount_col:
-                discount = pd.to_numeric(sales_df[discount_col], errors='coerce').fillna(0)
-                kpis['avg_discount_pct'] = float(discount.mean())
+            # COGS (Total Cost)
+            merged['cogs'] = merged['_qty'] * merged['_cost']
+            kpis['total_cogs'] = float(merged['cogs'].sum())
+            
+            # Net Revenue
+            kpis['net_revenue'] = kpis['total_revenue'] - kpis['refund_amount']
+            
+            # Discount calculations
+            discount_col = self._find_column(merged, ['discount_pct', 'discount', 'discount_percent'])
+            if discount_col and discount_col in merged.columns:
+                merged['_discount_pct'] = pd.to_numeric(merged[discount_col], errors='coerce').fillna(0)
+                kpis['avg_discount_pct'] = float(merged['_discount_pct'].mean())
+                kpis['total_discount'] = float((merged['revenue'] * merged['_discount_pct'] / 100).sum())
             else:
                 kpis['avg_discount_pct'] = 0
+                kpis['total_discount'] = 0
                 
         except Exception as e:
             print(f"Error in calculate_overall_kpis: {e}")
@@ -305,7 +322,7 @@ class Simulator:
                 merged['date'] = pd.to_datetime(merged[date_col], errors='coerce').dt.date
             else:
                 # No date column found - create dummy dates
-                merged['date'] = pd.date_range(end=pd.Timestamp.today(), periods=len(merged), freq='H').date
+                merged['date'] = pd.date_range(end=pd.Timestamp.today(), periods=len(merged), freq='h').date
             
             merged = merged.dropna(subset=['date'])
             
