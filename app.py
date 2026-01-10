@@ -1473,7 +1473,7 @@ def show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, 
                             sunburst_df['revenue'] = sunburst_df['selling_price_aed']
                         
                         channel_rev = sunburst_df.groupby('channel')['revenue'].sum().reset_index()
-                        fig_fallback = px.pie(channel_rev, values='revenue', names='channel', title='Revenue by Channel', color_discrete_sequence=['#06b6d4', '#8b5cf6', '#ec4899'], hole=0.4)
+                        fig_fallback = px.pie(channel_rev, values='revenue', names='channel', title='Revenue by Channel', color_discrete_sequence=['#f65c5c', '#f68a5c', '#f6b85c'], hole=0.4)
                         fig_fallback = style_plotly_chart_themed(fig_fallback, height=400)
                         st.plotly_chart(fig_fallback, use_container_width=True)
                     else:
