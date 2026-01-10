@@ -534,6 +534,97 @@ def get_animated_background_html():
 # HELPER FUNCTIONS
 # ============================================================================
 
+# ============================================================================
+# FORMATTING HELPER FUNCTIONS
+# ============================================================================
+
+def format_currency(value):
+    """Format number as currency (AED)."""
+    try:
+        if value is None:
+            return "AED 0"
+        if abs(value) >= 1_000_000:
+            return f"AED {value/1_000_000:.2f}M"
+        elif abs(value) >= 1_000:
+            return f"AED {value/1_000:.1f}K"
+        else:
+            return f"AED {value:,.2f}"
+    except Exception:
+        return "AED 0"
+
+
+def format_number(value):
+    """Format number with appropriate suffix."""
+    try:
+        if value is None:
+            return "0"
+        if abs(value) >= 1_000_000:
+            return f"{value/1_000_000:.2f}M"
+        elif abs(value) >= 1_000:
+            return f"{value/1_000:.1f}K"
+        else:
+            return f"{value:,.0f}"
+    except Exception:
+        return "0"
+
+
+def format_percent(value):
+    """Format number as percentage."""
+    try:
+        if value is None:
+            return "0%"
+        return f"{value:.1f}%"
+    except Exception:
+        return "0%"
+
+
+def safe_divide(numerator, denominator, default=0):
+    """Safely divide two numbers, returning default if division fails."""
+    try:
+        if denominator is None or denominator == 0:
+            return default
+        return numerator / denominator
+    except Exception:
+        return default
+
+
+def get_theme_colors():
+    """Get chart colors based on current theme."""
+    is_dark = st.session_state.theme == 'dark'
+    
+    if is_dark:
+        return {
+            'chart_bg': 'rgba(10, 10, 15, 0)',
+            'chart_text': '#f8fafc',
+            'chart_grid': 'rgba(148, 163, 184, 0.1)',
+            'chart_line': '#06b6d4',
+            'positive': '#10b981',
+            'negative': '#ef4444',
+            'neutral': '#64748b',
+        }
+    else:
+        return {
+            'chart_bg': 'rgba(255, 255, 255, 0)',
+            'chart_text': '#0f172a',
+            'chart_grid': 'rgba(0, 0, 0, 0.08)',
+            'chart_line': '#0891b2',
+            'positive': '#059669',
+            'negative': '#dc2626',
+            'neutral': '#475569',
+        }
+
+
+def calculate_delta(current, previous):
+    """Calculate percentage change between two values."""
+    try:
+        if previous is None or previous == 0:
+            return 0, "neutral"
+        delta = ((current - previous) / abs(previous)) * 100
+        delta_type = "positive" if delta >= 0 else "negative"
+        return delta, delta_type
+    except Exception:
+        return 0, "neutral"
+
 def create_metric_card(label, value, delta=None, delta_type="positive", color="cyan"):
     """Create a styled metric card."""
     delta_html = ""
