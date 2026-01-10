@@ -1678,7 +1678,7 @@ def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, pr
     col1, col2 = st.columns(2)
     
     with col1:
-        # CHART 3: Bar Chart - Demand vs Stock by Category
+        # CHART 3: Bar Chart - Demand vs Stock by Category (FIXED - Dual Y-Axis)
         if sales_df is not None and inventory_df is not None and products_df is not None:
             try:
                 sales_with_cat = sales_df.copy()
@@ -1688,34 +1688,126 @@ def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, pr
                     sales_with_cat = sales_with_cat.merge(products_df[[sku_col, 'category']], on=sku_col, how='left')
                 
                 if 'category' in sales_with_cat.columns and 'qty' in sales_with_cat.columns:
+                    # Calculate demand
+                    sales_with_cat['qty'] = pd.to_numeric(sales_with_cat['qty'], errors='coerce').fillna(0)
                     demand_by_cat = sales_with_cat.groupby('category')['qty'].sum().reset_index()
                     demand_by_cat.columns = ['Category', 'Demand']
                     
+                    # Calculate stock
                     inv_with_cat = inventory_df.copy()
                     if sku_col in inv_with_cat.columns and sku_col in products_df.columns:
                         inv_with_cat = inv_with_cat.merge(products_df[[sku_col, 'category']], on=sku_col, how='left')
                     
                     if 'category' in inv_with_cat.columns and 'stock_on_hand' in inv_with_cat.columns:
+                        inv_with_cat['stock_on_hand'] = pd.to_numeric(inv_with_cat['stock_on_hand'], errors='coerce').fillna(0)
                         stock_by_cat = inv_with_cat.groupby('category')['stock_on_hand'].sum().reset_index()
                         stock_by_cat.columns = ['Category', 'Stock']
                         
+                        # Merge and get top categories
                         demand_stock = demand_by_cat.merge(stock_by_cat, on='Category', how='outer').fillna(0)
                         demand_stock = demand_stock.nlargest(8, 'Demand')
                         
-                        fig_demand_stock = go.Figure()
-                        fig_demand_stock.add_trace(go.Bar(name='Demand', x=demand_stock['Category'], y=demand_stock['Demand'], marker_color='#8b5cf6'))
-                        fig_demand_stock.add_trace(go.Bar(name='Stock', x=demand_stock['Category'], y=demand_stock['Stock'], marker_color='#06b6d4'))
+                        # Calculate stock coverage ratio (days of stock)
+                        demand_stock['Coverage'] = np.where(
+                            demand_stock['Demand'] > 0,
+                            demand_stock['Stock'] / demand_stock['Demand'],
+                            0
+                        )
                         
-                        fig_demand_stock = style_plotly_chart_themed(fig_demand_stock, height=350)
-                        fig_demand_stock.update_layout(title="Demand vs Stock by Category", barmode='group', xaxis_title="Category", yaxis_title="Units", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+                        # Create figure with secondary y-axis
+                        fig_demand_stock = make_subplots(specs=[[{"secondary_y": True}]])
+                        
+                        # Add Demand bars (primary y-axis - LEFT)
+                        fig_demand_stock.add_trace(
+                            go.Bar(
+                                name='Demand (Units Sold)',
+                                x=demand_stock['Category'],
+                                y=demand_stock['Demand'],
+                                marker_color='#8b5cf6',
+                                text=[f"{int(v):,}" for v in demand_stock['Demand']],
+                                textposition='outside',
+                                offsetgroup=0
+                            ),
+                            secondary_y=False
+                        )
+                        
+                        # Add Stock bars (secondary y-axis - RIGHT)
+                        fig_demand_stock.add_trace(
+                            go.Bar(
+                                name='Stock (On Hand)',
+                                x=demand_stock['Category'],
+                                y=demand_stock['Stock'],
+                                marker_color='#06b6d4',
+                                text=[f"{int(v):,}" for v in demand_stock['Stock']],
+                                textposition='outside',
+                                offsetgroup=1
+                            ),
+                            secondary_y=True
+                        )
+                        
+                        # Style the chart
+                        colors = get_theme_colors()
+                        fig_demand_stock.update_layout(
+                            title="Demand vs Stock by Category",
+                            barmode='group',
+                            paper_bgcolor=colors['chart_bg'],
+                            plot_bgcolor=colors['chart_bg'],
+                            font=dict(color=colors['chart_text'], family='Inter, sans-serif'),
+                            legend=dict(
+                                orientation="h",
+                                yanchor="bottom",
+                                y=1.02,
+                                xanchor="right",
+                                x=1,
+                                bgcolor='rgba(0,0,0,0)',
+                                font=dict(color=colors['chart_text'])
+                            ),
+                            height=380,
+                            margin=dict(l=20, r=20, t=80, b=60)
+                        )
+                        
+                        # Update y-axes with proper colors
+                        fig_demand_stock.update_yaxes(
+                            title_text="Demand (Units Sold)",
+                            secondary_y=False,
+                            gridcolor=colors['chart_grid'],
+                            tickfont=dict(color='#8b5cf6'),
+                            title_font=dict(color='#8b5cf6')
+                        )
+                        fig_demand_stock.update_yaxes(
+                            title_text="Stock (On Hand)",
+                            secondary_y=True,
+                            gridcolor=colors['chart_grid'],
+                            tickfont=dict(color='#06b6d4'),
+                            title_font=dict(color='#06b6d4')
+                        )
+                        
+                        # Update x-axis
+                        fig_demand_stock.update_xaxes(
+                            tickfont=dict(color=colors['chart_text']),
+                            tickangle=45,
+                            gridcolor=colors['chart_grid']
+                        )
+                        
                         st.plotly_chart(fig_demand_stock, use_container_width=True)
-                        st.caption("📌 Purple > Cyan = potential stockout.")
+                        
+                        # Show coverage ratio as additional insight
+                        low_coverage = demand_stock[demand_stock['Coverage'] < 10]
+                        if len(low_coverage) > 0:
+                            st.markdown(f"""
+                            <div class="warning-card">
+                                ⚠️ <strong>{len(low_coverage)} categories</strong> have less than 10x stock coverage: 
+                                {', '.join(low_coverage['Category'].tolist())}
+                            </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            st.caption("📌 Purple = Demand (left axis), Cyan = Stock (right axis). Scales differ for visibility.")
                     else:
                         st.info("Stock by category not available")
                 else:
                     st.info("Category demand data not available")
             except Exception as e:
-                st.info("Unable to create demand vs stock chart")
+                st.info(f"Unable to create demand vs stock chart: {str(e)}")
         else:
             st.info("Required data not available")
     
