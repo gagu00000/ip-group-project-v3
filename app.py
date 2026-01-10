@@ -3640,19 +3640,26 @@ with st.sidebar:
     
     t = get_theme()
     
-    title_color = "#000000" if st.session_state.theme == 'light' else "#1a1a1a"
-
-st.markdown(f"""
-<div style="text-align: center; margin-top: 10px; padding-bottom: 15px;">
-    <div style="font-size: 48px; margin-bottom: 5px;">🛒</div>
-    <div style="
-        font-size: 26px;
-        font-weight: 800;
-        color: {title_color};
-    ">UAE Pulse</div>
-    <div style="color: {t['text_secondary']}; font-size: 13px; font-weight: 500;">Promo Simulator + Data Rescue</div>
-</div>
-""", unsafe_allow_html=True)
+    # Title with gradient
+    if st.session_state.theme == 'dark':
+        title_gradient = f"linear-gradient(135deg, {t['accent_cyan']}, {t['accent_blue']}, {t['accent_purple']})"
+    else:
+        title_gradient = f"linear-gradient(135deg, {t['accent_purple']}, {t['accent_pink']}, {t['accent_red']})"
+    
+    st.markdown(f"""
+    <div style="text-align: center; margin-top: 10px; padding-bottom: 15px;">
+        <div style="font-size: 48px; margin-bottom: 5px;">🛒</div>
+        <div style="
+            font-size: 26px;
+            font-weight: 800;
+            background: {title_gradient};
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        ">UAE Pulse</div>
+        <div style="color: {t['text_secondary']}; font-size: 13px; font-weight: 500;">Promo Simulator + Data Rescue</div>
+    </div>
+    """, unsafe_allow_html=True)
     
     st.markdown("---")
     
