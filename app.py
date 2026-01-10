@@ -88,6 +88,32 @@ def get_theme_colors():
 # ============================================================================
 
 def get_theme_css():
+    /* Make Streamlit background transparent so animations show through */
+.stApp {
+    background: transparent !important;
+}
+
+.stApp::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-primary);
+    z-index: -2;
+}
+
+/* Ensure main content is above animations */
+.main .block-container {
+    position: relative;
+    z-index: 1;
+}
+
+section[data-testid="stSidebar"] {
+    z-index: 100;
+}
+
     """Generate CSS based on current theme state."""
     
     is_dark = st.session_state.theme == 'dark'
@@ -423,156 +449,321 @@ def get_animated_background_css():
     """Generate CSS for animated background on home page."""
     return """
     <style>
+    /* ===== ANIMATED BACKGROUND - FIXED FOR STREAMLIT ===== */
     .animated-bg-container {
         position: fixed;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
+        width: 100vw;
+        height: 100vh;
         overflow: hidden;
-        z-index: -1;
+        z-index: 0;
         pointer-events: none;
     }
     
+    /* Make sure Streamlit content is above the animation */
+    .stApp > div:first-child {
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* ===== ANIMATED GRADIENT ORBS ===== */
     .orb {
         position: absolute;
         border-radius: 50%;
-        filter: blur(80px);
-        opacity: 0.5;
+        filter: blur(60px);
+        opacity: 0.6;
         animation: float-orb 20s ease-in-out infinite;
     }
     
     .orb-1 {
-        width: 600px;
-        height: 600px;
-        background: radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, transparent 70%);
-        top: -10%;
-        left: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(6, 182, 212, 0.5) 0%, transparent 70%);
+        top: -100px;
+        left: -100px;
         animation-duration: 25s;
     }
     
     .orb-2 {
-        width: 500px;
-        height: 500px;
-        background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%);
-        top: 50%;
-        right: -15%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%);
+        top: 40%;
+        right: -100px;
         animation-delay: -5s;
         animation-duration: 30s;
     }
     
     .orb-3 {
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%);
-        bottom: -10%;
+        width: 350px;
+        height: 350px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%);
+        bottom: -50px;
         left: 30%;
         animation-delay: -10s;
         animation-duration: 22s;
     }
     
     .orb-4 {
-        width: 350px;
-        height: 350px;
-        background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 70%);
-        top: 30%;
-        left: 50%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
+        top: 25%;
+        left: 40%;
         animation-delay: -7s;
         animation-duration: 28s;
     }
     
     @keyframes float-orb {
         0%, 100% { transform: translate(0, 0) scale(1); }
-        25% { transform: translate(50px, -80px) scale(1.1); }
-        50% { transform: translate(-30px, 50px) scale(0.9); }
-        75% { transform: translate(80px, 30px) scale(1.05); }
+        25% { transform: translate(60px, -100px) scale(1.15); }
+        50% { transform: translate(-40px, 60px) scale(0.85); }
+        75% { transform: translate(100px, 40px) scale(1.1); }
+    }
+    
+    /* ===== FLOATING PARTICLES ===== */
+    .particles-wrapper {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
     }
     
     .particle {
         position: absolute;
-        width: 4px;
-        height: 4px;
-        background: var(--accent-cyan);
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
         opacity: 0;
-        animation: particle-float 15s ease-in-out infinite;
-        box-shadow: 0 0 10px var(--accent-cyan);
+        animation: particle-rise 12s ease-in-out infinite;
     }
     
-    .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 12s; }
-    .particle:nth-child(2) { left: 20%; animation-delay: 2s; animation-duration: 14s; background: var(--accent-purple); box-shadow: 0 0 10px var(--accent-purple); }
-    .particle:nth-child(3) { left: 30%; animation-delay: 4s; animation-duration: 16s; }
-    .particle:nth-child(4) { left: 40%; animation-delay: 1s; animation-duration: 13s; background: var(--accent-pink); box-shadow: 0 0 10px var(--accent-pink); }
-    .particle:nth-child(5) { left: 50%; animation-delay: 3s; animation-duration: 15s; }
-    .particle:nth-child(6) { left: 60%; animation-delay: 5s; animation-duration: 11s; background: var(--accent-blue); box-shadow: 0 0 10px var(--accent-blue); }
-    .particle:nth-child(7) { left: 70%; animation-delay: 2.5s; animation-duration: 17s; }
-    .particle:nth-child(8) { left: 80%; animation-delay: 0.5s; animation-duration: 14s; background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
-    .particle:nth-child(9) { left: 90%; animation-delay: 3.5s; animation-duration: 12s; }
-    .particle:nth-child(10) { left: 15%; animation-delay: 6s; animation-duration: 18s; background: var(--accent-teal); box-shadow: 0 0 10px var(--accent-teal); }
+    .particle-cyan { background: #06b6d4; box-shadow: 0 0 15px #06b6d4, 0 0 30px #06b6d4; }
+    .particle-purple { background: #8b5cf6; box-shadow: 0 0 15px #8b5cf6, 0 0 30px #8b5cf6; }
+    .particle-pink { background: #ec4899; box-shadow: 0 0 15px #ec4899, 0 0 30px #ec4899; }
+    .particle-blue { background: #3b82f6; box-shadow: 0 0 15px #3b82f6, 0 0 30px #3b82f6; }
+    .particle-green { background: #10b981; box-shadow: 0 0 15px #10b981, 0 0 30px #10b981; }
+    .particle-orange { background: #f59e0b; box-shadow: 0 0 15px #f59e0b, 0 0 30px #f59e0b; }
     
-    @keyframes particle-float {
-        0% { transform: translateY(100vh); opacity: 0; }
-        10% { opacity: 1; }
-        90% { opacity: 1; }
-        100% { transform: translateY(-100vh); opacity: 0; }
+    .particle:nth-child(1) { left: 5%; animation-delay: 0s; }
+    .particle:nth-child(2) { left: 15%; animation-delay: 1s; }
+    .particle:nth-child(3) { left: 25%; animation-delay: 2s; }
+    .particle:nth-child(4) { left: 35%; animation-delay: 0.5s; }
+    .particle:nth-child(5) { left: 45%; animation-delay: 1.5s; }
+    .particle:nth-child(6) { left: 55%; animation-delay: 2.5s; }
+    .particle:nth-child(7) { left: 65%; animation-delay: 0.8s; }
+    .particle:nth-child(8) { left: 75%; animation-delay: 1.8s; }
+    .particle:nth-child(9) { left: 85%; animation-delay: 2.8s; }
+    .particle:nth-child(10) { left: 95%; animation-delay: 0.3s; }
+    .particle:nth-child(11) { left: 10%; animation-delay: 3s; }
+    .particle:nth-child(12) { left: 30%; animation-delay: 3.5s; }
+    .particle:nth-child(13) { left: 50%; animation-delay: 4s; }
+    .particle:nth-child(14) { left: 70%; animation-delay: 4.5s; }
+    .particle:nth-child(15) { left: 90%; animation-delay: 5s; }
+    
+    @keyframes particle-rise {
+        0% {
+            bottom: -10px;
+            opacity: 0;
+            transform: translateX(0) scale(0.5);
+        }
+        10% {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+        }
+        90% {
+            opacity: 1;
+        }
+        100% {
+            bottom: 100vh;
+            opacity: 0;
+            transform: translateX(100px) scale(0.5);
+        }
+    }
+    
+    /* ===== SHOOTING STARS ===== */
+    .shooting-stars-wrapper {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        overflow: hidden;
     }
     
     .shooting-star {
         position: absolute;
-        width: 100px;
+        width: 150px;
         height: 2px;
-        background: linear-gradient(90deg, var(--accent-cyan), transparent);
-        animation: shooting 3s ease-in-out infinite;
+        background: linear-gradient(90deg, rgba(6, 182, 212, 0), rgba(6, 182, 212, 1), rgba(6, 182, 212, 0));
+        border-radius: 50%;
+        animation: shoot 4s ease-in-out infinite;
         opacity: 0;
+        transform: rotate(-45deg);
     }
     
-    .shooting-star:nth-child(1) { top: 10%; left: 20%; }
-    .shooting-star:nth-child(2) { top: 30%; left: 60%; animation-delay: 2s; background: linear-gradient(90deg, var(--accent-purple), transparent); }
-    .shooting-star:nth-child(3) { top: 50%; left: 40%; animation-delay: 4s; background: linear-gradient(90deg, var(--accent-pink), transparent); }
+    .shooting-star::before {
+        content: '';
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 0 10px #06b6d4, 0 0 20px #06b6d4;
+        right: 0;
+        top: -3px;
+    }
     
-    @keyframes shooting {
-        0% { transform: translateX(0) translateY(0) rotate(-45deg); opacity: 0; }
-        5% { opacity: 1; }
-        20% { transform: translateX(300px) translateY(300px) rotate(-45deg); opacity: 0; }
-        100% { opacity: 0; }
+    .shooting-star:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+    .shooting-star:nth-child(2) { top: 25%; left: 50%; animation-delay: 2s; background: linear-gradient(90deg, rgba(139, 92, 246, 0), rgba(139, 92, 246, 1), rgba(139, 92, 246, 0)); }
+    .shooting-star:nth-child(2)::before { box-shadow: 0 0 10px #8b5cf6, 0 0 20px #8b5cf6; }
+    .shooting-star:nth-child(3) { top: 40%; left: 30%; animation-delay: 4s; background: linear-gradient(90deg, rgba(236, 72, 153, 0), rgba(236, 72, 153, 1), rgba(236, 72, 153, 0)); }
+    .shooting-star:nth-child(3)::before { box-shadow: 0 0 10px #ec4899, 0 0 20px #ec4899; }
+    .shooting-star:nth-child(4) { top: 15%; left: 70%; animation-delay: 6s; }
+    .shooting-star:nth-child(5) { top: 50%; left: 80%; animation-delay: 3s; background: linear-gradient(90deg, rgba(16, 185, 129, 0), rgba(16, 185, 129, 1), rgba(16, 185, 129, 0)); }
+    .shooting-star:nth-child(5)::before { box-shadow: 0 0 10px #10b981, 0 0 20px #10b981; }
+    
+    @keyframes shoot {
+        0% {
+            transform: rotate(-45deg) translateX(0);
+            opacity: 0;
+        }
+        5% {
+            opacity: 1;
+        }
+        15% {
+            transform: rotate(-45deg) translateX(400px);
+            opacity: 0;
+        }
+        100% {
+            opacity: 0;
+        }
+    }
+    
+    /* ===== PULSE RINGS ===== */
+    .pulse-rings-wrapper {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
     }
     
     .pulse-ring {
         position: absolute;
-        border: 2px solid var(--accent-cyan);
+        border: 3px solid;
         border-radius: 50%;
-        animation: pulse-expand 4s ease-out infinite;
+        animation: pulse-grow 4s ease-out infinite;
         opacity: 0;
     }
     
-    .pulse-ring-1 { width: 100px; height: 100px; top: 20%; left: 15%; }
-    .pulse-ring-2 { width: 80px; height: 80px; top: 60%; right: 20%; animation-delay: 1.5s; border-color: var(--accent-purple); }
-    .pulse-ring-3 { width: 120px; height: 120px; bottom: 25%; left: 60%; animation-delay: 3s; border-color: var(--accent-pink); }
-    
-    @keyframes pulse-expand {
-        0% { transform: scale(0.5); opacity: 0.8; }
-        100% { transform: scale(3); opacity: 0; }
+    .pulse-ring-1 { 
+        width: 80px; height: 80px; 
+        top: 20%; left: 10%; 
+        border-color: #06b6d4;
+        animation-delay: 0s;
+    }
+    .pulse-ring-2 { 
+        width: 60px; height: 60px; 
+        top: 60%; right: 15%; 
+        border-color: #8b5cf6;
+        animation-delay: 1.5s;
+    }
+    .pulse-ring-3 { 
+        width: 100px; height: 100px; 
+        bottom: 20%; left: 50%; 
+        border-color: #ec4899;
+        animation-delay: 3s;
+    }
+    .pulse-ring-4 { 
+        width: 70px; height: 70px; 
+        top: 40%; left: 70%; 
+        border-color: #10b981;
+        animation-delay: 2s;
     }
     
-    .floating-icon {
+    @keyframes pulse-grow {
+        0% {
+            transform: scale(0.5);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(2.5);
+            opacity: 0;
+        }
+    }
+    
+    /* ===== FLOATING DATA ICONS ===== */
+    .floating-icons-wrapper {
         position: absolute;
-        font-size: 24px;
-        opacity: 0.15;
-        animation: icon-float 20s ease-in-out infinite;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
     }
     
-    .floating-icon:nth-child(1) { top: 15%; left: 8%; }
-    .floating-icon:nth-child(2) { top: 25%; right: 12%; animation-delay: 3s; }
-    .floating-icon:nth-child(3) { top: 45%; left: 5%; animation-delay: 6s; }
-    .floating-icon:nth-child(4) { top: 65%; right: 8%; animation-delay: 2s; }
-    .floating-icon:nth-child(5) { top: 80%; left: 12%; animation-delay: 4s; }
-    .floating-icon:nth-child(6) { top: 35%; right: 5%; animation-delay: 5s; }
+    .float-icon {
+        position: absolute;
+        font-size: 28px;
+        opacity: 0.2;
+        animation: icon-bob 6s ease-in-out infinite;
+        filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.5));
+    }
     
-    @keyframes icon-float {
+    .float-icon:nth-child(1) { top: 12%; left: 5%; animation-delay: 0s; }
+    .float-icon:nth-child(2) { top: 22%; right: 8%; animation-delay: 1s; }
+    .float-icon:nth-child(3) { top: 42%; left: 3%; animation-delay: 2s; }
+    .float-icon:nth-child(4) { top: 62%; right: 5%; animation-delay: 1.5s; }
+    .float-icon:nth-child(5) { top: 78%; left: 8%; animation-delay: 2.5s; }
+    .float-icon:nth-child(6) { top: 32%; right: 3%; animation-delay: 0.5s; }
+    .float-icon:nth-child(7) { top: 52%; left: 6%; animation-delay: 3s; }
+    .float-icon:nth-child(8) { top: 88%; right: 10%; animation-delay: 3.5s; }
+    
+    @keyframes icon-bob {
         0%, 100% { transform: translateY(0) rotate(0deg); }
-        25% { transform: translateY(-30px) rotate(10deg); }
-        50% { transform: translateY(10px) rotate(-5deg); }
-        75% { transform: translateY(-20px) rotate(5deg); }
+        25% { transform: translateY(-20px) rotate(5deg); }
+        50% { transform: translateY(0) rotate(0deg); }
+        75% { transform: translateY(-10px) rotate(-5deg); }
+    }
+    
+    /* ===== GRID LINES ===== */
+    .grid-overlay {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        background-image: 
+            linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+        background-size: 80px 80px;
+        animation: grid-scroll 30s linear infinite;
+    }
+    
+    @keyframes grid-scroll {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(80px, 80px); }
+    }
+    
+    /* ===== GLOWING LINES ===== */
+    .glow-line {
+        position: absolute;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+        animation: line-glow 3s ease-in-out infinite;
+        opacity: 0;
+    }
+    
+    .glow-line-1 { width: 200px; top: 30%; left: 0; animation-delay: 0s; }
+    .glow-line-2 { width: 150px; top: 50%; right: 0; animation-delay: 1s; background: linear-gradient(90deg, transparent, #8b5cf6, transparent); }
+    .glow-line-3 { width: 180px; top: 70%; left: 0; animation-delay: 2s; background: linear-gradient(90deg, transparent, #ec4899, transparent); }
+    
+    @keyframes line-glow {
+        0% { opacity: 0; transform: translateX(-100%); }
+        50% { opacity: 0.8; }
+        100% { opacity: 0; transform: translateX(100vw); }
     }
     </style>
     """
@@ -582,39 +773,69 @@ def get_animated_background_html():
     """Generate HTML elements for animated background."""
     return """
     <div class="animated-bg-container">
+        <!-- Gradient Orbs -->
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
         <div class="orb orb-4"></div>
         
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
-        <div class="particle"></div>
+        <!-- Grid Overlay -->
+        <div class="grid-overlay"></div>
         
-        <div class="shooting-star"></div>
-        <div class="shooting-star"></div>
-        <div class="shooting-star"></div>
+        <!-- Floating Particles -->
+        <div class="particles-wrapper">
+            <div class="particle particle-cyan"></div>
+            <div class="particle particle-purple"></div>
+            <div class="particle particle-pink"></div>
+            <div class="particle particle-blue"></div>
+            <div class="particle particle-green"></div>
+            <div class="particle particle-cyan"></div>
+            <div class="particle particle-orange"></div>
+            <div class="particle particle-purple"></div>
+            <div class="particle particle-pink"></div>
+            <div class="particle particle-blue"></div>
+            <div class="particle particle-green"></div>
+            <div class="particle particle-cyan"></div>
+            <div class="particle particle-purple"></div>
+            <div class="particle particle-pink"></div>
+            <div class="particle particle-orange"></div>
+        </div>
         
-        <div class="pulse-ring pulse-ring-1"></div>
-        <div class="pulse-ring pulse-ring-2"></div>
-        <div class="pulse-ring pulse-ring-3"></div>
+        <!-- Shooting Stars -->
+        <div class="shooting-stars-wrapper">
+            <div class="shooting-star"></div>
+            <div class="shooting-star"></div>
+            <div class="shooting-star"></div>
+            <div class="shooting-star"></div>
+            <div class="shooting-star"></div>
+        </div>
         
-        <div class="floating-icon">📊</div>
-        <div class="floating-icon">📈</div>
-        <div class="floating-icon">🛒</div>
-        <div class="floating-icon">💹</div>
-        <div class="floating-icon">🎯</div>
-        <div class="floating-icon">⚡</div>
+        <!-- Pulse Rings -->
+        <div class="pulse-rings-wrapper">
+            <div class="pulse-ring pulse-ring-1"></div>
+            <div class="pulse-ring pulse-ring-2"></div>
+            <div class="pulse-ring pulse-ring-3"></div>
+            <div class="pulse-ring pulse-ring-4"></div>
+        </div>
+        
+        <!-- Floating Icons -->
+        <div class="floating-icons-wrapper">
+            <div class="float-icon">📊</div>
+            <div class="float-icon">📈</div>
+            <div class="float-icon">🛒</div>
+            <div class="float-icon">💹</div>
+            <div class="float-icon">🎯</div>
+            <div class="float-icon">⚡</div>
+            <div class="float-icon">🔮</div>
+            <div class="float-icon">✨</div>
+        </div>
+        
+        <!-- Glowing Lines -->
+        <div class="glow-line glow-line-1"></div>
+        <div class="glow-line glow-line-2"></div>
+        <div class="glow-line glow-line-3"></div>
     </div>
     """
-
 
 # ============================================================================
 # HELPER FUNCTIONS FOR UI
@@ -941,10 +1162,11 @@ with st.sidebar:
 # ============================================================================
 
 def show_home_page():
-    # Add animated background
+    # IMPORTANT: Add animated background FIRST before any other content
     st.markdown(get_animated_background_css(), unsafe_allow_html=True)
     st.markdown(get_animated_background_html(), unsafe_allow_html=True)
     
+    # Rest of home page content
     st.markdown("""
     <div class="hero-container">
         <div style="margin-bottom: 24px;">
@@ -958,8 +1180,6 @@ def show_home_page():
         </p>
     </div>
     """, unsafe_allow_html=True)
-    
-    # ... rest of your home page code ...
     
     st.markdown('<p class="section-title section-title-purple">✨ Powerful Features</p>', unsafe_allow_html=True)
     
@@ -975,58 +1195,10 @@ def show_home_page():
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Stats Section with animated counters feel
-    st.markdown('<p class="section-title section-title-cyan">📊 Platform Capabilities</p>', unsafe_allow_html=True)
-    
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.markdown(create_metric_card("Data Issues Detected", "15+", color="cyan"), unsafe_allow_html=True)
-    with col2:
-        st.markdown(create_metric_card("Auto-Fix Rules", "20+", color="purple"), unsafe_allow_html=True)
-    with col3:
-        st.markdown(create_metric_card("KPI Metrics", "25+", color="pink"), unsafe_allow_html=True)
-    with col4:
-        st.markdown(create_metric_card("Chart Types", "12+", color="green"), unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
     if st.session_state.data_loaded:
-        st.markdown(create_success_card("Data is loaded! Go to 📊 Dashboard to see your KPIs or 🎯 Simulator to run campaigns."), unsafe_allow_html=True)
+        st.markdown(create_success_card("Data is loaded! Go to 📊 Dashboard to see your KPIs."), unsafe_allow_html=True)
     else:
-        st.markdown(create_info_card("💡 <strong>Get started!</strong> Go to 📂 Data page to upload your files or load sample data."), unsafe_allow_html=True)
-    
-    # Quick Start Guide
-    st.markdown("---")
-    st.markdown('<p class="section-title section-title-blue">🚀 Quick Start Guide</p>', unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown("""
-        <div class="info-card">
-            <h4 style="color: var(--accent-cyan); margin-bottom: 12px;">Step 1: Load Data</h4>
-            <p style="color: var(--text-secondary); font-size: 0.95rem;">
-                Upload your CSV files (Products, Stores, Sales, Inventory) or use our sample data to explore.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown("""
-        <div class="info-card" style="border-left-color: var(--accent-purple);">
-            <h4 style="color: var(--accent-purple); margin-bottom: 12px;">Step 2: Clean Data</h4>
-            <p style="color: var(--text-secondary); font-size: 0.95rem;">
-                Run the Data Rescue to automatically detect and fix quality issues in your data.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col3:
-        st.markdown("""
-        <div class="info-card" style="border-left-color: var(--accent-pink);">
-            <h4 style="color: var(--accent-pink); margin-bottom: 12px;">Step 3: Analyze & Simulate</h4>
-            <p style="color: var(--text-secondary); font-size: 0.95rem;">
-                View dashboards, run what-if scenarios, and optimize your campaigns.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(create_info_card("💡 <strong>Start by loading data.</strong> Go to 📂 Data page."), unsafe_allow_html=True)
     
     show_footer()
 
