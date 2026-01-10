@@ -85,6 +85,9 @@ def get_theme_colors():
 
 def get_theme_css():
     # Add this function after your get_theme_css() function
+    
+# Apply theme CSS
+st.markdown(get_theme_css(), unsafe_allow_html=True)
 
 def get_animated_background_css():
     """Generate CSS for animated background on home page."""
