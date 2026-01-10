@@ -970,7 +970,7 @@ with st.sidebar:
             font-size: 28px;
             font-weight: 900;
             -webkit-background-clip: text;
-            -webkit-text-fill-color: #000000;
+            -webkit-text-fill-color: #8b5cf6;
         ">UAE Pulse</div>
         <div style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));"; font-size: 13px; margin-top: 5px;">SIMULATOR + DATA RESCUE</div>
     </div>
