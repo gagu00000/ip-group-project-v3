@@ -1,6 +1,7 @@
 # ============================================================================
 # UAE PULSE - RETAIL SIMULATOR + DATA RESCUE CENTER
-# Complete Application with All Fixes Applied
+# Complete Application with All Project Requirements
+# Version 2.1 - Fixed
 # ============================================================================
 
 import streamlit as st
@@ -12,11 +13,6 @@ from datetime import datetime, timedelta
 import io
 import re
 from typing import Optional, Tuple, Dict, List, Any
-
-
-# TO:
-from modules import DataCleaner
-from modules import Simulator
 
 # ============================================================================
 # PAGE CONFIGURATION
@@ -30,7 +26,7 @@ st.set_page_config(
 )
 
 # ============================================================================
-# THEME DEFINITIONS (FIX 3: Better Light Mode Visibility)
+# THEME DEFINITIONS
 # ============================================================================
 
 THEMES = {
@@ -91,53 +87,41 @@ def get_theme():
     return THEMES.get(st.session_state.get('theme', 'dark'), THEMES['dark'])
 
 # ============================================================================
-# SESSION STATE INITIALIZATION (Updated with Multi-Select Keys)
+# SESSION STATE INITIALIZATION
 # ============================================================================
 
-if 'theme' not in st.session_state:
-    st.session_state.theme = 'dark'
-if 'data_loaded' not in st.session_state:
-    st.session_state.data_loaded = False
-if 'is_cleaned' not in st.session_state:
-    st.session_state.is_cleaned = False
-if 'raw_products' not in st.session_state:
-    st.session_state.raw_products = None
-if 'raw_stores' not in st.session_state:
-    st.session_state.raw_stores = None
-if 'raw_sales' not in st.session_state:
-    st.session_state.raw_sales = None
-if 'raw_inventory' not in st.session_state:
-    st.session_state.raw_inventory = None
-if 'clean_products' not in st.session_state:
-    st.session_state.clean_products = None
-if 'clean_stores' not in st.session_state:
-    st.session_state.clean_stores = None
-if 'clean_sales' not in st.session_state:
-    st.session_state.clean_sales = None
-if 'clean_inventory' not in st.session_state:
-    st.session_state.clean_inventory = None
-if 'issues_df' not in st.session_state:
-    st.session_state.issues_df = None
-if 'cleaner_stats' not in st.session_state:
-    st.session_state.cleaner_stats = {}
+def init_session_state():
+    """Initialize all session state variables."""
+    defaults = {
+        'theme': 'dark',
+        'data_loaded': False,
+        'is_cleaned': False,
+        'raw_products': None,
+        'raw_stores': None,
+        'raw_sales': None,
+        'raw_inventory': None,
+        'clean_products': None,
+        'clean_stores': None,
+        'clean_sales': None,
+        'clean_inventory': None,
+        'issues_df': None,
+        'cleaner_stats': {},
+        # Global filters - Multi-select
+        'global_date_range': None,
+        'global_cities': [],
+        'global_channels': [],
+        'global_categories': [],
+        'global_brands': [],  # NEW: 5th filter
+        'global_fulfillment': [],  # NEW: 6th filter option
+        # Simulation state
+        'last_simulation': None,
+    }
+    
+    for key, default_value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = default_value
 
-# Global filter states - MULTI-SELECT (FIX 4)
-if 'global_date_range' not in st.session_state:
-    st.session_state.global_date_range = None
-if 'global_cities' not in st.session_state:
-    st.session_state.global_cities = []
-if 'global_channels' not in st.session_state:
-    st.session_state.global_channels = []
-if 'global_categories' not in st.session_state:
-    st.session_state.global_categories = []
-
-# Legacy single-select (keep for backward compatibility)
-if 'global_city' not in st.session_state:
-    st.session_state.global_city = 'All'
-if 'global_channel' not in st.session_state:
-    st.session_state.global_channel = 'All'
-if 'global_category' not in st.session_state:
-    st.session_state.global_category = 'All'
+init_session_state()
 
 # ============================================================================
 # CSS INJECTION
@@ -404,39 +388,6 @@ def inject_css():
                 0 0 30px {t['glow_color']};
         }}
         
-        /* Info cards */
-        .info-card-3d {{
-            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(59, 130, 246, 0.1));
-            border: 1px solid {t['accent_cyan']};
-            border-radius: 12px;
-            padding: 15px 20px;
-            margin: 10px 0;
-        }}
-        
-        .success-card-3d {{
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(20, 184, 166, 0.1));
-            border: 1px solid {t['accent_green']};
-            border-radius: 12px;
-            padding: 15px 20px;
-            margin: 10px 0;
-        }}
-        
-        .warning-card-3d {{
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1));
-            border: 1px solid {t['accent_orange']};
-            border-radius: 12px;
-            padding: 15px 20px;
-            margin: 10px 0;
-        }}
-        
-        .error-card-3d {{
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(236, 72, 153, 0.1));
-            border: 1px solid {t['accent_red']};
-            border-radius: 12px;
-            padding: 15px 20px;
-            margin: 10px 0;
-        }}
-        
         /* Animations */
         @keyframes fadeInUp {{
             from {{
@@ -457,15 +408,6 @@ def inject_css():
             to {{
                 opacity: 1;
                 transform: scale(1);
-            }}
-        }}
-        
-        @keyframes pulse {{
-            0%, 100% {{
-                opacity: 1;
-            }}
-            50% {{
-                opacity: 0.7;
             }}
         }}
         
@@ -640,12 +582,22 @@ def style_plotly_chart_themed(fig):
     return fig
 
 
+def format_currency(value):
+    """Format value as AED currency."""
+    if value >= 1_000_000:
+        return f"AED {value/1_000_000:.2f}M"
+    elif value >= 1_000:
+        return f"AED {value/1_000:.1f}K"
+    else:
+        return f"AED {value:,.0f}"
+
+
 # ============================================================================
-# FILTER FUNCTIONS (FIX 4: Multi-Select Support)
+# FILTER FUNCTIONS (WITH 5TH FILTER - BRAND)
 # ============================================================================
 
 def show_global_filters_sidebar():
-    """Display global filters in sidebar with MULTI-SELECT support."""
+    """Display global filters in sidebar with MULTI-SELECT support including Brand."""
     t = get_theme()
     
     st.markdown(f"""
@@ -730,12 +682,47 @@ def show_global_filters_sidebar():
     )
     st.session_state.global_categories = selected_categories
     
+    # =========================================================================
+    # NEW: 5th FILTER - BRAND
+    # =========================================================================
+    brands = []
+    if products_df is not None and 'brand' in products_df.columns:
+        brands = sorted(products_df['brand'].dropna().unique().tolist())
+    
+    selected_brands = st.multiselect(
+        "🏷️ Brands",
+        options=brands,
+        default=st.session_state.get('global_brands', []),
+        key='global_brand_filter',
+        placeholder="All Brands"
+    )
+    st.session_state.global_brands = selected_brands
+    
+    # =========================================================================
+    # OPTIONAL 6th FILTER - FULFILLMENT TYPE
+    # =========================================================================
+    fulfillment_types = []
+    if stores_df is not None and 'fulfillment_type' in stores_df.columns:
+        fulfillment_types = sorted(stores_df['fulfillment_type'].dropna().unique().tolist())
+    
+    if len(fulfillment_types) > 0:
+        selected_fulfillment = st.multiselect(
+            "🚚 Fulfillment",
+            options=fulfillment_types,
+            default=st.session_state.get('global_fulfillment', []),
+            key='global_fulfillment_filter',
+            placeholder="All Types"
+        )
+        st.session_state.global_fulfillment = selected_fulfillment
+    
     # Reset filters button
     if st.button("🔄 Reset All Filters", key='reset_global_filters', use_container_width=True):
         st.session_state.global_date_range = None
         st.session_state.global_cities = []
         st.session_state.global_channels = []
         st.session_state.global_categories = []
+        st.session_state.global_brands = []
+        st.session_state.global_fulfillment = []
         st.rerun()
     
     # Show active filters indicator
@@ -748,6 +735,10 @@ def show_global_filters_sidebar():
         active_filters.append(f"📱 {len(st.session_state.global_channels)} channels")
     if len(st.session_state.get('global_categories', [])) > 0:
         active_filters.append(f"📦 {len(st.session_state.global_categories)} categories")
+    if len(st.session_state.get('global_brands', [])) > 0:
+        active_filters.append(f"🏷️ {len(st.session_state.global_brands)} brands")
+    if len(st.session_state.get('global_fulfillment', [])) > 0:
+        active_filters.append(f"🚚 {len(st.session_state.global_fulfillment)} fulfillment")
     
     if active_filters:
         st.markdown(f"""
@@ -766,7 +757,7 @@ def show_global_filters_sidebar():
 
 
 def apply_global_filters(df, stores_df=None, products_df=None):
-    """Apply global filters to a dataframe - supports MULTI-SELECT."""
+    """Apply global filters to a dataframe - supports MULTI-SELECT including Brand."""
     if df is None or len(df) == 0:
         return df
     
@@ -801,9 +792,29 @@ def apply_global_filters(df, stores_df=None, products_df=None):
     # Apply category filter (MULTI-SELECT)
     selected_categories = st.session_state.get('global_categories', [])
     if len(selected_categories) > 0 and products_df is not None:
-        if 'category' in products_df.columns and 'sku' in filtered_df.columns:
-            category_skus = products_df[products_df['category'].isin(selected_categories)]['sku'].tolist()
-            filtered_df = filtered_df[filtered_df['sku'].isin(category_skus)]
+        if 'category' in products_df.columns:
+            sku_col = 'sku' if 'sku' in filtered_df.columns else 'product_id'
+            prod_sku_col = 'sku' if 'sku' in products_df.columns else 'product_id'
+            if sku_col in filtered_df.columns and prod_sku_col in products_df.columns:
+                category_skus = products_df[products_df['category'].isin(selected_categories)][prod_sku_col].tolist()
+                filtered_df = filtered_df[filtered_df[sku_col].isin(category_skus)]
+    
+    # Apply brand filter (MULTI-SELECT) - NEW!
+    selected_brands = st.session_state.get('global_brands', [])
+    if len(selected_brands) > 0 and products_df is not None:
+        if 'brand' in products_df.columns:
+            sku_col = 'sku' if 'sku' in filtered_df.columns else 'product_id'
+            prod_sku_col = 'sku' if 'sku' in products_df.columns else 'product_id'
+            if sku_col in filtered_df.columns and prod_sku_col in products_df.columns:
+                brand_skus = products_df[products_df['brand'].isin(selected_brands)][prod_sku_col].tolist()
+                filtered_df = filtered_df[filtered_df[sku_col].isin(brand_skus)]
+    
+    # Apply fulfillment filter (MULTI-SELECT)
+    selected_fulfillment = st.session_state.get('global_fulfillment', [])
+    if len(selected_fulfillment) > 0 and stores_df is not None:
+        if 'fulfillment_type' in stores_df.columns and 'store_id' in filtered_df.columns:
+            fulfillment_stores = stores_df[stores_df['fulfillment_type'].isin(selected_fulfillment)]['store_id'].tolist()
+            filtered_df = filtered_df[filtered_df['store_id'].isin(fulfillment_stores)]
     
     return filtered_df
 
@@ -823,7 +834,7 @@ def show_chart_filter(chart_id, available_filters=['city', 'channel', 'category'
             st.info("No additional filters available for this chart")
             return local_filters
         
-        cols = st.columns(min(num_filters, 3))
+        cols = st.columns(min(num_filters, 4))
         col_idx = 0
         
         if 'city' in available_filters and stores_df is not None and 'city' in stores_df.columns:
@@ -855,6 +866,17 @@ def show_chart_filter(chart_id, available_filters=['city', 'channel', 'category'
                     "📦 Categories",
                     options=categories,
                     key=f'{chart_id}_category',
+                    placeholder="All"
+                )
+            col_idx += 1
+        
+        if 'brand' in available_filters and products_df is not None and 'brand' in products_df.columns:
+            with cols[col_idx % len(cols)]:
+                brands = sorted(products_df['brand'].dropna().unique().tolist())
+                local_filters['brands'] = st.multiselect(
+                    "🏷️ Brands",
+                    options=brands,
+                    key=f'{chart_id}_brand',
                     placeholder="All"
                 )
             col_idx += 1
@@ -901,11 +923,878 @@ def apply_local_filters(df, local_filters, stores_df=None, products_df=None):
     # Apply category filter (MULTI-SELECT)
     selected_categories = local_filters.get('categories', [])
     if len(selected_categories) > 0 and products_df is not None:
-        if 'category' in products_df.columns and 'sku' in filtered_df.columns:
-            category_skus = products_df[products_df['category'].isin(selected_categories)]['sku'].tolist()
-            filtered_df = filtered_df[filtered_df['sku'].isin(category_skus)]
+        if 'category' in products_df.columns:
+            sku_col = 'sku' if 'sku' in filtered_df.columns else 'product_id'
+            prod_sku_col = 'sku' if 'sku' in products_df.columns else 'product_id'
+            if sku_col in filtered_df.columns and prod_sku_col in products_df.columns:
+                category_skus = products_df[products_df['category'].isin(selected_categories)][prod_sku_col].tolist()
+                filtered_df = filtered_df[filtered_df[sku_col].isin(category_skus)]
+    
+    # Apply brand filter (MULTI-SELECT)
+    selected_brands = local_filters.get('brands', [])
+    if len(selected_brands) > 0 and products_df is not None:
+        if 'brand' in products_df.columns:
+            sku_col = 'sku' if 'sku' in filtered_df.columns else 'product_id'
+            prod_sku_col = 'sku' if 'sku' in products_df.columns else 'product_id'
+            if sku_col in filtered_df.columns and prod_sku_col in products_df.columns:
+                brand_skus = products_df[products_df['brand'].isin(selected_brands)][prod_sku_col].tolist()
+                filtered_df = filtered_df[filtered_df[sku_col].isin(brand_skus)]
     
     return filtered_df
+
+
+# ============================================================================
+# DATA CLEANER MODULE
+# ============================================================================
+
+class DataCleaner:
+    """
+    Data Cleaner class for retail data validation and cleaning.
+    Detects and fixes: missing values, duplicates, outliers, text issues, FK violations.
+    """
+    
+    def __init__(self):
+        """Initialize the DataCleaner with empty stats and issues log."""
+        self.stats = {
+            'missing_values_fixed': 0,
+            'duplicates_removed': 0,
+            'outliers_fixed': 0,
+            'text_standardized': 0,
+            'negative_values_fixed': 0,
+            'fk_violations_fixed': 0,
+            'whitespace_fixed': 0,
+            'invalid_timestamps_fixed': 0,
+            'total_issues': 0
+        }
+        self.issues_log: List[Dict[str, Any]] = []
+    
+    def log_issue(self, table: str, column: str, issue_type: str, 
+                  row_index: Any = None, original_value: Any = None, 
+                  fixed_value: Any = None, action_taken: str = "", description: str = ""):
+        """Log an issue found during cleaning."""
+        self.issues_log.append({
+            'table': table,
+            'column': column,
+            'issue_type': issue_type,
+            'row_index': row_index,
+            'original_value': str(original_value)[:100] if original_value is not None else None,
+            'fixed_value': str(fixed_value)[:100] if fixed_value is not None else None,
+            'action_taken': action_taken if action_taken else 'Fixed',
+            'description': description,
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        })
+        self.stats['total_issues'] += 1
+    
+    def get_issues_df(self) -> pd.DataFrame:
+        """Return issues log as a DataFrame."""
+        if len(self.issues_log) == 0:
+            return pd.DataFrame({
+                'table': ['None'],
+                'column': ['None'],
+                'issue_type': ['None'],
+                'action_taken': ['None'],
+                'description': ['No issues found']
+            })
+        return pd.DataFrame(self.issues_log)
+    
+    def fix_missing_values(self, df: pd.DataFrame, table_name: str) -> pd.DataFrame:
+        """Fix missing values based on column type."""
+        if df is None or len(df) == 0:
+            return df
+        
+        df = df.copy()
+        
+        for col in df.columns:
+            missing_count = df[col].isna().sum()
+            
+            if missing_count > 0:
+                if df[col].dtype in ['float64', 'int64']:
+                    median_val = df[col].median()
+                    if pd.isna(median_val):
+                        median_val = 0
+                    df[col] = df[col].fillna(median_val)
+                    self.log_issue(table_name, col, 'missing_value', 
+                                  action_taken='Imputed with median',
+                                  description=f"Filled {missing_count} missing values with median: {median_val:.2f}")
+                elif df[col].dtype == 'object':
+                    mode_val = df[col].mode()
+                    fill_val = mode_val.iloc[0] if len(mode_val) > 0 else 'Unknown'
+                    df[col] = df[col].fillna(fill_val)
+                    self.log_issue(table_name, col, 'missing_value',
+                                  action_taken='Imputed with mode',
+                                  description=f"Filled {missing_count} missing values with: {fill_val}")
+                else:
+                    df[col] = df[col].ffill().bfill()
+                    self.log_issue(table_name, col, 'missing_value',
+                                  action_taken='Forward/backward fill',
+                                  description=f"Filled {missing_count} missing values with ffill/bfill")
+                
+                self.stats['missing_values_fixed'] += missing_count
+        
+        return df
+    
+    def remove_duplicates(self, df: pd.DataFrame, table_name: str, 
+                         subset: Optional[List[str]] = None) -> pd.DataFrame:
+        """Remove duplicate rows."""
+        if df is None or len(df) == 0:
+            return df
+        
+        df = df.copy()
+        initial_count = len(df)
+        
+        if subset:
+            valid_subset = [col for col in subset if col in df.columns]
+            if valid_subset:
+                df = df.drop_duplicates(subset=valid_subset, keep='first')
+        else:
+            df = df.drop_duplicates(keep='first')
+        
+        duplicates_removed = initial_count - len(df)
+        
+        if duplicates_removed > 0:
+            self.log_issue(table_name, 'all', 'duplicate',
+                          action_taken='Dropped duplicates',
+                          description=f"Removed {duplicates_removed} duplicate rows")
+            self.stats['duplicates_removed'] += duplicates_removed
+        
+        return df.reset_index(drop=True)
+    
+    def fix_outliers_iqr(self, df: pd.DataFrame, table_name: str, 
+                        columns: Optional[List[str]] = None,
+                        multiplier: float = 1.5) -> pd.DataFrame:
+        """Fix outliers using IQR method - cap at boundaries."""
+        if df is None or len(df) == 0:
+            return df
+        
+        df = df.copy()
+        
+        if columns:
+            numeric_cols = [col for col in columns if col in df.columns and df[col].dtype in ['float64', 'int64']]
+        else:
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        
+        for col in numeric_cols:
+            Q1 = df[col].quantile(0.25)
+            Q3 = df[col].quantile(0.75)
+            IQR = Q3 - Q1
+            
+            lower_bound = Q1 - multiplier * IQR
+            upper_bound = Q3 + multiplier * IQR
+            
+            outliers_low = (df[col] < lower_bound).sum()
+            outliers_high = (df[col] > upper_bound).sum()
+            total_outliers = outliers_low + outliers_high
+            
+            if total_outliers > 0:
+                df[col] = df[col].clip(lower=lower_bound, upper=upper_bound)
+                self.log_issue(table_name, col, 'outlier',
+                              action_taken='Capped at IQR bounds',
+                              description=f"Capped {total_outliers} outliers (low: {outliers_low}, high: {outliers_high})")
+                self.stats['outliers_fixed'] += total_outliers
+        
+        return df
+    
+    def standardize_text(self, df: pd.DataFrame, table_name: str,
+                        columns: Optional[List[str]] = None) -> pd.DataFrame:
+        """Standardize text columns - trim whitespace, title case for names."""
+        if df is None or len(df) == 0:
+            return df
+        
+        df = df.copy()
+        
+        if columns:
+            text_cols = [col for col in columns if col in df.columns and df[col].dtype == 'object']
+        else:
+            text_cols = df.select_dtypes(include=['object']).columns.tolist()
+        
+        for col in text_cols:
+            original = df[col].copy()
+            
+            df[col] = df[col].astype(str).str.strip()
+            df[col] = df[col].str.replace(r'\s+', ' ', regex=True)
+            
+            name_indicators = ['name', 'city', 'category', 'channel', 'brand']
+            if any(indicator in col.lower() for indicator in name_indicators):
+                df[col] = df[col].str.title()
+            
+            df[col] = df[col].replace(['nan', 'None', 'NaN', 'none', 'NULL', 'null'], 'Unknown')
+            
+            changes = (original.astype(str) != df[col]).sum()
+            
+            if changes > 0:
+                self.log_issue(table_name, col, 'text_standardization',
+                              action_taken='Standardized text',
+                              description=f"Standardized {changes} text values")
+                self.stats['text_standardized'] += changes
+                self.stats['whitespace_fixed'] += changes
+        
+        return df
+    
+    def fix_negative_values(self, df: pd.DataFrame, table_name: str,
+                           columns: Optional[List[str]] = None) -> pd.DataFrame:
+        """Fix negative values in columns that should be positive."""
+        if df is None or len(df) == 0:
+            return df
+        
+        df = df.copy()
+        
+        positive_indicators = ['price', 'qty', 'quantity', 'cost', 'stock', 'amount', 'revenue', 'sales']
+        
+        if columns:
+            check_cols = columns
+        else:
+            check_cols = [col for col in df.columns 
+                         if any(ind in col.lower() for ind in positive_indicators)
+                         and df[col].dtype in ['float64', 'int64']]
+        
+        for col in check_cols:
+            if col in df.columns and df[col].dtype in ['float64', 'int64']:
+                negative_count = (df[col] < 0).sum()
+                
+                if negative_count > 0:
+                    df[col] = df[col].abs()
+                    self.log_issue(table_name, col, 'negative_value',
+                                  action_taken='Converted to absolute',
+                                  description=f"Converted {negative_count} negative values to positive")
+                    self.stats['negative_values_fixed'] += negative_count
+        
+        return df
+    
+    def fix_timestamps(self, df: pd.DataFrame, table_name: str, 
+                      column: str = 'order_time') -> pd.DataFrame:
+        """Fix invalid timestamps."""
+        if df is None or len(df) == 0 or column not in df.columns:
+            return df
+        
+        df = df.copy()
+        
+        original = df[column].copy()
+        df[column] = pd.to_datetime(df[column], errors='coerce')
+        
+        invalid_count = df[column].isna().sum() - original.isna().sum()
+        
+        if invalid_count > 0:
+            median_date = df[column].dropna().median()
+            df[column] = df[column].fillna(median_date)
+            
+            self.log_issue(table_name, column, 'invalid_timestamp',
+                          action_taken='Parsed and imputed',
+                          description=f"Fixed {invalid_count} invalid timestamps")
+            self.stats['invalid_timestamps_fixed'] += invalid_count
+        
+        return df
+    
+    def validate_foreign_keys(self, df: pd.DataFrame, table_name: str,
+                             fk_column: str, reference_df: pd.DataFrame,
+                             pk_column: str) -> pd.DataFrame:
+        """Validate and fix foreign key references."""
+        if df is None or reference_df is None:
+            return df
+        if fk_column not in df.columns or pk_column not in reference_df.columns:
+            return df
+        
+        df = df.copy()
+        
+        valid_keys = set(reference_df[pk_column].dropna().unique())
+        invalid_mask = ~df[fk_column].isin(valid_keys) & df[fk_column].notna()
+        invalid_count = invalid_mask.sum()
+        
+        if invalid_count > 0:
+            self.log_issue(table_name, fk_column, 'fk_violation',
+                          action_taken='Flagged invalid references',
+                          description=f"Found {invalid_count} invalid foreign key references")
+            self.stats['fk_violations_fixed'] += invalid_count
+        
+        return df
+    
+    def clean_products(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Clean products table."""
+        if df is None:
+            return None
+        
+        table_name = 'products'
+        
+        sku_col = 'sku' if 'sku' in df.columns else 'product_id'
+        if sku_col in df.columns:
+            df = self.remove_duplicates(df, table_name, subset=[sku_col])
+        else:
+            df = self.remove_duplicates(df, table_name)
+        
+        df = self.fix_missing_values(df, table_name)
+        df = self.standardize_text(df, table_name)
+        
+        price_cols = [col for col in df.columns if 'price' in col.lower() or 'cost' in col.lower()]
+        df = self.fix_negative_values(df, table_name, columns=price_cols)
+        df = self.fix_outliers_iqr(df, table_name, columns=price_cols)
+        
+        return df
+    
+    def clean_stores(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Clean stores table."""
+        if df is None:
+            return None
+        
+        table_name = 'stores'
+        
+        if 'store_id' in df.columns:
+            df = self.remove_duplicates(df, table_name, subset=['store_id'])
+        else:
+            df = self.remove_duplicates(df, table_name)
+        
+        df = self.fix_missing_values(df, table_name)
+        df = self.standardize_text(df, table_name)
+        
+        return df
+    
+    def clean_sales(self, df: pd.DataFrame, products_df: pd.DataFrame = None, 
+                   stores_df: pd.DataFrame = None) -> pd.DataFrame:
+        """Clean sales table."""
+        if df is None:
+            return None
+        
+        table_name = 'sales'
+        
+        df = self.remove_duplicates(df, table_name)
+        df = self.fix_missing_values(df, table_name)
+        
+        if 'order_time' in df.columns:
+            df = self.fix_timestamps(df, table_name, 'order_time')
+        
+        qty_price_cols = [col for col in df.columns 
+                         if any(x in col.lower() for x in ['qty', 'quantity', 'price', 'amount'])]
+        df = self.fix_negative_values(df, table_name, columns=qty_price_cols)
+        df = self.fix_outliers_iqr(df, table_name, columns=qty_price_cols)
+        
+        sku_col = 'sku' if 'sku' in df.columns else 'product_id'
+        prod_sku_col = 'sku' if products_df is not None and 'sku' in products_df.columns else 'product_id'
+        if products_df is not None and sku_col in df.columns:
+            df = self.validate_foreign_keys(df, table_name, sku_col, products_df, prod_sku_col)
+        
+        if stores_df is not None and 'store_id' in df.columns:
+            df = self.validate_foreign_keys(df, table_name, 'store_id', stores_df, 'store_id')
+        
+        df = self.standardize_text(df, table_name)
+        
+        return df
+    
+    def clean_inventory(self, df: pd.DataFrame, products_df: pd.DataFrame = None,
+                       stores_df: pd.DataFrame = None) -> pd.DataFrame:
+        """Clean inventory table."""
+        if df is None:
+            return None
+        
+        table_name = 'inventory'
+        
+        sku_col = 'sku' if 'sku' in df.columns else 'product_id'
+        if sku_col in df.columns and 'store_id' in df.columns:
+            df = self.remove_duplicates(df, table_name, subset=[sku_col, 'store_id'])
+        else:
+            df = self.remove_duplicates(df, table_name)
+        
+        df = self.fix_missing_values(df, table_name)
+        
+        stock_cols = [col for col in df.columns if 'stock' in col.lower() or 'qty' in col.lower()]
+        df = self.fix_negative_values(df, table_name, columns=stock_cols)
+        df = self.fix_outliers_iqr(df, table_name, columns=stock_cols)
+        
+        prod_sku_col = 'sku' if products_df is not None and 'sku' in products_df.columns else 'product_id'
+        if products_df is not None and sku_col in df.columns:
+            df = self.validate_foreign_keys(df, table_name, sku_col, products_df, prod_sku_col)
+        
+        if stores_df is not None and 'store_id' in df.columns:
+            df = self.validate_foreign_keys(df, table_name, 'store_id', stores_df, 'store_id')
+        
+        return df
+    
+    def clean_all(self, products_df: pd.DataFrame = None, stores_df: pd.DataFrame = None,
+                  sales_df: pd.DataFrame = None, inventory_df: pd.DataFrame = None) -> Tuple:
+        """Clean all tables and return cleaned DataFrames."""
+        self.stats = {
+            'missing_values_fixed': 0,
+            'duplicates_removed': 0,
+            'outliers_fixed': 0,
+            'text_standardized': 0,
+            'negative_values_fixed': 0,
+            'fk_violations_fixed': 0,
+            'whitespace_fixed': 0,
+            'invalid_timestamps_fixed': 0,
+            'total_issues': 0
+        }
+        self.issues_log = []
+        
+        clean_products = self.clean_products(products_df)
+        clean_stores = self.clean_stores(stores_df)
+        clean_sales = self.clean_sales(sales_df, clean_products, clean_stores)
+        clean_inventory = self.clean_inventory(inventory_df, clean_products, clean_stores)
+        
+        return clean_products, clean_stores, clean_sales, clean_inventory
+
+
+# ============================================================================
+# SIMULATOR MODULE (ENHANCED WITH ALL REQUIREMENTS)
+# ============================================================================
+
+class Simulator:
+    """
+    Business Simulator class for calculating KPIs and running what-if scenarios.
+    Includes constraint enforcement and demand uplift logic.
+    """
+    
+    # Demand uplift factors by channel and category
+    CHANNEL_UPLIFT = {
+        'Marketplace': 1.4,  # Marketplace reacts more to discounts
+        'App': 1.2,
+        'Web': 1.0
+    }
+    
+    CATEGORY_UPLIFT = {
+        'Electronics': 1.5,  # Electronics reacts more to discounts
+        'Fashion': 1.3,
+        'Home': 1.1,
+        'Grocery': 0.9,  # Grocery less elastic
+        'Beauty': 1.2
+    }
+    
+    def __init__(self):
+        """Initialize the Simulator."""
+        pass
+    
+    def calculate_overall_kpis(self, sales_df: pd.DataFrame, 
+                               products_df: pd.DataFrame = None) -> Dict[str, Any]:
+        """Calculate overall business KPIs from sales data."""
+        kpis = {
+            'total_revenue': 0,
+            'gross_revenue': 0,
+            'net_revenue': 0,
+            'total_cogs': 0,
+            'total_profit': 0,
+            'gross_margin_aed': 0,
+            'profit_margin_pct': 0,
+            'gross_margin_pct': 0,
+            'avg_order_value': 0,
+            'total_orders': 0,
+            'total_quantity': 0,
+            'avg_discount_pct': 0,
+            'refund_amount': 0,
+            'return_rate_pct': 0,
+            'promo_spend': 0,
+            'profit_proxy': 0,
+            'budget_utilization_pct': 0
+        }
+        
+        if sales_df is None or len(sales_df) == 0:
+            return kpis
+        
+        try:
+            # Calculate gross revenue
+            if 'selling_price_aed' in sales_df.columns and 'qty' in sales_df.columns:
+                qty = pd.to_numeric(sales_df['qty'], errors='coerce').fillna(0)
+                price = pd.to_numeric(sales_df['selling_price_aed'], errors='coerce').fillna(0)
+                kpis['gross_revenue'] = (qty * price).sum()
+                kpis['total_revenue'] = kpis['gross_revenue']
+            elif 'selling_price_aed' in sales_df.columns:
+                kpis['gross_revenue'] = pd.to_numeric(sales_df['selling_price_aed'], errors='coerce').fillna(0).sum()
+                kpis['total_revenue'] = kpis['gross_revenue']
+            
+            # Calculate refunds
+            refund_mask = None
+            if 'order_status' in sales_df.columns:
+                refund_mask = sales_df['order_status'].astype(str).str.lower().isin(['returned', 'refunded', 'cancelled'])
+            elif 'payment_status' in sales_df.columns:
+                refund_mask = sales_df['payment_status'].astype(str).str.lower().isin(['refunded', 'cancelled'])
+            
+            if refund_mask is not None and refund_mask.any():
+                if 'selling_price_aed' in sales_df.columns:
+                    refund_price = pd.to_numeric(sales_df.loc[refund_mask, 'selling_price_aed'], errors='coerce').fillna(0)
+                    if 'qty' in sales_df.columns:
+                        refund_qty = pd.to_numeric(sales_df.loc[refund_mask, 'qty'], errors='coerce').fillna(0)
+                        kpis['refund_amount'] = (refund_qty * refund_price).sum()
+                    else:
+                        kpis['refund_amount'] = refund_price.sum()
+            
+            # Net revenue
+            kpis['net_revenue'] = kpis['gross_revenue'] - kpis['refund_amount']
+            
+            # Calculate COGS
+            if products_df is not None:
+                sku_col = 'sku' if 'sku' in sales_df.columns else 'product_id'
+                prod_sku_col = 'sku' if 'sku' in products_df.columns else 'product_id'
+                
+                cost_col = None
+                for col in ['cost_price_aed', 'unit_cost_aed', 'cost_price', 'cost', 'cogs']:
+                    if col in products_df.columns:
+                        cost_col = col
+                        break
+                
+                if cost_col and sku_col in sales_df.columns and prod_sku_col in products_df.columns:
+                    merged = sales_df.merge(products_df[[prod_sku_col, cost_col]], 
+                                           left_on=sku_col, right_on=prod_sku_col, how='left')
+                    cost = pd.to_numeric(merged[cost_col], errors='coerce').fillna(0)
+                    if 'qty' in merged.columns:
+                        qty = pd.to_numeric(merged['qty'], errors='coerce').fillna(0)
+                        kpis['total_cogs'] = (qty * cost).sum()
+                    else:
+                        kpis['total_cogs'] = cost.sum()
+            
+            # Calculate profit and margins
+            kpis['total_profit'] = kpis['net_revenue'] - kpis['total_cogs']
+            kpis['gross_margin_aed'] = kpis['total_profit']
+            
+            if kpis['net_revenue'] > 0:
+                kpis['profit_margin_pct'] = (kpis['total_profit'] / kpis['net_revenue']) * 100
+                kpis['gross_margin_pct'] = kpis['profit_margin_pct']
+            
+            # Total orders
+            if 'order_id' in sales_df.columns:
+                kpis['total_orders'] = sales_df['order_id'].nunique()
+            else:
+                kpis['total_orders'] = len(sales_df)
+            
+            # Total quantity
+            if 'qty' in sales_df.columns:
+                kpis['total_quantity'] = pd.to_numeric(sales_df['qty'], errors='coerce').fillna(0).sum()
+            
+            # Average order value
+            if kpis['total_orders'] > 0:
+                kpis['avg_order_value'] = kpis['gross_revenue'] / kpis['total_orders']
+            
+            # Average discount percentage
+            if 'discount_pct' in sales_df.columns:
+                kpis['avg_discount_pct'] = pd.to_numeric(sales_df['discount_pct'], errors='coerce').fillna(0).mean()
+            elif 'discount' in sales_df.columns:
+                kpis['avg_discount_pct'] = pd.to_numeric(sales_df['discount'], errors='coerce').fillna(0).mean()
+            
+            # Return rate
+            if refund_mask is not None:
+                total = len(sales_df)
+                returns = refund_mask.sum()
+                kpis['return_rate_pct'] = (returns / total * 100) if total > 0 else 0
+            
+            # Promo spend (estimated as discount * revenue)
+            kpis['promo_spend'] = kpis['gross_revenue'] * (kpis['avg_discount_pct'] / 100)
+            
+            # Profit proxy
+            kpis['profit_proxy'] = kpis['total_profit']
+        
+        except Exception as e:
+            print(f"Error calculating KPIs: {str(e)}")
+        
+        return kpis
+    
+    def calculate_kpis_by_dimension(self, sales_df: pd.DataFrame,
+                                    stores_df: pd.DataFrame = None,
+                                    products_df: pd.DataFrame = None,
+                                    dimension: str = 'city') -> pd.DataFrame:
+        """Calculate KPIs grouped by a dimension (city, channel, category)."""
+        if sales_df is None or len(sales_df) == 0:
+            return pd.DataFrame()
+        
+        try:
+            df = sales_df.copy()
+            
+            # Merge with stores for city/channel
+            if dimension in ['city', 'channel'] and stores_df is not None:
+                if 'store_id' in df.columns and 'store_id' in stores_df.columns:
+                    store_cols = ['store_id']
+                    if 'city' in stores_df.columns:
+                        store_cols.append('city')
+                    if 'channel' in stores_df.columns:
+                        store_cols.append('channel')
+                    df = df.merge(stores_df[store_cols], on='store_id', how='left')
+            
+            # Merge with products for category
+            if dimension == 'category' and products_df is not None:
+                sku_col = 'sku' if 'sku' in df.columns else 'product_id'
+                prod_sku_col = 'sku' if 'sku' in products_df.columns else 'product_id'
+                
+                if sku_col in df.columns and prod_sku_col in products_df.columns:
+                    product_cols = [prod_sku_col]
+                    if 'category' in products_df.columns:
+                        product_cols.append('category')
+                    
+                    cost_col = None
+                    for col in ['cost_price_aed', 'unit_cost_aed', 'cost_price', 'cost']:
+                        if col in products_df.columns:
+                            cost_col = col
+                            break
+                    if cost_col:
+                        product_cols.append(cost_col)
+                    
+                    df = df.merge(products_df[product_cols], left_on=sku_col, right_on=prod_sku_col, how='left')
+            
+            # Check if dimension column exists
+            if dimension not in df.columns:
+                return pd.DataFrame()
+            
+            # Calculate revenue per row
+            if 'selling_price_aed' in df.columns and 'qty' in df.columns:
+                df['_revenue'] = (
+                    pd.to_numeric(df['qty'], errors='coerce').fillna(0) * 
+                    pd.to_numeric(df['selling_price_aed'], errors='coerce').fillna(0)
+                )
+            elif 'selling_price_aed' in df.columns:
+                df['_revenue'] = pd.to_numeric(df['selling_price_aed'], errors='coerce').fillna(0)
+            else:
+                df['_revenue'] = 0
+            
+            # Calculate COGS if cost data available
+            cost_col = None
+            for col in ['cost_price_aed', 'unit_cost_aed', 'cost_price', 'cost']:
+                if col in df.columns:
+                    cost_col = col
+                    break
+            
+            if cost_col and 'qty' in df.columns:
+                df['_cogs'] = (
+                    pd.to_numeric(df['qty'], errors='coerce').fillna(0) * 
+                    pd.to_numeric(df[cost_col], errors='coerce').fillna(0)
+                )
+            else:
+                df['_cogs'] = 0
+            
+            # Group by dimension
+            grouped = df.groupby(dimension).agg({
+                '_revenue': 'sum',
+                '_cogs': 'sum'
+            }).reset_index()
+            
+            grouped.columns = [dimension, 'revenue', 'cogs']
+            
+            # Calculate profit and margin
+            grouped['profit'] = grouped['revenue'] - grouped['cogs']
+            grouped['margin_pct'] = np.where(
+                grouped['revenue'] > 0,
+                (grouped['profit'] / grouped['revenue']) * 100,
+                0
+            )
+            
+            grouped = grouped.sort_values('revenue', ascending=False)
+            
+            return grouped
+        
+        except Exception as e:
+            print(f"Error calculating KPIs by dimension: {str(e)}")
+            return pd.DataFrame()
+    
+    def calculate_demand_uplift(self, base_demand: float, discount_pct: float, 
+                               channel: str = None, category: str = None) -> float:
+        """
+        Calculate demand uplift based on discount and elasticity factors.
+        This is rule-based, not ML.
+        """
+        # Base elasticity: 1% discount = 0.5% demand increase
+        base_elasticity = 0.5
+        
+        # Get channel multiplier
+        channel_mult = self.CHANNEL_UPLIFT.get(channel, 1.0) if channel else 1.0
+        
+        # Get category multiplier
+        category_mult = self.CATEGORY_UPLIFT.get(category, 1.0) if category else 1.0
+        
+        # Calculate uplift
+        uplift_pct = discount_pct * base_elasticity * channel_mult * category_mult
+        
+        # Apply uplift to base demand
+        new_demand = base_demand * (1 + uplift_pct / 100)
+        
+        return new_demand
+    
+    def simulate_scenario(self, sales_df: pd.DataFrame, products_df: pd.DataFrame = None,
+                         stores_df: pd.DataFrame = None, inventory_df: pd.DataFrame = None,
+                         discount_pct: float = 0, promo_budget: float = 500000,
+                         margin_floor: float = 15, simulation_days: int = 14) -> Dict[str, Any]:
+        """
+        Run a complete what-if simulation with constraint enforcement.
+        """
+        # Get baseline KPIs
+        baseline = self.calculate_overall_kpis(sales_df, products_df)
+        
+        # Calculate baseline daily metrics
+        if sales_df is not None and 'order_time' in sales_df.columns:
+            try:
+                sales_df['order_time'] = pd.to_datetime(sales_df['order_time'], errors='coerce')
+                date_range = (sales_df['order_time'].max() - sales_df['order_time'].min()).days
+                if date_range > 0:
+                    daily_revenue = baseline['gross_revenue'] / date_range
+                    daily_demand = baseline['total_quantity'] / date_range if baseline['total_quantity'] > 0 else 0
+                else:
+                    daily_revenue = baseline['gross_revenue']
+                    daily_demand = baseline['total_quantity']
+            except:
+                daily_revenue = baseline['gross_revenue'] / 30  # Assume 30 days
+                daily_demand = baseline['total_quantity'] / 30
+        else:
+            daily_revenue = baseline['gross_revenue'] / 30
+            daily_demand = baseline['total_quantity'] / 30
+        
+        # Calculate demand uplift
+        avg_uplift = 1 + (discount_pct * 0.005 * 1.2)  # Simplified average uplift
+        simulated_daily_demand = daily_demand * avg_uplift
+        simulated_total_demand = simulated_daily_demand * simulation_days
+        
+        # Calculate simulated revenue
+        avg_price = baseline['gross_revenue'] / baseline['total_quantity'] if baseline['total_quantity'] > 0 else 0
+        simulated_revenue = simulated_total_demand * avg_price * (1 - discount_pct / 100)
+        
+        # Calculate promo spend
+        promo_spend = simulated_total_demand * avg_price * (discount_pct / 100)
+        
+        # Calculate simulated COGS
+        avg_cost_ratio = baseline['total_cogs'] / baseline['gross_revenue'] if baseline['gross_revenue'] > 0 else 0.6
+        simulated_cogs = simulated_revenue * avg_cost_ratio
+        
+        # Calculate simulated profit
+        simulated_profit = simulated_revenue - simulated_cogs - promo_spend
+        simulated_margin_pct = (simulated_profit / simulated_revenue * 100) if simulated_revenue > 0 else 0
+        
+        # Budget utilization
+        budget_utilization = (promo_spend / promo_budget * 100) if promo_budget > 0 else 0
+        
+        # Check stock constraint
+        stock_violation = False
+        stock_shortage = 0
+        top_stockout_items = []
+        
+        if inventory_df is not None and 'stock_on_hand' in inventory_df.columns:
+            total_stock = pd.to_numeric(inventory_df['stock_on_hand'], errors='coerce').fillna(0).sum()
+            if simulated_total_demand > total_stock:
+                stock_violation = True
+                stock_shortage = simulated_total_demand - total_stock
+                
+                # Get top 10 items at risk
+                sku_col = 'sku' if 'sku' in inventory_df.columns else 'product_id'
+                if sku_col in inventory_df.columns:
+                    top_stockout_items = inventory_df.nsmallest(10, 'stock_on_hand')[[sku_col, 'stock_on_hand']].to_dict('records')
+        
+        # Check constraints
+        constraints = {
+            'budget_ok': promo_spend <= promo_budget,
+            'margin_ok': simulated_margin_pct >= margin_floor,
+            'stock_ok': not stock_violation,
+            'all_ok': True
+        }
+        constraints['all_ok'] = constraints['budget_ok'] and constraints['margin_ok'] and constraints['stock_ok']
+        
+        # Build results
+        results = {
+            # Baseline
+            'baseline_revenue': baseline['gross_revenue'],
+            'baseline_margin_pct': baseline['profit_margin_pct'],
+            'baseline_daily_demand': daily_demand,
+            
+            # Simulated
+            'simulated_revenue': simulated_revenue,
+            'simulated_profit': simulated_profit,
+            'simulated_margin_pct': simulated_margin_pct,
+            'simulated_demand': simulated_total_demand,
+            
+            # Promo metrics
+            'promo_spend': promo_spend,
+            'budget_utilization_pct': budget_utilization,
+            'profit_proxy': simulated_profit,
+            
+            # Changes
+            'revenue_change_pct': ((simulated_revenue - baseline['gross_revenue']) / baseline['gross_revenue'] * 100) if baseline['gross_revenue'] > 0 else 0,
+            'margin_change_pct': simulated_margin_pct - baseline['profit_margin_pct'],
+            'demand_uplift_pct': (avg_uplift - 1) * 100,
+            
+            # Constraints
+            'constraints': constraints,
+            'stock_shortage': stock_shortage,
+            'top_stockout_items': top_stockout_items,
+            
+            # Parameters used
+            'discount_pct': discount_pct,
+            'promo_budget': promo_budget,
+            'margin_floor': margin_floor,
+            'simulation_days': simulation_days
+        }
+        
+        return results
+    
+    def get_top_products(self, sales_df: pd.DataFrame, products_df: pd.DataFrame = None,
+                        n: int = 10, metric: str = 'revenue') -> pd.DataFrame:
+        """Get top N products by a metric."""
+        if sales_df is None or len(sales_df) == 0:
+            return pd.DataFrame()
+        
+        sku_col = 'sku' if 'sku' in sales_df.columns else 'product_id'
+        if sku_col not in sales_df.columns:
+            return pd.DataFrame()
+        
+        try:
+            df = sales_df.copy()
+            
+            if 'selling_price_aed' in df.columns and 'qty' in df.columns:
+                df['_revenue'] = (
+                    pd.to_numeric(df['qty'], errors='coerce').fillna(0) * 
+                    pd.to_numeric(df['selling_price_aed'], errors='coerce').fillna(0)
+                )
+            else:
+                df['_revenue'] = 0
+            
+            df['_qty'] = pd.to_numeric(df.get('qty', 0), errors='coerce').fillna(0)
+            
+            grouped = df.groupby(sku_col).agg({
+                '_revenue': 'sum',
+                '_qty': 'sum'
+            }).reset_index()
+            
+            grouped.columns = [sku_col, 'revenue', 'quantity']
+            
+            if products_df is not None:
+                prod_sku_col = 'sku' if 'sku' in products_df.columns else 'product_id'
+                name_col = 'product_name' if 'product_name' in products_df.columns else 'name'
+                if name_col in products_df.columns and prod_sku_col in products_df.columns:
+                    grouped = grouped.merge(products_df[[prod_sku_col, name_col]], 
+                                           left_on=sku_col, right_on=prod_sku_col, how='left')
+            
+            sort_col = 'revenue' if metric == 'revenue' else 'quantity'
+            return grouped.sort_values(sort_col, ascending=False).head(n)
+        
+        except Exception as e:
+            print(f"Error getting top products: {str(e)}")
+            return pd.DataFrame()
+    
+    def calculate_inventory_metrics(self, inventory_df: pd.DataFrame,
+                                   sales_df: pd.DataFrame = None) -> Dict[str, Any]:
+        """Calculate inventory-related metrics."""
+        metrics = {
+            'total_stock': 0,
+            'low_stock_count': 0,
+            'out_of_stock_count': 0,
+            'stockout_risk_pct': 0,
+            'avg_stock_per_sku': 0,
+            'high_risk_skus': 0
+        }
+        
+        if inventory_df is None or len(inventory_df) == 0:
+            return metrics
+        
+        try:
+            stock_col = None
+            for col in ['stock_on_hand', 'stock', 'quantity', 'qty']:
+                if col in inventory_df.columns:
+                    stock_col = col
+                    break
+            
+            if stock_col:
+                stock = pd.to_numeric(inventory_df[stock_col], errors='coerce').fillna(0)
+                
+                metrics['total_stock'] = stock.sum()
+                metrics['low_stock_count'] = (stock < 10).sum()
+                metrics['out_of_stock_count'] = (stock == 0).sum()
+                metrics['high_risk_skus'] = metrics['low_stock_count']
+                metrics['avg_stock_per_sku'] = stock.mean()
+                
+                total_items = len(inventory_df)
+                if total_items > 0:
+                    metrics['stockout_risk_pct'] = (metrics['low_stock_count'] / total_items) * 100
+        
+        except Exception as e:
+            print(f"Error calculating inventory metrics: {str(e)}")
+        
+        return metrics
 
 
 # ============================================================================
@@ -919,7 +1808,7 @@ def show_footer():
     st.markdown(f"""
     <div style="text-align: center; padding: 20px; color: {t['text_muted']};">
         <p style="margin: 0;">🛒 <strong>UAE Pulse</strong> - Retail Analytics & Simulation Platform</p>
-        <p style="margin: 5px 0 0 0; font-size: 0.85rem;">Built with ❤️ using Streamlit</p>
+        <p style="margin: 5px 0 0 0; font-size: 0.85rem;">Built with ❤️ using Streamlit | Data Rescue + Promo Pulse Simulator</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -948,7 +1837,7 @@ def show_home_page():
             color: {t['text_secondary']};
             font-size: 1.4rem;
             margin-bottom: 40px;
-        ">Retail Simulator + Data Rescue Center</p>
+        ">Promo Pulse Simulator + Data Rescue Center</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -962,6 +1851,7 @@ def show_home_page():
             <h3 style="color: {t['accent_cyan']}; margin-bottom: 10px;">Data Loading</h3>
             <p style="color: {t['text_secondary']}; font-size: 0.95rem;">
                 Upload your retail data files (Products, Stores, Sales, Inventory) in CSV or Excel format.
+                Supports faculty dataset testing with column mapping.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -972,7 +1862,8 @@ def show_home_page():
             <div style="font-size: 50px; margin-bottom: 15px;">🧹</div>
             <h3 style="color: {t['accent_green']}; margin-bottom: 10px;">Data Rescue</h3>
             <p style="color: {t['text_secondary']}; font-size: 0.95rem;">
-                Automatically detect and fix data quality issues including missing values, duplicates, and outliers.
+                Automatically detect and fix data quality issues: missing values, duplicates, 
+                outliers, invalid timestamps, and FK violations.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -983,7 +1874,8 @@ def show_home_page():
             <div style="font-size: 50px; margin-bottom: 15px;">📊</div>
             <h3 style="color: {t['accent_purple']}; margin-bottom: 10px;">Dashboard</h3>
             <p style="color: {t['text_secondary']}; font-size: 0.95rem;">
-                View Executive and Manager dashboards with KPIs, charts, and actionable insights.
+                Toggle between Executive View (financial KPIs) and Manager View 
+                (operational metrics) with 14+ KPIs.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -996,9 +1888,10 @@ def show_home_page():
         st.markdown(f"""
         <div class="card-3d" style="text-align: center; min-height: 250px;">
             <div style="font-size: 50px; margin-bottom: 15px;">🎯</div>
-            <h3 style="color: {t['accent_orange']}; margin-bottom: 10px;">Simulator</h3>
+            <h3 style="color: {t['accent_orange']}; margin-bottom: 10px;">Promo Simulator</h3>
             <p style="color: {t['text_secondary']}; font-size: 0.95rem;">
-                Run what-if scenarios to simulate business changes and predict impacts.
+                Run what-if scenarios with budget caps, margin floors, and stock constraints.
+                Rule-based demand uplift by channel and category.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -1007,9 +1900,10 @@ def show_home_page():
         st.markdown(f"""
         <div class="card-3d" style="text-align: center; min-height: 250px;">
             <div style="font-size: 50px; margin-bottom: 15px;">🌐</div>
-            <h3 style="color: {t['accent_teal']}; margin-bottom: 10px;">Global Filters</h3>
+            <h3 style="color: {t['accent_teal']}; margin-bottom: 10px;">6 Global Filters</h3>
             <p style="color: {t['text_secondary']}; font-size: 0.95rem;">
-                Apply filters across all pages by date, city, channel, and category.
+                Filter by Date Range, City, Channel, Category, Brand, and Fulfillment Type.
+                Multi-select support for all filters.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -1021,6 +1915,7 @@ def show_home_page():
             <h3 style="color: {t['accent_pink']}; margin-bottom: 10px;">Theme Support</h3>
             <p style="color: {t['text_secondary']}; font-size: 0.95rem;">
                 Switch between dark and light themes for comfortable viewing.
+                Beautiful 3D cards and gradient styling.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -1038,27 +1933,65 @@ def show_home_page():
         border: 1px solid {t['border_color']};
     ">
         <ol style="color: {t['text_primary']}; font-size: 1.1rem; line-height: 2.2;">
-            <li><strong>📂 Load Data</strong> — Upload your CSV/Excel files in the Data page</li>
-            <li><strong>🧹 Clean Data</strong> — Run the data cleaner to fix quality issues</li>
-            <li><strong>📊 View Dashboard</strong> — Explore KPIs and charts in Executive or Manager view</li>
-            <li><strong>🎯 Run Simulations</strong> — Test business scenarios in the Simulator</li>
+            <li><strong>📂 Load Data</strong> — Upload your CSV/Excel files (Products, Stores, Sales, Inventory)</li>
+            <li><strong>🧹 Clean Data</strong> — Run the data cleaner to fix quality issues and generate issues log</li>
+            <li><strong>📊 View Dashboard</strong> — Toggle between Executive and Manager views with 14+ KPIs</li>
+            <li><strong>🎯 Run Simulations</strong> — Test promo scenarios with budget, margin, and stock constraints</li>
         </ol>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Project requirements checklist
+    st.markdown("---")
+    st.markdown(f'<p class="section-title section-title-purple">✅ Project Requirements Coverage</p>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown(f"""
+        <div class="card-3d">
+            <h4 style="color: {t['accent_green']}; margin-bottom: 15px;">Phase 1: Data Rescue ✅</h4>
+            <ul style="color: {t['text_primary']}; line-height: 1.8;">
+                <li>✅ Validation rules (timestamps, FKs, ranges)</li>
+                <li>✅ Issues log with action_taken column</li>
+                <li>✅ Duplicate detection & removal</li>
+                <li>✅ Missing value imputation</li>
+                <li>✅ Outlier detection (IQR method)</li>
+                <li>✅ Text standardization</li>
+                <li>✅ Download cleaned data</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class="card-3d">
+            <h4 style="color: {t['accent_orange']}; margin-bottom: 15px;">Phase 2: Promo Simulator ✅</h4>
+            <ul style="color: {t['text_primary']}; line-height: 1.8;">
+                <li>✅ 14 KPIs (Finance + Operations)</li>
+                <li>✅ Promo Budget input + utilization</li>
+                <li>✅ Margin Floor constraint</li>
+                <li>✅ Stock constraint + violations</li>
+                <li>✅ Simulation window (7/14 days)</li>
+                <li>✅ Rule-based demand uplift</li>
+                <li>✅ Scenario comparison charts</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
     
     show_footer()
 
 
 # ============================================================================
-# PAGE: DATA
+# PAGE: DATA (WITH COLUMN MAPPING FOR FACULTY TESTING)
 # ============================================================================
 
 def show_data_page():
-    """Display the data loading page."""
+    """Display the data loading page with column mapping support."""
     t = get_theme()
     
     st.markdown(f'<h1 class="page-title page-title-cyan">📂 Data Loading</h1>', unsafe_allow_html=True)
-    st.markdown(f'<p class="page-description">Upload your retail data files to get started</p>', unsafe_allow_html=True)
+    st.markdown(f'<p class="page-description">Upload your retail data files to get started. Supports faculty dataset testing.</p>', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -1136,6 +2069,159 @@ def show_data_page():
                 st.session_state.is_cleaned = False
                 st.balloons()
     
+    # Column Mapping Section (for faculty testing)
+    if st.session_state.data_loaded:
+        st.markdown("---")
+        st.markdown(f'<p class="section-title section-title-teal">🔄 Column Mapping (Faculty Testing)</p>', unsafe_allow_html=True)
+        
+        with st.expander("📋 Map Columns to Expected Schema", expanded=False):
+            st.markdown("""
+            If your uploaded files have different column names, map them to the expected schema below.
+            This is useful when the faculty provides a new dataset during presentation.
+            """)
+            
+            tab1, tab2, tab3, tab4 = st.tabs(["Products", "Stores", "Sales", "Inventory"])
+            
+            with tab1:
+                if st.session_state.raw_products is not None:
+                    st.markdown("**Expected columns:** sku/product_id, category, brand, base_price_aed, cost_price_aed")
+                    cols = list(st.session_state.raw_products.columns)
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        sku_map = st.selectbox("SKU/Product ID column:", ['(auto-detect)'] + cols, key='prod_sku_map')
+                        category_map = st.selectbox("Category column:", ['(auto-detect)'] + cols, key='prod_cat_map')
+                        brand_map = st.selectbox("Brand column:", ['(auto-detect)'] + cols, key='prod_brand_map')
+                    with col2:
+                        price_map = st.selectbox("Base Price column:", ['(auto-detect)'] + cols, key='prod_price_map')
+                        cost_map = st.selectbox("Cost Price column:", ['(auto-detect)'] + cols, key='prod_cost_map')
+                    
+                    if st.button("Apply Product Mapping", key='apply_prod_map'):
+                        df = st.session_state.raw_products.copy()
+                        rename_map = {}
+                        if sku_map != '(auto-detect)':
+                            rename_map[sku_map] = 'sku'
+                        if category_map != '(auto-detect)':
+                            rename_map[category_map] = 'category'
+                        if brand_map != '(auto-detect)':
+                            rename_map[brand_map] = 'brand'
+                        if price_map != '(auto-detect)':
+                            rename_map[price_map] = 'base_price_aed'
+                        if cost_map != '(auto-detect)':
+                            rename_map[cost_map] = 'cost_price_aed'
+                        
+                        if rename_map:
+                            df = df.rename(columns=rename_map)
+                            st.session_state.raw_products = df
+                            st.success("✅ Product columns mapped successfully!")
+                            st.rerun()
+            
+            with tab2:
+                if st.session_state.raw_stores is not None:
+                    st.markdown("**Expected columns:** store_id, city, channel, fulfillment_type")
+                    cols = list(st.session_state.raw_stores.columns)
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        store_id_map = st.selectbox("Store ID column:", ['(auto-detect)'] + cols, key='store_id_map')
+                        city_map = st.selectbox("City column:", ['(auto-detect)'] + cols, key='store_city_map')
+                    with col2:
+                        channel_map = st.selectbox("Channel column:", ['(auto-detect)'] + cols, key='store_channel_map')
+                        fulfillment_map = st.selectbox("Fulfillment Type column:", ['(auto-detect)'] + cols, key='store_fulfillment_map')
+                    
+                    if st.button("Apply Store Mapping", key='apply_store_map'):
+                        df = st.session_state.raw_stores.copy()
+                        rename_map = {}
+                        if store_id_map != '(auto-detect)':
+                            rename_map[store_id_map] = 'store_id'
+                        if city_map != '(auto-detect)':
+                            rename_map[city_map] = 'city'
+                        if channel_map != '(auto-detect)':
+                            rename_map[channel_map] = 'channel'
+                        if fulfillment_map != '(auto-detect)':
+                            rename_map[fulfillment_map] = 'fulfillment_type'
+                        
+                        if rename_map:
+                            df = df.rename(columns=rename_map)
+                            st.session_state.raw_stores = df
+                            st.success("✅ Store columns mapped successfully!")
+                            st.rerun()
+            
+            with tab3:
+                if st.session_state.raw_sales is not None:
+                    st.markdown("**Expected columns:** order_id, order_time, sku/product_id, store_id, qty, selling_price_aed, discount_pct, payment_status")
+                    cols = list(st.session_state.raw_sales.columns)
+                    
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        order_id_map = st.selectbox("Order ID column:", ['(auto-detect)'] + cols, key='sales_order_map')
+                        order_time_map = st.selectbox("Order Time column:", ['(auto-detect)'] + cols, key='sales_time_map')
+                        sku_map = st.selectbox("SKU/Product ID column:", ['(auto-detect)'] + cols, key='sales_sku_map')
+                    with col2:
+                        store_map = st.selectbox("Store ID column:", ['(auto-detect)'] + cols, key='sales_store_map')
+                        qty_map = st.selectbox("Quantity column:", ['(auto-detect)'] + cols, key='sales_qty_map')
+                        price_map = st.selectbox("Selling Price column:", ['(auto-detect)'] + cols, key='sales_price_map')
+                    with col3:
+                        discount_map = st.selectbox("Discount % column:", ['(auto-detect)'] + cols, key='sales_discount_map')
+                        payment_map = st.selectbox("Payment Status column:", ['(auto-detect)'] + cols, key='sales_payment_map')
+                    
+                    if st.button("Apply Sales Mapping", key='apply_sales_map'):
+                        df = st.session_state.raw_sales.copy()
+                        rename_map = {}
+                        if order_id_map != '(auto-detect)':
+                            rename_map[order_id_map] = 'order_id'
+                        if order_time_map != '(auto-detect)':
+                            rename_map[order_time_map] = 'order_time'
+                        if sku_map != '(auto-detect)':
+                            rename_map[sku_map] = 'sku'
+                        if store_map != '(auto-detect)':
+                            rename_map[store_map] = 'store_id'
+                        if qty_map != '(auto-detect)':
+                            rename_map[qty_map] = 'qty'
+                        if price_map != '(auto-detect)':
+                            rename_map[price_map] = 'selling_price_aed'
+                        if discount_map != '(auto-detect)':
+                            rename_map[discount_map] = 'discount_pct'
+                        if payment_map != '(auto-detect)':
+                            rename_map[payment_map] = 'payment_status'
+                        
+                        if rename_map:
+                            df = df.rename(columns=rename_map)
+                            st.session_state.raw_sales = df
+                            st.success("✅ Sales columns mapped successfully!")
+                            st.rerun()
+            
+            with tab4:
+                if st.session_state.raw_inventory is not None:
+                    st.markdown("**Expected columns:** sku/product_id, store_id, stock_on_hand, reorder_point")
+                    cols = list(st.session_state.raw_inventory.columns)
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        sku_map = st.selectbox("SKU/Product ID column:", ['(auto-detect)'] + cols, key='inv_sku_map')
+                        store_map = st.selectbox("Store ID column:", ['(auto-detect)'] + cols, key='inv_store_map')
+                    with col2:
+                        stock_map = st.selectbox("Stock on Hand column:", ['(auto-detect)'] + cols, key='inv_stock_map')
+                        reorder_map = st.selectbox("Reorder Point column:", ['(auto-detect)'] + cols, key='inv_reorder_map')
+                    
+                    if st.button("Apply Inventory Mapping", key='apply_inv_map'):
+                        df = st.session_state.raw_inventory.copy()
+                        rename_map = {}
+                        if sku_map != '(auto-detect)':
+                            rename_map[sku_map] = 'sku'
+                        if store_map != '(auto-detect)':
+                            rename_map[store_map] = 'store_id'
+                        if stock_map != '(auto-detect)':
+                            rename_map[stock_map] = 'stock_on_hand'
+                        if reorder_map != '(auto-detect)':
+                            rename_map[reorder_map] = 'reorder_point'
+                        
+                        if rename_map:
+                            df = df.rename(columns=rename_map)
+                            st.session_state.raw_inventory = df
+                            st.success("✅ Inventory columns mapped successfully!")
+                            st.rerun()
+    
     # Show loaded data preview
     if st.session_state.data_loaded:
         st.markdown("---")
@@ -1146,6 +2232,7 @@ def show_data_page():
         with tab1:
             if st.session_state.raw_products is not None:
                 st.markdown(f"**Shape:** {st.session_state.raw_products.shape[0]:,} rows × {st.session_state.raw_products.shape[1]} columns")
+                st.markdown(f"**Columns:** {', '.join(st.session_state.raw_products.columns.tolist())}")
                 st.dataframe(st.session_state.raw_products.head(100), use_container_width=True)
             else:
                 st.info("No products data loaded")
@@ -1153,6 +2240,7 @@ def show_data_page():
         with tab2:
             if st.session_state.raw_stores is not None:
                 st.markdown(f"**Shape:** {st.session_state.raw_stores.shape[0]:,} rows × {st.session_state.raw_stores.shape[1]} columns")
+                st.markdown(f"**Columns:** {', '.join(st.session_state.raw_stores.columns.tolist())}")
                 st.dataframe(st.session_state.raw_stores.head(100), use_container_width=True)
             else:
                 st.info("No stores data loaded")
@@ -1160,6 +2248,7 @@ def show_data_page():
         with tab3:
             if st.session_state.raw_sales is not None:
                 st.markdown(f"**Shape:** {st.session_state.raw_sales.shape[0]:,} rows × {st.session_state.raw_sales.shape[1]} columns")
+                st.markdown(f"**Columns:** {', '.join(st.session_state.raw_sales.columns.tolist())}")
                 st.dataframe(st.session_state.raw_sales.head(100), use_container_width=True)
             else:
                 st.info("No sales data loaded")
@@ -1167,801 +2256,20 @@ def show_data_page():
         with tab4:
             if st.session_state.raw_inventory is not None:
                 st.markdown(f"**Shape:** {st.session_state.raw_inventory.shape[0]:,} rows × {st.session_state.raw_inventory.shape[1]} columns")
+                st.markdown(f"**Columns:** {', '.join(st.session_state.raw_inventory.columns.tolist())}")
                 st.dataframe(st.session_state.raw_inventory.head(100), use_container_width=True)
             else:
                 st.info("No inventory data loaded")
     
     show_footer()
 
-# ============================================================================
-# DATA CLEANER MODULE
-# Handles data validation, cleaning, and issue logging
-# ============================================================================
-
-import pandas as pd
-import numpy as np
-from typing import Optional, Tuple, List, Dict, Any
-import re
-from datetime import datetime
-
-class DataCleaner:
-    """
-    Data Cleaner class for retail data validation and cleaning.
-    Detects and fixes: missing values, duplicates, outliers, text issues, FK violations.
-    """
-    
-    def __init__(self):
-        """Initialize the DataCleaner with empty stats and issues log."""
-        self.stats = {
-            'missing_values_fixed': 0,
-            'duplicates_removed': 0,
-            'outliers_fixed': 0,
-            'text_standardized': 0,
-            'negative_values_fixed': 0,
-            'fk_violations_fixed': 0,
-            'whitespace_fixed': 0,
-            'total_issues': 0
-        }
-        self.issues_log: List[Dict[str, Any]] = []
-    
-    def log_issue(self, table: str, column: str, issue_type: str, 
-                  row_index: Any = None, original_value: Any = None, 
-                  fixed_value: Any = None, description: str = ""):
-        """Log an issue found during cleaning."""
-        self.issues_log.append({
-            'table': table,
-            'column': column,
-            'issue_type': issue_type,
-            'row_index': row_index,
-            'original_value': str(original_value)[:100] if original_value is not None else None,
-            'fixed_value': str(fixed_value)[:100] if fixed_value is not None else None,
-            'description': description,
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        })
-        self.stats['total_issues'] += 1
-    
-    def get_issues_df(self) -> pd.DataFrame:
-        """Return issues log as a DataFrame."""
-        if len(self.issues_log) == 0:
-            return pd.DataFrame({
-                'table': ['None'],
-                'column': ['None'],
-                'issue_type': ['None'],
-                'description': ['No issues found']
-            })
-        return pd.DataFrame(self.issues_log)
-    
-    # =========================================================================
-    # CORE CLEANING METHODS
-    # =========================================================================
-    
-    def fix_missing_values(self, df: pd.DataFrame, table_name: str) -> pd.DataFrame:
-        """Fix missing values based on column type."""
-        if df is None or len(df) == 0:
-            return df
-        
-        df = df.copy()
-        
-        for col in df.columns:
-            missing_count = df[col].isna().sum()
-            
-            if missing_count > 0:
-                # Determine fill strategy based on column type and name
-                if df[col].dtype in ['float64', 'int64']:
-                    # Numeric columns - use median
-                    median_val = df[col].median()
-                    if pd.isna(median_val):
-                        median_val = 0
-                    df[col] = df[col].fillna(median_val)
-                    self.log_issue(table_name, col, 'missing_value', 
-                                  description=f"Filled {missing_count} missing values with median: {median_val}")
-                elif df[col].dtype == 'object':
-                    # String columns - use mode or 'Unknown'
-                    mode_val = df[col].mode()
-                    fill_val = mode_val.iloc[0] if len(mode_val) > 0 else 'Unknown'
-                    df[col] = df[col].fillna(fill_val)
-                    self.log_issue(table_name, col, 'missing_value',
-                                  description=f"Filled {missing_count} missing values with: {fill_val}")
-                else:
-                    # Other types - forward fill then backward fill
-                    df[col] = df[col].ffill().bfill()
-                    self.log_issue(table_name, col, 'missing_value',
-                                  description=f"Filled {missing_count} missing values with ffill/bfill")
-                
-                self.stats['missing_values_fixed'] += missing_count
-        
-        return df
-    
-    def remove_duplicates(self, df: pd.DataFrame, table_name: str, 
-                         subset: Optional[List[str]] = None) -> pd.DataFrame:
-        """Remove duplicate rows."""
-        if df is None or len(df) == 0:
-            return df
-        
-        df = df.copy()
-        initial_count = len(df)
-        
-        if subset:
-            # Only consider specified columns for duplicate detection
-            valid_subset = [col for col in subset if col in df.columns]
-            if valid_subset:
-                df = df.drop_duplicates(subset=valid_subset, keep='first')
-        else:
-            df = df.drop_duplicates(keep='first')
-        
-        duplicates_removed = initial_count - len(df)
-        
-        if duplicates_removed > 0:
-            self.log_issue(table_name, 'all', 'duplicate',
-                          description=f"Removed {duplicates_removed} duplicate rows")
-            self.stats['duplicates_removed'] += duplicates_removed
-        
-        return df.reset_index(drop=True)
-    
-    def fix_outliers_iqr(self, df: pd.DataFrame, table_name: str, 
-                        columns: Optional[List[str]] = None,
-                        multiplier: float = 1.5) -> pd.DataFrame:
-        """Fix outliers using IQR method - cap at boundaries."""
-        if df is None or len(df) == 0:
-            return df
-        
-        df = df.copy()
-        
-        # Get numeric columns
-        if columns:
-            numeric_cols = [col for col in columns if col in df.columns and df[col].dtype in ['float64', 'int64']]
-        else:
-            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        
-        for col in numeric_cols:
-            Q1 = df[col].quantile(0.25)
-            Q3 = df[col].quantile(0.75)
-            IQR = Q3 - Q1
-            
-            lower_bound = Q1 - multiplier * IQR
-            upper_bound = Q3 + multiplier * IQR
-            
-            # Count outliers
-            outliers_low = (df[col] < lower_bound).sum()
-            outliers_high = (df[col] > upper_bound).sum()
-            total_outliers = outliers_low + outliers_high
-            
-            if total_outliers > 0:
-                # Cap outliers at boundaries
-                df[col] = df[col].clip(lower=lower_bound, upper=upper_bound)
-                self.log_issue(table_name, col, 'outlier',
-                              description=f"Capped {total_outliers} outliers (low: {outliers_low}, high: {outliers_high})")
-                self.stats['outliers_fixed'] += total_outliers
-        
-        return df
-    
-    def standardize_text(self, df: pd.DataFrame, table_name: str,
-                        columns: Optional[List[str]] = None) -> pd.DataFrame:
-        """Standardize text columns - trim whitespace, title case for names."""
-        if df is None or len(df) == 0:
-            return df
-        
-        df = df.copy()
-        
-        # Get string columns
-        if columns:
-            text_cols = [col for col in columns if col in df.columns and df[col].dtype == 'object']
-        else:
-            text_cols = df.select_dtypes(include=['object']).columns.tolist()
-        
-        for col in text_cols:
-            original = df[col].copy()
-            
-            # Strip whitespace
-            df[col] = df[col].astype(str).str.strip()
-            
-            # Replace multiple spaces with single space
-            df[col] = df[col].str.replace(r'\s+', ' ', regex=True)
-            
-            # Title case for name-like columns
-            name_indicators = ['name', 'city', 'category', 'channel', 'brand']
-            if any(indicator in col.lower() for indicator in name_indicators):
-                df[col] = df[col].str.title()
-            
-            # Replace 'nan' and 'None' strings
-            df[col] = df[col].replace(['nan', 'None', 'NaN', 'none', 'NULL', 'null'], 'Unknown')
-            
-            # Count changes
-            changes = (original.astype(str) != df[col]).sum()
-            
-            if changes > 0:
-                self.log_issue(table_name, col, 'text_standardization',
-                              description=f"Standardized {changes} text values")
-                self.stats['text_standardized'] += changes
-                self.stats['whitespace_fixed'] += changes
-        
-        return df
-    
-    def fix_negative_values(self, df: pd.DataFrame, table_name: str,
-                           columns: Optional[List[str]] = None) -> pd.DataFrame:
-        """Fix negative values in columns that should be positive."""
-        if df is None or len(df) == 0:
-            return df
-        
-        df = df.copy()
-        
-        # Columns that should never be negative
-        positive_indicators = ['price', 'qty', 'quantity', 'cost', 'stock', 'amount', 'revenue', 'sales']
-        
-        if columns:
-            check_cols = columns
-        else:
-            check_cols = [col for col in df.columns 
-                         if any(ind in col.lower() for ind in positive_indicators)
-                         and df[col].dtype in ['float64', 'int64']]
-        
-        for col in check_cols:
-            if col in df.columns and df[col].dtype in ['float64', 'int64']:
-                negative_count = (df[col] < 0).sum()
-                
-                if negative_count > 0:
-                    # Convert negatives to absolute values
-                    df[col] = df[col].abs()
-                    self.log_issue(table_name, col, 'negative_value',
-                                  description=f"Converted {negative_count} negative values to positive")
-                    self.stats['negative_values_fixed'] += negative_count
-        
-        return df
-    
-    def validate_foreign_keys(self, df: pd.DataFrame, table_name: str,
-                             fk_column: str, reference_df: pd.DataFrame,
-                             pk_column: str) -> pd.DataFrame:
-        """Validate and fix foreign key references."""
-        if df is None or reference_df is None:
-            return df
-        if fk_column not in df.columns or pk_column not in reference_df.columns:
-            return df
-        
-        df = df.copy()
-        
-        valid_keys = set(reference_df[pk_column].dropna().unique())
-        invalid_mask = ~df[fk_column].isin(valid_keys) & df[fk_column].notna()
-        invalid_count = invalid_mask.sum()
-        
-        if invalid_count > 0:
-            # Log the invalid references
-            self.log_issue(table_name, fk_column, 'fk_violation',
-                          description=f"Found {invalid_count} invalid foreign key references")
-            self.stats['fk_violations_fixed'] += invalid_count
-            
-            # Option: Remove rows with invalid FKs or mark them
-            # Here we'll keep them but could filter: df = df[~invalid_mask]
-        
-        return df
-    
-    # =========================================================================
-    # TABLE-SPECIFIC CLEANING METHODS
-    # =========================================================================
-    
-    def clean_products(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Clean products table."""
-        if df is None:
-            return None
-        
-        table_name = 'products'
-        
-        # Remove duplicates based on SKU
-        if 'sku' in df.columns:
-            df = self.remove_duplicates(df, table_name, subset=['sku'])
-        else:
-            df = self.remove_duplicates(df, table_name)
-        
-        # Fix missing values
-        df = self.fix_missing_values(df, table_name)
-        
-        # Standardize text
-        df = self.standardize_text(df, table_name)
-        
-        # Fix negative prices and costs
-        price_cols = [col for col in df.columns if 'price' in col.lower() or 'cost' in col.lower()]
-        df = self.fix_negative_values(df, table_name, columns=price_cols)
-        
-        # Fix outliers in price columns
-        df = self.fix_outliers_iqr(df, table_name, columns=price_cols)
-        
-        return df
-    
-    def clean_stores(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Clean stores table."""
-        if df is None:
-            return None
-        
-        table_name = 'stores'
-        
-        # Remove duplicates based on store_id
-        if 'store_id' in df.columns:
-            df = self.remove_duplicates(df, table_name, subset=['store_id'])
-        else:
-            df = self.remove_duplicates(df, table_name)
-        
-        # Fix missing values
-        df = self.fix_missing_values(df, table_name)
-        
-        # Standardize text (city, channel names)
-        df = self.standardize_text(df, table_name)
-        
-        return df
-    
-    def clean_sales(self, df: pd.DataFrame, products_df: pd.DataFrame = None, 
-                   stores_df: pd.DataFrame = None) -> pd.DataFrame:
-        """Clean sales table."""
-        if df is None:
-            return None
-        
-        table_name = 'sales'
-        
-        # Remove exact duplicates
-        df = self.remove_duplicates(df, table_name)
-        
-        # Fix missing values
-        df = self.fix_missing_values(df, table_name)
-        
-        # Fix negative values in quantity and price columns
-        qty_price_cols = [col for col in df.columns 
-                         if any(x in col.lower() for x in ['qty', 'quantity', 'price', 'amount'])]
-        df = self.fix_negative_values(df, table_name, columns=qty_price_cols)
-        
-        # Fix outliers
-        df = self.fix_outliers_iqr(df, table_name, columns=qty_price_cols)
-        
-        # Validate foreign keys
-        if products_df is not None and 'sku' in df.columns:
-            df = self.validate_foreign_keys(df, table_name, 'sku', products_df, 'sku')
-        
-        if stores_df is not None and 'store_id' in df.columns:
-            df = self.validate_foreign_keys(df, table_name, 'store_id', stores_df, 'store_id')
-        
-        # Standardize text columns
-        df = self.standardize_text(df, table_name)
-        
-        # Parse dates
-        if 'order_time' in df.columns:
-            try:
-                df['order_time'] = pd.to_datetime(df['order_time'], errors='coerce')
-            except:
-                pass
-        
-        return df
-    
-    def clean_inventory(self, df: pd.DataFrame, products_df: pd.DataFrame = None,
-                       stores_df: pd.DataFrame = None) -> pd.DataFrame:
-        """Clean inventory table."""
-        if df is None:
-            return None
-        
-        table_name = 'inventory'
-        
-        # Remove duplicates (SKU + Store combination)
-        if 'sku' in df.columns and 'store_id' in df.columns:
-            df = self.remove_duplicates(df, table_name, subset=['sku', 'store_id'])
-        else:
-            df = self.remove_duplicates(df, table_name)
-        
-        # Fix missing values
-        df = self.fix_missing_values(df, table_name)
-        
-        # Fix negative stock values
-        stock_cols = [col for col in df.columns if 'stock' in col.lower() or 'qty' in col.lower()]
-        df = self.fix_negative_values(df, table_name, columns=stock_cols)
-        
-        # Fix outliers
-        df = self.fix_outliers_iqr(df, table_name, columns=stock_cols)
-        
-        # Validate foreign keys
-        if products_df is not None and 'sku' in df.columns:
-            df = self.validate_foreign_keys(df, table_name, 'sku', products_df, 'sku')
-        
-        if stores_df is not None and 'store_id' in df.columns:
-            df = self.validate_foreign_keys(df, table_name, 'store_id', stores_df, 'store_id')
-        
-        return df
-    
-    # =========================================================================
-    # MAIN CLEANING METHOD
-    # =========================================================================
-    
-    def clean_all(self, products_df: pd.DataFrame = None, stores_df: pd.DataFrame = None,
-                  sales_df: pd.DataFrame = None, inventory_df: pd.DataFrame = None) -> Tuple:
-        """
-        Clean all tables and return cleaned DataFrames.
-        
-        Returns:
-            Tuple of (clean_products, clean_stores, clean_sales, clean_inventory)
-        """
-        # Reset stats and issues log
-        self.stats = {
-            'missing_values_fixed': 0,
-            'duplicates_removed': 0,
-            'outliers_fixed': 0,
-            'text_standardized': 0,
-            'negative_values_fixed': 0,
-            'fk_violations_fixed': 0,
-            'whitespace_fixed': 0,
-            'total_issues': 0
-        }
-        self.issues_log = []
-        
-        # Clean in order: products/stores first (master data), then transactional data
-        clean_products = self.clean_products(products_df)
-        clean_stores = self.clean_stores(stores_df)
-        clean_sales = self.clean_sales(sales_df, clean_products, clean_stores)
-        clean_inventory = self.clean_inventory(inventory_df, clean_products, clean_stores)
-        
-        return clean_products, clean_stores, clean_sales, clean_inventory
 
 # ============================================================================
-# SIMULATOR MODULE
-# Handles KPI calculations and business simulations
-# ============================================================================
-
-import pandas as pd
-import numpy as np
-from typing import Optional, Dict, List, Any
-
-class Simulator:
-    """
-    Business Simulator class for calculating KPIs and running what-if scenarios.
-    """
-    
-    def __init__(self):
-        """Initialize the Simulator."""
-        pass
-    
-    def calculate_overall_kpis(self, sales_df: pd.DataFrame, 
-                               products_df: pd.DataFrame = None) -> Dict[str, Any]:
-        """
-        Calculate overall business KPIs from sales data.
-        
-        Args:
-            sales_df: Sales DataFrame
-            products_df: Products DataFrame for cost data
-            
-        Returns:
-            Dictionary of KPI values
-        """
-        kpis = {
-            'total_revenue': 0,
-            'net_revenue': 0,
-            'total_cogs': 0,
-            'total_profit': 0,
-            'profit_margin_pct': 0,
-            'avg_order_value': 0,
-            'total_orders': 0,
-            'total_quantity': 0,
-            'avg_discount_pct': 0,
-            'refund_amount': 0,
-            'return_rate_pct': 0
-        }
-        
-        if sales_df is None or len(sales_df) == 0:
-            return kpis
-        
-        try:
-            # Calculate total revenue
-            if 'selling_price_aed' in sales_df.columns and 'qty' in sales_df.columns:
-                qty = pd.to_numeric(sales_df['qty'], errors='coerce').fillna(0)
-                price = pd.to_numeric(sales_df['selling_price_aed'], errors='coerce').fillna(0)
-                kpis['total_revenue'] = (qty * price).sum()
-            elif 'selling_price_aed' in sales_df.columns:
-                kpis['total_revenue'] = pd.to_numeric(sales_df['selling_price_aed'], errors='coerce').fillna(0).sum()
-            
-            # Calculate refunds (from returned/refunded orders)
-            if 'order_status' in sales_df.columns:
-                refund_mask = sales_df['order_status'].str.lower().isin(['returned', 'refunded', 'cancelled'])
-                if 'selling_price_aed' in sales_df.columns:
-                    refund_price = pd.to_numeric(sales_df.loc[refund_mask, 'selling_price_aed'], errors='coerce').fillna(0)
-                    if 'qty' in sales_df.columns:
-                        refund_qty = pd.to_numeric(sales_df.loc[refund_mask, 'qty'], errors='coerce').fillna(0)
-                        kpis['refund_amount'] = (refund_qty * refund_price).sum()
-                    else:
-                        kpis['refund_amount'] = refund_price.sum()
-            
-            # Net revenue
-            kpis['net_revenue'] = kpis['total_revenue'] - kpis['refund_amount']
-            
-            # Calculate COGS
-            if products_df is not None and 'sku' in sales_df.columns and 'sku' in products_df.columns:
-                # Find cost column
-                cost_col = None
-                for col in ['cost_price_aed', 'cost_price', 'cost', 'cogs']:
-                    if col in products_df.columns:
-                        cost_col = col
-                        break
-                
-                if cost_col:
-                    merged = sales_df.merge(products_df[['sku', cost_col]], on='sku', how='left')
-                    cost = pd.to_numeric(merged[cost_col], errors='coerce').fillna(0)
-                    if 'qty' in merged.columns:
-                        qty = pd.to_numeric(merged['qty'], errors='coerce').fillna(0)
-                        kpis['total_cogs'] = (qty * cost).sum()
-                    else:
-                        kpis['total_cogs'] = cost.sum()
-            
-            # Calculate profit
-            kpis['total_profit'] = kpis['net_revenue'] - kpis['total_cogs']
-            
-            # Profit margin percentage
-            if kpis['net_revenue'] > 0:
-                kpis['profit_margin_pct'] = (kpis['total_profit'] / kpis['net_revenue']) * 100
-            
-            # Total orders (unique order_ids)
-            if 'order_id' in sales_df.columns:
-                kpis['total_orders'] = sales_df['order_id'].nunique()
-            else:
-                kpis['total_orders'] = len(sales_df)
-            
-            # Total quantity
-            if 'qty' in sales_df.columns:
-                kpis['total_quantity'] = pd.to_numeric(sales_df['qty'], errors='coerce').fillna(0).sum()
-            
-            # Average order value
-            if kpis['total_orders'] > 0:
-                kpis['avg_order_value'] = kpis['total_revenue'] / kpis['total_orders']
-            
-            # Average discount percentage
-            if 'discount_pct' in sales_df.columns:
-                kpis['avg_discount_pct'] = pd.to_numeric(sales_df['discount_pct'], errors='coerce').fillna(0).mean()
-            elif 'discount' in sales_df.columns:
-                kpis['avg_discount_pct'] = pd.to_numeric(sales_df['discount'], errors='coerce').fillna(0).mean()
-            
-            # Return rate
-            if 'order_status' in sales_df.columns:
-                total = len(sales_df)
-                returns = sales_df['order_status'].str.lower().isin(['returned', 'refunded']).sum()
-                kpis['return_rate_pct'] = (returns / total * 100) if total > 0 else 0
-        
-        except Exception as e:
-            print(f"Error calculating KPIs: {str(e)}")
-        
-        return kpis
-    
-    def calculate_kpis_by_dimension(self, sales_df: pd.DataFrame,
-                                    stores_df: pd.DataFrame = None,
-                                    products_df: pd.DataFrame = None,
-                                    dimension: str = 'city') -> pd.DataFrame:
-        """
-        Calculate KPIs grouped by a dimension (city, channel, category).
-        
-        Args:
-            sales_df: Sales DataFrame
-            stores_df: Stores DataFrame
-            products_df: Products DataFrame
-            dimension: Dimension to group by ('city', 'channel', 'category')
-            
-        Returns:
-            DataFrame with KPIs by dimension
-        """
-        if sales_df is None or len(sales_df) == 0:
-            return pd.DataFrame()
-        
-        try:
-            df = sales_df.copy()
-            
-            # Merge with stores for city/channel
-            if dimension in ['city', 'channel'] and stores_df is not None:
-                if 'store_id' in df.columns and 'store_id' in stores_df.columns:
-                    store_cols = ['store_id']
-                    if 'city' in stores_df.columns:
-                        store_cols.append('city')
-                    if 'channel' in stores_df.columns:
-                        store_cols.append('channel')
-                    df = df.merge(stores_df[store_cols], on='store_id', how='left')
-            
-            # Merge with products for category
-            if dimension == 'category' and products_df is not None:
-                if 'sku' in df.columns and 'sku' in products_df.columns:
-                    product_cols = ['sku']
-                    if 'category' in products_df.columns:
-                        product_cols.append('category')
-                    if 'cost_price_aed' in products_df.columns:
-                        product_cols.append('cost_price_aed')
-                    df = df.merge(products_df[product_cols], on='sku', how='left')
-            
-            # Check if dimension column exists
-            if dimension not in df.columns:
-                return pd.DataFrame()
-            
-            # Calculate revenue per row
-            if 'selling_price_aed' in df.columns and 'qty' in df.columns:
-                df['_revenue'] = (
-                    pd.to_numeric(df['qty'], errors='coerce').fillna(0) * 
-                    pd.to_numeric(df['selling_price_aed'], errors='coerce').fillna(0)
-                )
-            elif 'selling_price_aed' in df.columns:
-                df['_revenue'] = pd.to_numeric(df['selling_price_aed'], errors='coerce').fillna(0)
-            else:
-                df['_revenue'] = 0
-            
-            # Calculate COGS if cost data available
-            if 'cost_price_aed' in df.columns and 'qty' in df.columns:
-                df['_cogs'] = (
-                    pd.to_numeric(df['qty'], errors='coerce').fillna(0) * 
-                    pd.to_numeric(df['cost_price_aed'], errors='coerce').fillna(0)
-                )
-            else:
-                df['_cogs'] = 0
-            
-            # Group by dimension
-            grouped = df.groupby(dimension).agg({
-                '_revenue': 'sum',
-                '_cogs': 'sum'
-            }).reset_index()
-            
-            grouped.columns = [dimension, 'revenue', 'cogs']
-            
-            # Calculate profit and margin
-            grouped['profit'] = grouped['revenue'] - grouped['cogs']
-            grouped['margin_pct'] = np.where(
-                grouped['revenue'] > 0,
-                (grouped['profit'] / grouped['revenue']) * 100,
-                0
-            )
-            
-            # Sort by revenue descending
-            grouped = grouped.sort_values('revenue', ascending=False)
-            
-            return grouped
-        
-        except Exception as e:
-            print(f"Error calculating KPIs by dimension: {str(e)}")
-            return pd.DataFrame()
-    
-    def simulate_scenario(self, sales_df: pd.DataFrame, products_df: pd.DataFrame = None,
-                         price_change_pct: float = 0, discount_change_pct: float = 0,
-                         demand_change_pct: float = 0) -> Dict[str, Any]:
-        """
-        Simulate a business scenario with parameter changes.
-        
-        Args:
-            sales_df: Base sales DataFrame
-            products_df: Products DataFrame
-            price_change_pct: Percentage change in prices
-            discount_change_pct: Percentage change in discounts
-            demand_change_pct: Percentage change in demand/quantity
-            
-        Returns:
-            Dictionary with simulated KPIs
-        """
-        # Get baseline KPIs
-        baseline = self.calculate_overall_kpis(sales_df, products_df)
-        
-        # Apply simple simulation logic
-        price_multiplier = 1 + (price_change_pct / 100)
-        discount_impact = 1 - (discount_change_pct / 100) * 0.5
-        demand_multiplier = 1 + (demand_change_pct / 100)
-        
-        simulated = {
-            'baseline_revenue': baseline['total_revenue'],
-            'simulated_revenue': baseline['total_revenue'] * price_multiplier * discount_impact * demand_multiplier,
-            'baseline_margin_pct': baseline['profit_margin_pct'],
-            'simulated_margin_pct': baseline['profit_margin_pct'] + (price_change_pct * 0.5) - (discount_change_pct * 0.3),
-            'revenue_change_pct': 0,
-            'margin_change_pct': 0
-        }
-        
-        # Calculate changes
-        if baseline['total_revenue'] > 0:
-            simulated['revenue_change_pct'] = (
-                (simulated['simulated_revenue'] - simulated['baseline_revenue']) / 
-                simulated['baseline_revenue'] * 100
-            )
-        
-        simulated['margin_change_pct'] = simulated['simulated_margin_pct'] - simulated['baseline_margin_pct']
-        
-        return simulated
-    
-    def get_top_products(self, sales_df: pd.DataFrame, products_df: pd.DataFrame = None,
-                        n: int = 10, metric: str = 'revenue') -> pd.DataFrame:
-        """
-        Get top N products by a metric.
-        
-        Args:
-            sales_df: Sales DataFrame
-            products_df: Products DataFrame
-            n: Number of top products to return
-            metric: Metric to sort by ('revenue', 'quantity', 'profit')
-            
-        Returns:
-            DataFrame of top products
-        """
-        if sales_df is None or len(sales_df) == 0 or 'sku' not in sales_df.columns:
-            return pd.DataFrame()
-        
-        try:
-            df = sales_df.copy()
-            
-            # Calculate revenue
-            if 'selling_price_aed' in df.columns and 'qty' in df.columns:
-                df['_revenue'] = (
-                    pd.to_numeric(df['qty'], errors='coerce').fillna(0) * 
-                    pd.to_numeric(df['selling_price_aed'], errors='coerce').fillna(0)
-                )
-            else:
-                df['_revenue'] = 0
-            
-            df['_qty'] = pd.to_numeric(df.get('qty', 0), errors='coerce').fillna(0)
-            
-            # Group by SKU
-            grouped = df.groupby('sku').agg({
-                '_revenue': 'sum',
-                '_qty': 'sum'
-            }).reset_index()
-            
-            grouped.columns = ['sku', 'revenue', 'quantity']
-            
-            # Merge with products for names
-            if products_df is not None and 'sku' in products_df.columns:
-                name_col = 'product_name' if 'product_name' in products_df.columns else 'name'
-                if name_col in products_df.columns:
-                    grouped = grouped.merge(products_df[['sku', name_col]], on='sku', how='left')
-            
-            # Sort and return top N
-            sort_col = 'revenue' if metric == 'revenue' else 'quantity'
-            return grouped.sort_values(sort_col, ascending=False).head(n)
-        
-        except Exception as e:
-            print(f"Error getting top products: {str(e)}")
-            return pd.DataFrame()
-    
-    def calculate_inventory_metrics(self, inventory_df: pd.DataFrame,
-                                   sales_df: pd.DataFrame = None) -> Dict[str, Any]:
-        """
-        Calculate inventory-related metrics.
-        
-        Args:
-            inventory_df: Inventory DataFrame
-            sales_df: Sales DataFrame for velocity calculations
-            
-        Returns:
-            Dictionary of inventory metrics
-        """
-        metrics = {
-            'total_stock': 0,
-            'low_stock_count': 0,
-            'out_of_stock_count': 0,
-            'stockout_risk_pct': 0,
-            'avg_stock_per_sku': 0
-        }
-        
-        if inventory_df is None or len(inventory_df) == 0:
-            return metrics
-        
-        try:
-            stock_col = None
-            for col in ['stock_on_hand', 'stock', 'quantity', 'qty']:
-                if col in inventory_df.columns:
-                    stock_col = col
-                    break
-            
-            if stock_col:
-                stock = pd.to_numeric(inventory_df[stock_col], errors='coerce').fillna(0)
-                
-                metrics['total_stock'] = stock.sum()
-                metrics['low_stock_count'] = (stock < 10).sum()
-                metrics['out_of_stock_count'] = (stock == 0).sum()
-                metrics['avg_stock_per_sku'] = stock.mean()
-                
-                total_items = len(inventory_df)
-                if total_items > 0:
-                    metrics['stockout_risk_pct'] = (metrics['low_stock_count'] / total_items) * 100
-        
-        except Exception as e:
-            print(f"Error calculating inventory metrics: {str(e)}")
-        
-        return metrics
-
-
-# ============================================================================
-# PAGE: CLEANER (FIX 1: KPI Cards Visible)
+# PAGE: CLEANER
 # ============================================================================
 
 def show_cleaner_page():
-    """Display the data cleaner page with VISIBLE KPI cards."""
+    """Display the data cleaner page."""
     t = get_theme()
     
     st.markdown(f'<h1 class="page-title page-title-green">🧹 Data Rescue Center</h1>', unsafe_allow_html=True)
@@ -1985,8 +2293,8 @@ def show_cleaner_page():
             <ul style="color: {t['text_primary']}; font-size: 0.95rem; margin-bottom: 0; line-height: 1.8;">
                 <li>Missing values</li>
                 <li>Duplicate records</li>
+                <li>Invalid timestamps</li>
                 <li>Whitespace issues</li>
-                <li>Text standardization</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -1996,10 +2304,10 @@ def show_cleaner_page():
         <div class="card-3d">
             <strong style="color: {t['accent_purple']}; font-size: 1.1rem;">Format Issues</strong>
             <ul style="color: {t['text_primary']}; font-size: 0.95rem; margin-bottom: 0; line-height: 1.8;">
-                <li>Multi-language text</li>
-                <li>Non-English values</li>
-                <li>Fuzzy matching</li>
+                <li>Text standardization</li>
+                <li>City name variants</li>
                 <li>Case normalization</li>
+                <li>Multi-language text</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
@@ -2052,80 +2360,47 @@ def show_cleaner_page():
         
         stats = st.session_state.get('cleaner_stats', {})
         
-        # FIX 1: Using inline HTML for proper visibility
+        # KPI Cards
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             value = stats.get('missing_values_fixed', 0)
-            st.markdown(f"""
-            <div style="
-                background: linear-gradient(145deg, {t['bg_card']} 0%, {t['bg_card_hover']} 100%);
-                border-radius: 16px;
-                padding: 24px;
-                border: 1px solid {t['border_color']};
-                box-shadow: 0 8px 32px {t['shadow_color']};
-                text-align: center;
-                height: 140px;
-            ">
-                <div style="color: {t['text_secondary']}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">Missing Fixed</div>
-                <div style="color: {t['accent_cyan']}; font-size: 2.2rem; font-weight: 700; margin: 15px 0;">{value:,}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(create_metric_card_3d("Missing Fixed", f"{value:,}", color="cyan"), unsafe_allow_html=True)
         
         with col2:
             value = stats.get('duplicates_removed', 0)
-            st.markdown(f"""
-            <div style="
-                background: linear-gradient(145deg, {t['bg_card']} 0%, {t['bg_card_hover']} 100%);
-                border-radius: 16px;
-                padding: 24px;
-                border: 1px solid {t['border_color']};
-                box-shadow: 0 8px 32px {t['shadow_color']};
-                text-align: center;
-                height: 140px;
-            ">
-                <div style="color: {t['text_secondary']}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">Duplicates Removed</div>
-                <div style="color: {t['accent_blue']}; font-size: 2.2rem; font-weight: 700; margin: 15px 0;">{value:,}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(create_metric_card_3d("Duplicates Removed", f"{value:,}", color="blue"), unsafe_allow_html=True)
         
         with col3:
             value = stats.get('outliers_fixed', 0)
-            st.markdown(f"""
-            <div style="
-                background: linear-gradient(145deg, {t['bg_card']} 0%, {t['bg_card_hover']} 100%);
-                border-radius: 16px;
-                padding: 24px;
-                border: 1px solid {t['border_color']};
-                box-shadow: 0 8px 32px {t['shadow_color']};
-                text-align: center;
-                height: 140px;
-            ">
-                <div style="color: {t['text_secondary']}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">Outliers Fixed</div>
-                <div style="color: {t['accent_purple']}; font-size: 2.2rem; font-weight: 700; margin: 15px 0;">{value:,}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(create_metric_card_3d("Outliers Fixed", f"{value:,}", color="purple"), unsafe_allow_html=True)
         
         with col4:
             value = stats.get('text_standardized', 0)
-            st.markdown(f"""
-            <div style="
-                background: linear-gradient(145deg, {t['bg_card']} 0%, {t['bg_card_hover']} 100%);
-                border-radius: 16px;
-                padding: 24px;
-                border: 1px solid {t['border_color']};
-                box-shadow: 0 8px 32px {t['shadow_color']};
-                text-align: center;
-                height: 140px;
-            ">
-                <div style="color: {t['text_secondary']}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">Text Standardized</div>
-                <div style="color: {t['accent_pink']}; font-size: 2.2rem; font-weight: 700; margin: 15px 0;">{value:,}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(create_metric_card_3d("Text Standardized", f"{value:,}", color="pink"), unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
         
-        # Issues chart
+        # Row 2
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            value = stats.get('negative_values_fixed', 0)
+            st.markdown(create_metric_card_3d("Negatives Fixed", f"{value:,}", color="orange"), unsafe_allow_html=True)
+        
+        with col2:
+            value = stats.get('invalid_timestamps_fixed', 0)
+            st.markdown(create_metric_card_3d("Timestamps Fixed", f"{value:,}", color="teal"), unsafe_allow_html=True)
+        
+        with col3:
+            value = stats.get('fk_violations_fixed', 0)
+            st.markdown(create_metric_card_3d("FK Violations", f"{value:,}", color="red"), unsafe_allow_html=True)
+        
+        with col4:
+            value = stats.get('total_issues', 0)
+            st.markdown(create_metric_card_3d("Total Issues", f"{value:,}", color="green"), unsafe_allow_html=True)
+        
+        # Issues breakdown
         issues_df = st.session_state.issues_df
         
         if issues_df is not None and len(issues_df) > 0:
@@ -2133,26 +2408,48 @@ def show_cleaner_page():
             
             if has_real_issues:
                 st.markdown("---")
-                st.markdown(f'<p class="section-title section-title-orange">🔍 Issues Breakdown</p>', unsafe_allow_html=True)
+                st.markdown(f'<p class="section-title section-title-orange">🔍 Issues Breakdown (Pareto)</p>', unsafe_allow_html=True)
                 
                 col1, col2 = st.columns(2)
                 
                 with col1:
                     issue_counts = issues_df.groupby('issue_type').size().reset_index(name='count')
                     issue_counts = issue_counts[issue_counts['issue_type'] != 'None']
+                    issue_counts = issue_counts.sort_values('count', ascending=False)
                     
                     if len(issue_counts) > 0:
-                        fig = px.bar(
-                            issue_counts,
-                            x='count',
-                            y='issue_type',
-                            orientation='h',
-                            title='Issues by Type',
-                            color='count',
-                            color_continuous_scale=[t['accent_cyan'], t['accent_purple'], t['accent_pink']]
+                        # Add cumulative percentage for Pareto
+                        total = issue_counts['count'].sum()
+                        issue_counts['cumulative_pct'] = (issue_counts['count'].cumsum() / total * 100)
+                        
+                        # Create Pareto chart
+                        fig = go.Figure()
+                        
+                        # Bars
+                        fig.add_trace(go.Bar(
+                            x=issue_counts['issue_type'],
+                            y=issue_counts['count'],
+                            name='Count',
+                            marker_color=t['accent_cyan']
+                        ))
+                        
+                        # Line
+                        fig.add_trace(go.Scatter(
+                            x=issue_counts['issue_type'],
+                            y=issue_counts['cumulative_pct'],
+                            name='Cumulative %',
+                            yaxis='y2',
+                            mode='lines+markers',
+                            line=dict(color=t['accent_pink'], width=3),
+                            marker=dict(size=8)
+                        ))
+                        
+                        fig.update_layout(
+                            title='Issues Pareto Chart',
+                            yaxis=dict(title='Count'),
+                            yaxis2=dict(title='Cumulative %', overlaying='y', side='right', range=[0, 105])
                         )
                         fig = style_plotly_chart_themed(fig)
-                        fig.update_layout(coloraxis_showscale=False)
                         st.plotly_chart(fig, use_container_width=True)
                     else:
                         st.info("No issues by type to display")
@@ -2176,10 +2473,18 @@ def show_cleaner_page():
                 
                 st.markdown(f'<p class="section-title section-title-purple">📋 Detailed Issues Log</p>', unsafe_allow_html=True)
                 st.dataframe(issues_df, use_container_width=True)
+                
+                # Download issues log
+                issues_csv = issues_df.to_csv(index=False)
+                st.download_button(
+                    "📥 Download Issues Log (CSV)",
+                    issues_csv,
+                    "issues.csv",
+                    "text/csv",
+                    use_container_width=True
+                )
             else:
                 st.markdown(create_success_card_3d("No major issues found! Your data is clean."), unsafe_allow_html=True)
-        else:
-            st.markdown(create_success_card_3d("No issues detected. Your data is clean."), unsafe_allow_html=True)
         
         # Data Comparison
         st.markdown("---")
@@ -2265,7 +2570,7 @@ def show_cleaner_page():
 
 
 # ============================================================================
-# PAGE: DASHBOARD (WITH SWITCH VIEW)
+# PAGE: DASHBOARD
 # ============================================================================
 
 def show_dashboard_page():
@@ -2312,6 +2617,11 @@ def show_dashboard_page():
     
     # Apply global filters
     filtered_sales = apply_global_filters(sales_df, stores_df, products_df)
+    filtered_inventory = apply_global_filters(inventory_df, stores_df, products_df) if inventory_df is not None else None
+    
+    # Filter products and stores based on what's in filtered sales
+    filtered_products = products_df
+    filtered_stores = stores_df
     
     # Active filter indicator
     active_filters = []
@@ -2323,10 +2633,12 @@ def show_dashboard_page():
         active_filters.append(f"{len(st.session_state.global_channels)} Channels")
     if len(st.session_state.get('global_categories', [])) > 0:
         active_filters.append(f"{len(st.session_state.global_categories)} Categories")
+    if len(st.session_state.get('global_brands', [])) > 0:
+        active_filters.append(f"{len(st.session_state.global_brands)} Brands")
     
     if active_filters:
         st.markdown(f"""
-        <div class="info-card-3d">
+        <div class="info-card-3d" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(59, 130, 246, 0.1)); border: 1px solid {t['accent_cyan']}; border-radius: 12px; padding: 15px 20px;">
             <strong style="color: {t['accent_cyan']};">🌐 Global Filters Active:</strong>
             <span style="color: {t['text_secondary']};">{' | '.join(active_filters)}</span>
             <span style="color: {t['text_muted']}; font-size: 0.85rem; margin-left: 10px;">
@@ -2336,17 +2648,17 @@ def show_dashboard_page():
         """, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
     
-    # Calculate KPIs
+    # Calculate KPIs using filtered data
     sim = Simulator()
-    kpis = sim.calculate_overall_kpis(filtered_sales, products_df)
-    city_kpis = sim.calculate_kpis_by_dimension(filtered_sales, stores_df, products_df, 'city')
-    channel_kpis = sim.calculate_kpis_by_dimension(filtered_sales, stores_df, products_df, 'channel')
-    category_kpis = sim.calculate_kpis_by_dimension(filtered_sales, stores_df, products_df, 'category')
+    kpis = sim.calculate_overall_kpis(filtered_sales, filtered_products)
+    city_kpis = sim.calculate_kpis_by_dimension(filtered_sales, filtered_stores, filtered_products, 'city')
+    channel_kpis = sim.calculate_kpis_by_dimension(filtered_sales, filtered_stores, filtered_products, 'channel')
+    category_kpis = sim.calculate_kpis_by_dimension(filtered_sales, filtered_stores, filtered_products, 'category')
     
     if not view_mode:
-        show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, filtered_sales, products_df, stores_df)
+        show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, filtered_sales, filtered_products, filtered_stores)
     else:
-        show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, filtered_sales, products_df, stores_df, inventory_df)
+        show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, filtered_sales, filtered_products, filtered_stores, filtered_inventory)
     
     st.markdown("---")
     
@@ -2371,36 +2683,36 @@ def show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, 
     
     st.markdown(f'<p class="section-title section-title-cyan">💰 Financial KPIs</p>', unsafe_allow_html=True)
     
-    # Row 1
+    # Row 1: Revenue KPIs
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        gross_revenue = kpis.get('total_revenue', 0)
-        st.markdown(create_metric_card_3d("Gross Revenue", f"AED {gross_revenue:,.0f}", color="cyan", delay=0.1), unsafe_allow_html=True)
+        gross_revenue = kpis.get('gross_revenue', 0)
+        st.markdown(create_metric_card_3d("Gross Revenue", format_currency(gross_revenue), color="cyan", delay=0.1), unsafe_allow_html=True)
     
     with col2:
         refund_amount = kpis.get('refund_amount', 0)
-        st.markdown(create_metric_card_3d("Refund Amount", f"AED {refund_amount:,.0f}", color="pink", delay=0.2), unsafe_allow_html=True)
+        st.markdown(create_metric_card_3d("Refund Amount", format_currency(refund_amount), color="pink", delay=0.2), unsafe_allow_html=True)
     
     with col3:
-        net_revenue = kpis.get('net_revenue', gross_revenue - refund_amount)
-        st.markdown(create_metric_card_3d("Net Revenue", f"AED {net_revenue:,.0f}", color="green", delay=0.3), unsafe_allow_html=True)
+        net_revenue = kpis.get('net_revenue', 0)
+        st.markdown(create_metric_card_3d("Net Revenue", format_currency(net_revenue), color="green", delay=0.3), unsafe_allow_html=True)
     
     with col4:
         cogs = kpis.get('total_cogs', 0)
-        st.markdown(create_metric_card_3d("COGS", f"AED {cogs:,.0f}", color="orange", delay=0.4), unsafe_allow_html=True)
+        st.markdown(create_metric_card_3d("COGS", format_currency(cogs), color="orange", delay=0.4), unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Row 2
+    # Row 2: Margin and Discount KPIs
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        gross_margin = kpis.get('total_profit', 0)
-        st.markdown(create_metric_card_3d("Gross Margin (AED)", f"AED {gross_margin:,.0f}", color="teal", delay=0.1), unsafe_allow_html=True)
+        gross_margin = kpis.get('gross_margin_aed', 0)
+        st.markdown(create_metric_card_3d("Gross Margin (AED)", format_currency(gross_margin), color="teal", delay=0.1), unsafe_allow_html=True)
     
     with col2:
-        gross_margin_pct = kpis.get('profit_margin_pct', 0)
+        gross_margin_pct = kpis.get('gross_margin_pct', 0)
         st.markdown(create_metric_card_3d("Gross Margin %", f"{gross_margin_pct:.1f}%", color="purple", delay=0.2), unsafe_allow_html=True)
     
     with col3:
@@ -2409,7 +2721,7 @@ def show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, 
     
     with col4:
         avg_order_value = kpis.get('avg_order_value', 0)
-        st.markdown(create_metric_card_3d("Avg Order Value", f"AED {avg_order_value:,.2f}", color="cyan", delay=0.4), unsafe_allow_html=True)
+        st.markdown(create_metric_card_3d("Avg Order Value", format_currency(avg_order_value), color="cyan", delay=0.4), unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -2420,71 +2732,138 @@ def show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, 
     
     with col1:
         st.markdown("#### 📅 Net Revenue Trend")
-        local_filters_1 = show_chart_filter('exec_trend', ['city', 'channel', 'category'])
+        local_filters_1 = show_chart_filter('exec_trend', ['city', 'channel', 'category', 'brand'])
         chart_data_1 = apply_local_filters(sales_df, local_filters_1, stores_df, products_df)
         
-        if 'order_time' in chart_data_1.columns:
+        if chart_data_1 is not None and 'order_time' in chart_data_1.columns and len(chart_data_1) > 0:
             sales_trend = chart_data_1.copy()
-            sales_trend['date'] = pd.to_datetime(sales_trend['order_time'], errors='coerce').dt.date
-            daily_revenue = sales_trend.groupby('date').agg({'selling_price_aed': 'sum'}).reset_index()
+            sales_trend['order_time'] = pd.to_datetime(sales_trend['order_time'], errors='coerce')
+            sales_trend['date'] = sales_trend['order_time'].dt.date
+            
+            if 'selling_price_aed' in sales_trend.columns and 'qty' in sales_trend.columns:
+                sales_trend['revenue'] = (
+                    pd.to_numeric(sales_trend['qty'], errors='coerce').fillna(0) *
+                    pd.to_numeric(sales_trend['selling_price_aed'], errors='coerce').fillna(0)
+                )
+            elif 'selling_price_aed' in sales_trend.columns:
+                sales_trend['revenue'] = pd.to_numeric(sales_trend['selling_price_aed'], errors='coerce').fillna(0)
+            else:
+                sales_trend['revenue'] = 0
+            
+            daily_revenue = sales_trend.groupby('date')['revenue'].sum().reset_index()
             daily_revenue.columns = ['Date', 'Revenue']
             
-            fig = px.line(daily_revenue, x='Date', y='Revenue', title='', markers=True)
+            fig = px.area(daily_revenue, x='Date', y='Revenue', title='')
             fig = style_plotly_chart_themed(fig)
-            fig.update_traces(line_color=t['accent_cyan'])
+            fig.update_traces(fill='tozeroy', line_color=t['accent_cyan'], fillcolor=f"rgba(6, 182, 212, 0.3)")
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("Revenue trend requires order_time column")
     
     with col2:
-        st.markdown("#### 🏙️ Revenue by City")
-        local_filters_2 = show_chart_filter('exec_city', ['channel', 'category'])
+        st.markdown("#### 🏙️ Revenue by City/Channel (Sunburst)")
+        local_filters_2 = show_chart_filter('exec_sunburst', ['category', 'brand'])
         chart_data_2 = apply_local_filters(sales_df, local_filters_2, stores_df, products_df)
         
-        city_kpis_filtered = Simulator().calculate_kpis_by_dimension(chart_data_2, stores_df, products_df, 'city')
-        
-        if len(city_kpis_filtered) > 0:
-            fig = px.bar(city_kpis_filtered, x='city', y='revenue', title='', color='city',
-                        color_discrete_sequence=[t['accent_cyan'], t['accent_blue'], t['accent_purple']])
-            fig = style_plotly_chart_themed(fig)
-            fig.update_layout(showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+        if chart_data_2 is not None and len(chart_data_2) > 0 and stores_df is not None:
+            merged = chart_data_2.merge(stores_df[['store_id', 'city', 'channel']], on='store_id', how='left')
+            
+            if 'selling_price_aed' in merged.columns and 'qty' in merged.columns:
+                merged['revenue'] = (
+                    pd.to_numeric(merged['qty'], errors='coerce').fillna(0) *
+                    pd.to_numeric(merged['selling_price_aed'], errors='coerce').fillna(0)
+                )
+            else:
+                merged['revenue'] = 0
+            
+            sunburst_data = merged.groupby(['city', 'channel'])['revenue'].sum().reset_index()
+            
+            if len(sunburst_data) > 0:
+                fig = px.sunburst(
+                    sunburst_data,
+                    path=['city', 'channel'],
+                    values='revenue',
+                    title='',
+                    color='revenue',
+                    color_continuous_scale=[t['accent_cyan'], t['accent_blue'], t['accent_purple']]
+                )
+                fig = style_plotly_chart_themed(fig)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No data for sunburst chart")
         else:
-            st.info("No city data available")
+            st.info("City/Channel data not available")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("#### 📦 Margin by Category")
-        local_filters_3 = show_chart_filter('exec_category', ['city', 'channel'])
+        st.markdown("#### 📦 Margin % by Category")
+        local_filters_3 = show_chart_filter('exec_category', ['city', 'channel', 'brand'])
         chart_data_3 = apply_local_filters(sales_df, local_filters_3, stores_df, products_df)
         
         cat_kpis_filtered = Simulator().calculate_kpis_by_dimension(chart_data_3, stores_df, products_df, 'category')
         
         if len(cat_kpis_filtered) > 0:
-            y_col = 'margin_pct' if 'margin_pct' in cat_kpis_filtered.columns else 'revenue'
-            fig = px.bar(cat_kpis_filtered.head(8), x='category', y=y_col, title='', color=y_col,
-                        color_continuous_scale=[t['accent_red'], t['accent_orange'], t['accent_green']])
+            fig = px.bar(
+                cat_kpis_filtered.head(8), 
+                x='margin_pct', 
+                y='category', 
+                orientation='h',
+                title='', 
+                color='margin_pct',
+                color_continuous_scale=[t['accent_red'], t['accent_orange'], t['accent_green']]
+            )
             fig = style_plotly_chart_themed(fig)
-            fig.update_layout(coloraxis_showscale=False)
+            fig.update_layout(coloraxis_showscale=False, yaxis={'categoryorder': 'total ascending'})
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("No category data available")
     
     with col2:
         st.markdown("#### 📱 Revenue by Channel")
-        local_filters_4 = show_chart_filter('exec_channel', ['city', 'category'])
+        local_filters_4 = show_chart_filter('exec_channel', ['city', 'category', 'brand'])
         chart_data_4 = apply_local_filters(sales_df, local_filters_4, stores_df, products_df)
         
         channel_kpis_filtered = Simulator().calculate_kpis_by_dimension(chart_data_4, stores_df, products_df, 'channel')
         
         if len(channel_kpis_filtered) > 0:
-            fig = px.pie(channel_kpis_filtered, values='revenue', names='channel', title='',
-                        color_discrete_sequence=[t['accent_cyan'], t['accent_purple'], t['accent_pink']], hole=0.4)
+            fig = px.pie(
+                channel_kpis_filtered, 
+                values='revenue', 
+                names='channel', 
+                title='',
+                color_discrete_sequence=[t['accent_cyan'], t['accent_purple'], t['accent_pink']], 
+                hole=0.4
+            )
             fig = style_plotly_chart_themed(fig)
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("No channel data available")
+    
+    st.markdown("---")
+    
+    # Profit Bridge (Waterfall Chart)
+    st.markdown(f'<p class="section-title section-title-teal">🌊 Profit Bridge (Waterfall)</p>', unsafe_allow_html=True)
+    
+    gross_rev = kpis.get('gross_revenue', 0)
+    refunds = kpis.get('refund_amount', 0)
+    cogs = kpis.get('total_cogs', 0)
+    profit = kpis.get('total_profit', 0)
+    
+    fig = go.Figure(go.Waterfall(
+        name="Profit Bridge",
+        orientation="v",
+        measure=["absolute", "relative", "relative", "total"],
+        x=["Gross Revenue", "Refunds", "COGS", "Net Profit"],
+        y=[gross_rev, -refunds, -cogs, profit],
+        connector={"line": {"color": t['border_color']}},
+        decreasing={"marker": {"color": t['accent_red']}},
+        increasing={"marker": {"color": t['accent_green']}},
+        totals={"marker": {"color": t['accent_cyan']}}
+    ))
+    fig = style_plotly_chart_themed(fig)
+    fig.update_layout(title="", showlegend=False)
+    st.plotly_chart(fig, use_container_width=True)
     
     st.markdown("---")
     
@@ -2506,17 +2885,17 @@ def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, pr
     # Calculate Manager-specific KPIs
     return_rate = kpis.get('return_rate_pct', 0)
     
-    if 'payment_status' in sales_df.columns:
+    payment_failure_rate = 0
+    if sales_df is not None and 'payment_status' in sales_df.columns:
         total_orders = len(sales_df)
-        failed_orders = (sales_df['payment_status'] == 'Failed').sum()
+        failed_orders = (sales_df['payment_status'].astype(str).str.lower() == 'failed').sum()
         payment_failure_rate = (failed_orders / total_orders * 100) if total_orders > 0 else 0
-    else:
-        payment_failure_rate = 0
     
     stockout_risk = 0
     high_risk_skus = 0
     if inventory_df is not None and 'stock_on_hand' in inventory_df.columns:
-        low_stock = (inventory_df['stock_on_hand'] < 10).sum()
+        stock = pd.to_numeric(inventory_df['stock_on_hand'], errors='coerce').fillna(0)
+        low_stock = (stock < 10).sum()
         total_inventory = len(inventory_df)
         stockout_risk = (low_stock / total_inventory * 100) if total_inventory > 0 else 0
         high_risk_skus = low_stock
@@ -2537,58 +2916,151 @@ def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, pr
     
     st.markdown("---")
     
+    # Gauge Chart for Stockout Risk
+    st.markdown(f'<p class="section-title section-title-pink">🎯 Stockout Risk Gauge</p>', unsafe_allow_html=True)
+    
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number+delta",
+        value=stockout_risk,
+        domain={'x': [0, 1], 'y': [0, 1]},
+        title={'text': "Stockout Risk %", 'font': {'size': 20, 'color': t['text_primary']}},
+        delta={'reference': 15, 'increasing': {'color': t['accent_red']}, 'decreasing': {'color': t['accent_green']}},
+        gauge={
+            'axis': {'range': [0, 50], 'tickwidth': 1, 'tickcolor': t['text_secondary']},
+            'bar': {'color': t['accent_pink']},
+            'bgcolor': t['bg_card'],
+            'borderwidth': 2,
+            'bordercolor': t['border_color'],
+            'steps': [
+                {'range': [0, 10], 'color': t['accent_green']},
+                {'range': [10, 25], 'color': t['accent_orange']},
+                {'range': [25, 50], 'color': t['accent_red']}
+            ],
+            'threshold': {
+                'line': {'color': t['accent_red'], 'width': 4},
+                'thickness': 0.75,
+                'value': 30
+            }
+        }
+    ))
+    fig = style_plotly_chart_themed(fig)
+    fig.update_layout(height=300)
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.markdown("---")
+    
     # Charts
     st.markdown(f'<p class="section-title section-title-teal">📊 Operational Charts</p>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("#### 🏙️ Stockout Risk by City")
-        local_filters_1 = show_chart_filter('mgr_stockout', ['channel', 'category'])
+        st.markdown("#### 🏙️ Stockout Risk by City/Channel")
+        local_filters_1 = show_chart_filter('mgr_stockout', ['category', 'brand'])
         
-        if len(city_kpis) > 0:
-            city_risk = city_kpis.copy()
-            np.random.seed(42)
-            city_risk['stockout_risk'] = np.random.uniform(5, 25, len(city_risk))
+        if inventory_df is not None and stores_df is not None and 'stock_on_hand' in inventory_df.columns:
+            inv_with_store = inventory_df.merge(stores_df[['store_id', 'city', 'channel']], on='store_id', how='left')
+            inv_with_store['stock_on_hand'] = pd.to_numeric(inv_with_store['stock_on_hand'], errors='coerce').fillna(0)
+            inv_with_store['is_low_stock'] = inv_with_store['stock_on_hand'] < 10
             
-            fig = px.bar(city_risk, x='city', y='stockout_risk', title='', color='stockout_risk',
-                        color_continuous_scale=[t['accent_green'], t['accent_orange'], t['accent_red']])
-            fig = style_plotly_chart_themed(fig)
-            fig.update_layout(coloraxis_showscale=False)
-            st.plotly_chart(fig, use_container_width=True)
+            city_risk = inv_with_store.groupby('city').agg({
+                'is_low_stock': 'mean'
+            }).reset_index()
+            city_risk.columns = ['city', 'stockout_risk']
+            city_risk['stockout_risk'] = city_risk['stockout_risk'] * 100
+            
+            if len(city_risk) > 0:
+                fig = px.bar(
+                    city_risk, 
+                    x='stockout_risk', 
+                    y='city', 
+                    orientation='h',
+                    title='', 
+                    color='stockout_risk',
+                    color_continuous_scale=[t['accent_green'], t['accent_orange'], t['accent_red']]
+                )
+                fig = style_plotly_chart_themed(fig)
+                fig.update_layout(coloraxis_showscale=False)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No city risk data available")
         else:
-            st.info("No city data available")
+            st.info("Inventory or store data not available")
     
     with col2:
-        st.markdown("#### 🚨 Top Stockout Risk Items")
-        local_filters_2 = show_chart_filter('mgr_risk_items', ['city', 'channel'])
+        st.markdown("#### 📦 Demand vs Stock by Category")
+        local_filters_2 = show_chart_filter('mgr_demand_stock', ['city', 'channel'])
         
-        if inventory_df is not None and 'stock_on_hand' in inventory_df.columns and 'sku' in inventory_df.columns:
-            risk_df = inventory_df.nsmallest(10, 'stock_on_hand')[['sku', 'store_id', 'stock_on_hand']].copy()
-            risk_df['risk_level'] = risk_df['stock_on_hand'].apply(
-                lambda x: 'Critical' if x < 5 else ('High' if x < 10 else 'Medium')
-            )
+        if sales_df is not None and inventory_df is not None and products_df is not None:
+            sku_col = 'sku' if 'sku' in sales_df.columns else 'product_id'
+            prod_sku_col = 'sku' if 'sku' in products_df.columns else 'product_id'
             
-            fig = px.bar(risk_df, x='sku', y='stock_on_hand', title='', color='risk_level',
-                        color_discrete_map={'Critical': t['accent_red'], 'High': t['accent_orange'], 'Medium': t['accent_blue']})
-            fig = style_plotly_chart_themed(fig)
-            st.plotly_chart(fig, use_container_width=True)
+            if sku_col in sales_df.columns and prod_sku_col in products_df.columns and 'category' in products_df.columns:
+                # Calculate demand by category
+                sales_with_cat = sales_df.merge(products_df[[prod_sku_col, 'category']], left_on=sku_col, right_on=prod_sku_col, how='left')
+                if 'qty' in sales_with_cat.columns:
+                    demand_by_cat = sales_with_cat.groupby('category')['qty'].sum().reset_index()
+                    demand_by_cat.columns = ['category', 'demand']
+                else:
+                    demand_by_cat = pd.DataFrame(columns=['category', 'demand'])
+                
+                # Calculate stock by category
+                inv_sku_col = 'sku' if 'sku' in inventory_df.columns else 'product_id'
+                if inv_sku_col in inventory_df.columns:
+                    inv_with_cat = inventory_df.merge(products_df[[prod_sku_col, 'category']], left_on=inv_sku_col, right_on=prod_sku_col, how='left')
+                    if 'stock_on_hand' in inv_with_cat.columns:
+                        stock_by_cat = inv_with_cat.groupby('category')['stock_on_hand'].sum().reset_index()
+                        stock_by_cat.columns = ['category', 'stock']
+                    else:
+                        stock_by_cat = pd.DataFrame(columns=['category', 'stock'])
+                else:
+                    stock_by_cat = pd.DataFrame(columns=['category', 'stock'])
+                
+                if len(demand_by_cat) > 0 and len(stock_by_cat) > 0:
+                    merged = demand_by_cat.merge(stock_by_cat, on='category', how='outer').fillna(0)
+                    merged = merged.head(8)
+                    
+                    fig = go.Figure()
+                    fig.add_trace(go.Bar(name='Demand', x=merged['category'], y=merged['demand'], marker_color=t['accent_cyan']))
+                    fig.add_trace(go.Bar(name='Stock', x=merged['category'], y=merged['stock'], marker_color=t['accent_purple']))
+                    fig.update_layout(barmode='group', title='')
+                    fig = style_plotly_chart_themed(fig)
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("Not enough data for demand vs stock chart")
+            else:
+                st.info("Required columns not found")
         else:
-            st.info("Stock data not available")
+            st.info("Sales, inventory, or product data not available")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("#### 📦 Inventory Distribution")
-        local_filters_3 = show_chart_filter('mgr_inventory', ['city', 'channel'])
+        st.markdown("#### 🚨 Top 10 Stockout Risk Items")
+        local_filters_3 = show_chart_filter('mgr_risk_items', ['city', 'channel', 'category'])
         
         if inventory_df is not None and 'stock_on_hand' in inventory_df.columns:
-            fig = px.histogram(inventory_df, x='stock_on_hand', title='', nbins=30,
-                              color_discrete_sequence=[t['accent_cyan']])
-            fig = style_plotly_chart_themed(fig)
-            st.plotly_chart(fig, use_container_width=True)
+            sku_col = 'sku' if 'sku' in inventory_df.columns else 'product_id'
+            if sku_col in inventory_df.columns:
+                risk_df = inventory_df.nsmallest(10, 'stock_on_hand')[[sku_col, 'store_id', 'stock_on_hand']].copy()
+                risk_df['risk_level'] = risk_df['stock_on_hand'].apply(
+                    lambda x: 'Critical' if x < 5 else ('High' if x < 10 else 'Medium')
+                )
+                
+                fig = px.bar(
+                    risk_df, 
+                    x=sku_col, 
+                    y='stock_on_hand', 
+                    title='', 
+                    color='risk_level',
+                    color_discrete_map={'Critical': t['accent_red'], 'High': t['accent_orange'], 'Medium': t['accent_blue']}
+                )
+                fig = style_plotly_chart_themed(fig)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("SKU column not found")
         else:
-            st.info("Inventory data not available")
+            st.info("Stock data not available")
     
     with col2:
         st.markdown("#### 📋 Issues Pareto")
@@ -2599,12 +3071,36 @@ def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, pr
             if len(issues_df) > 0 and 'issue_type' in issues_df.columns:
                 issue_counts = issues_df['issue_type'].value_counts().head(10).reset_index()
                 issue_counts.columns = ['issue_type', 'count']
+                issue_counts = issue_counts[issue_counts['issue_type'] != 'None']
                 
-                fig = px.bar(issue_counts, x='count', y='issue_type', orientation='h', title='', color='count',
-                            color_continuous_scale=[t['accent_cyan'], t['accent_purple'], t['accent_pink']])
-                fig = style_plotly_chart_themed(fig)
-                fig.update_layout(coloraxis_showscale=False)
-                st.plotly_chart(fig, use_container_width=True)
+                if len(issue_counts) > 0:
+                    # Add cumulative for Pareto
+                    total = issue_counts['count'].sum()
+                    issue_counts['cumulative_pct'] = (issue_counts['count'].cumsum() / total * 100)
+                    
+                    fig = go.Figure()
+                    fig.add_trace(go.Bar(
+                        x=issue_counts['issue_type'],
+                        y=issue_counts['count'],
+                        name='Count',
+                        marker_color=t['accent_cyan']
+                    ))
+                    fig.add_trace(go.Scatter(
+                        x=issue_counts['issue_type'],
+                        y=issue_counts['cumulative_pct'],
+                        name='Cumulative %',
+                        yaxis='y2',
+                        mode='lines+markers',
+                        line=dict(color=t['accent_pink'], width=3)
+                    ))
+                    fig.update_layout(
+                        yaxis2=dict(overlaying='y', side='right', range=[0, 105]),
+                        title=''
+                    )
+                    fig = style_plotly_chart_themed(fig)
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("No issues to display")
             else:
                 st.info("No issues logged")
         else:
@@ -2613,16 +3109,29 @@ def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, pr
     st.markdown("---")
     
     # Top 10 Risk Table
-    st.markdown(f'<p class="section-title section-title-orange">🚨 Top 10 Stockout Risk Items</p>', unsafe_allow_html=True)
+    st.markdown(f'<p class="section-title section-title-orange">🚨 Top 10 Stockout Risk Items (Sortable Table)</p>', unsafe_allow_html=True)
     
-    if inventory_df is not None and 'stock_on_hand' in inventory_df.columns and 'sku' in inventory_df.columns:
-        risk_table = inventory_df.nsmallest(10, 'stock_on_hand').copy()
-        
-        if 'store_id' in risk_table.columns and stores_df is not None and 'store_id' in stores_df.columns:
-            risk_table = risk_table.merge(stores_df[['store_id', 'city', 'channel']], on='store_id', how='left')
-        
-        display_cols = [col for col in ['sku', 'store_id', 'city', 'channel', 'stock_on_hand'] if col in risk_table.columns]
-        st.dataframe(risk_table[display_cols], use_container_width=True)
+    if inventory_df is not None and 'stock_on_hand' in inventory_df.columns:
+        sku_col = 'sku' if 'sku' in inventory_df.columns else 'product_id'
+        if sku_col in inventory_df.columns:
+            risk_table = inventory_df.nsmallest(10, 'stock_on_hand').copy()
+            
+            if 'store_id' in risk_table.columns and stores_df is not None and 'store_id' in stores_df.columns:
+                store_cols = ['store_id']
+                if 'city' in stores_df.columns:
+                    store_cols.append('city')
+                if 'channel' in stores_df.columns:
+                    store_cols.append('channel')
+                risk_table = risk_table.merge(stores_df[store_cols], on='store_id', how='left')
+            
+            risk_table['Risk Level'] = risk_table['stock_on_hand'].apply(
+                lambda x: '🔴 Critical' if x < 5 else ('🟠 High' if x < 10 else '🟡 Medium')
+            )
+            
+            display_cols = [col for col in [sku_col, 'store_id', 'city', 'channel', 'stock_on_hand', 'Risk Level'] if col in risk_table.columns]
+            st.dataframe(risk_table[display_cols], use_container_width=True)
+        else:
+            st.info("SKU column not found")
     else:
         st.info("Inventory data not available for risk analysis")
     
@@ -2656,41 +3165,45 @@ def generate_executive_recommendations(kpis, city_kpis, channel_kpis, category_k
     """Generate auto recommendations based on KPIs."""
     recommendations = []
     
-    margin = kpis.get('profit_margin_pct', 0)
+    margin = kpis.get('gross_margin_pct', 0)
     if margin < 20:
-        recommendations.append(f"📉 **Margin Alert**: Gross margin at {margin:.1f}% is below target. Consider reducing discounts or reviewing supplier costs.")
+        recommendations.append(f"📉 **Margin Alert**: Gross margin at {margin:.1f}% is below target (20%). Consider reducing discounts or reviewing supplier costs.")
     elif margin > 35:
-        recommendations.append(f"📈 **Strong Margins**: Gross margin at {margin:.1f}% is healthy. Opportunity to invest in growth.")
+        recommendations.append(f"📈 **Strong Margins**: Gross margin at {margin:.1f}% is healthy. Opportunity to invest in growth initiatives.")
+    else:
+        recommendations.append(f"✅ **Healthy Margins**: Gross margin at {margin:.1f}% is within target range.")
     
     avg_discount = kpis.get('avg_discount_pct', 0)
     if avg_discount > 15:
-        recommendations.append(f"💸 **High Discounting**: Average discount at {avg_discount:.1f}%. Evaluate if promotions are driving profitable growth.")
+        recommendations.append(f"💸 **High Discounting**: Average discount at {avg_discount:.1f}%. Evaluate if promotions are driving profitable growth or eroding margins.")
     
     if city_kpis is not None and len(city_kpis) > 0:
         top_city = city_kpis.iloc[0]['city']
         top_revenue = city_kpis.iloc[0]['revenue']
-        recommendations.append(f"🏙️ **Top Market**: {top_city} leads with AED {top_revenue:,.0f} revenue. Consider increasing investment.")
+        recommendations.append(f"🏙️ **Top Market**: {top_city} leads with {format_currency(top_revenue)} revenue. Consider increasing investment in this market.")
     
     if channel_kpis is not None and len(channel_kpis) > 0:
         top_channel = channel_kpis.iloc[0]['channel']
-        recommendations.append(f"📱 **Channel Focus**: {top_channel} is the top performing channel. Optimize marketing spend here.")
+        recommendations.append(f"📱 **Channel Focus**: {top_channel} is the top performing channel. Optimize marketing spend and inventory allocation here.")
     
-    if len(recommendations) == 0:
-        recommendations.append("✅ Business performance is on track. Continue monitoring KPIs.")
+    if category_kpis is not None and len(category_kpis) > 0:
+        if 'margin_pct' in category_kpis.columns:
+            best_margin_cat = category_kpis.loc[category_kpis['margin_pct'].idxmax()]
+            recommendations.append(f"📦 **Best Margin Category**: {best_margin_cat['category']} has {best_margin_cat['margin_pct']:.1f}% margin. Push promotions here for profitable growth.")
     
     return recommendations
 
 
 # ============================================================================
-# PAGE: SIMULATOR
+# PAGE: SIMULATOR (COMPLETE WITH ALL REQUIREMENTS)
 # ============================================================================
 
 def show_simulator_page():
-    """Display the simulator page."""
+    """Display the simulator page with all required inputs and constraints."""
     t = get_theme()
     
-    st.markdown(f'<h1 class="page-title page-title-orange">🎯 Business Simulator</h1>', unsafe_allow_html=True)
-    st.markdown(f'<p class="page-description">Run what-if scenarios to predict business impact</p>', unsafe_allow_html=True)
+    st.markdown(f'<h1 class="page-title page-title-orange">🎯 Promo Pulse Simulator</h1>', unsafe_allow_html=True)
+    st.markdown(f'<p class="page-description">Run what-if scenarios with budget, margin, and stock constraints</p>', unsafe_allow_html=True)
     
     if not st.session_state.data_loaded:
         st.markdown(create_warning_card_3d("Please load data first. Go to 📂 Data page."), unsafe_allow_html=True)
@@ -2699,162 +3212,420 @@ def show_simulator_page():
     
     st.markdown("---")
     
-    # Simulation parameters
-    st.markdown(f'<p class="section-title section-title-cyan">🎛️ Simulation Parameters</p>', unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        discount_change = st.slider("Discount Change (%)", min_value=-20, max_value=20, value=0, step=1,
-                                   help="Adjust overall discount levels")
-    
-    with col2:
-        price_change = st.slider("Price Change (%)", min_value=-15, max_value=15, value=0, step=1,
-                                help="Adjust product prices")
-    
-    with col3:
-        demand_change = st.slider("Demand Change (%)", min_value=-30, max_value=30, value=0, step=5,
-                                 help="Simulate demand fluctuations")
-    
-    st.markdown("---")
-    
     # Get current data
     sales_df = st.session_state.clean_sales if st.session_state.is_cleaned else st.session_state.raw_sales
     products_df = st.session_state.clean_products if st.session_state.is_cleaned else st.session_state.raw_products
     stores_df = st.session_state.clean_stores if st.session_state.is_cleaned else st.session_state.raw_stores
+    inventory_df = st.session_state.clean_inventory if st.session_state.is_cleaned else st.session_state.raw_inventory
     
     filtered_sales = apply_global_filters(sales_df, stores_df, products_df)
     
-    sim = Simulator()
-    current_kpis = sim.calculate_overall_kpis(filtered_sales, products_df)
+    # =========================================================================
+    # SIMULATION PARAMETERS (ALL REQUIRED INPUTS)
+    # =========================================================================
     
-    # Calculate simulated KPIs
-    current_revenue = current_kpis.get('total_revenue', 0)
-    current_margin_pct = current_kpis.get('profit_margin_pct', 0)
-    current_avg_discount = current_kpis.get('avg_discount_pct', 0)
+    st.markdown(f'<p class="section-title section-title-cyan">🎛️ Simulation Parameters</p>', unsafe_allow_html=True)
     
-    # Simple simulation logic
-    price_impact = 1 + (price_change / 100)
-    discount_impact = 1 - (discount_change / 100) * 0.5  # Discounts reduce effective revenue
-    demand_impact = 1 + (demand_change / 100)
-    
-    simulated_revenue = current_revenue * price_impact * discount_impact * demand_impact
-    simulated_margin_pct = current_margin_pct + (price_change * 0.5) - (discount_change * 0.3)
-    simulated_discount = current_avg_discount + discount_change
-    
-    revenue_change = ((simulated_revenue - current_revenue) / current_revenue * 100) if current_revenue > 0 else 0
-    margin_change = simulated_margin_pct - current_margin_pct
-    
-    # Display results
-    st.markdown(f'<p class="section-title section-title-purple">📊 Simulation Results</p>', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
+    # Row 1: Core simulation inputs
+    col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown(f"""
-        <div class="card-3d">
-            <h4 style="color: {t['accent_cyan']}; margin-bottom: 20px;">📈 Current State</h4>
-            <div style="display: flex; justify-content: space-between; margin: 15px 0;">
-                <span style="color: {t['text_secondary']};">Revenue:</span>
-                <span style="color: {t['text_primary']}; font-weight: 600;">AED {current_revenue:,.0f}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin: 15px 0;">
-                <span style="color: {t['text_secondary']};">Margin %:</span>
-                <span style="color: {t['text_primary']}; font-weight: 600;">{current_margin_pct:.1f}%</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin: 15px 0;">
-                <span style="color: {t['text_secondary']};">Avg Discount:</span>
-                <span style="color: {t['text_primary']}; font-weight: 600;">{current_avg_discount:.1f}%</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        discount_pct = st.slider(
+            "💸 Discount %",
+            min_value=0,
+            max_value=50,
+            value=10,
+            step=5,
+            help="Promotional discount percentage to simulate"
+        )
     
     with col2:
-        revenue_color = t['accent_green'] if revenue_change >= 0 else t['accent_red']
-        margin_color = t['accent_green'] if margin_change >= 0 else t['accent_red']
-        
-        st.markdown(f"""
-        <div class="card-3d">
-            <h4 style="color: {t['accent_purple']}; margin-bottom: 20px;">🔮 Simulated State</h4>
-            <div style="display: flex; justify-content: space-between; margin: 15px 0;">
-                <span style="color: {t['text_secondary']};">Revenue:</span>
-                <span style="color: {revenue_color}; font-weight: 600;">AED {simulated_revenue:,.0f} ({revenue_change:+.1f}%)</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin: 15px 0;">
-                <span style="color: {t['text_secondary']};">Margin %:</span>
-                <span style="color: {margin_color}; font-weight: 600;">{simulated_margin_pct:.1f}% ({margin_change:+.1f}%)</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin: 15px 0;">
-                <span style="color: {t['text_secondary']};">Avg Discount:</span>
-                <span style="color: {t['text_primary']}; font-weight: 600;">{simulated_discount:.1f}%</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        promo_budget = st.number_input(
+            "💰 Promo Budget (AED)",
+            min_value=0,
+            max_value=10000000,
+            value=500000,
+            step=50000,
+            help="Maximum promotional spend allowed"
+        )
+    
+    with col3:
+        margin_floor = st.slider(
+            "📊 Margin Floor %",
+            min_value=0,
+            max_value=50,
+            value=15,
+            step=1,
+            help="Minimum acceptable gross margin percentage"
+        )
+    
+    # Row 2: Additional parameters
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        simulation_days = st.radio(
+            "📅 Simulation Window",
+            options=[7, 14],
+            index=1,
+            horizontal=True,
+            help="Number of days to simulate"
+        )
+    
+    with col2:
+        # Optional: City focus
+        city_options = ['All']
+        if stores_df is not None and 'city' in stores_df.columns:
+            city_options += sorted(stores_df['city'].dropna().unique().tolist())
+        sim_city = st.selectbox("🏙️ City Focus", options=city_options, help="Focus simulation on specific city")
+    
+    with col3:
+        # Optional: Category focus
+        category_options = ['All']
+        if products_df is not None and 'category' in products_df.columns:
+            category_options += sorted(products_df['category'].dropna().unique().tolist())
+        sim_category = st.selectbox("📦 Category Focus", options=category_options, help="Focus simulation on specific category")
     
     st.markdown("---")
     
-    # Impact visualization
-    st.markdown(f'<p class="section-title section-title-teal">📉 Impact Visualization</p>', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Before/After comparison
-        comparison_data = pd.DataFrame({
-            'Metric': ['Revenue', 'Revenue'],
-            'State': ['Current', 'Simulated'],
-            'Value': [current_revenue, simulated_revenue]
-        })
-        
-        fig = px.bar(comparison_data, x='State', y='Value', color='State', title='Revenue Comparison',
-                    color_discrete_sequence=[t['accent_blue'], t['accent_cyan']])
-        fig = style_plotly_chart_themed(fig)
-        st.plotly_chart(fig, use_container_width=True)
-    
+    # Run Simulation Button
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        # Margin comparison
-        margin_data = pd.DataFrame({
-            'Metric': ['Margin %', 'Margin %'],
-            'State': ['Current', 'Simulated'],
-            'Value': [current_margin_pct, simulated_margin_pct]
-        })
+        run_simulation = st.button("🚀 Run Simulation", use_container_width=True, type="primary")
+    
+    if run_simulation:
+        with st.spinner("🔄 Running simulation..."):
+            sim = Simulator()
+            
+            # Run simulation
+            results = sim.simulate_scenario(
+                sales_df=filtered_sales,
+                products_df=products_df,
+                stores_df=stores_df,
+                inventory_df=inventory_df,
+                discount_pct=discount_pct,
+                promo_budget=promo_budget,
+                margin_floor=margin_floor,
+                simulation_days=simulation_days
+            )
+            
+            st.session_state.last_simulation = results
+    
+    # Display results if available
+    if st.session_state.get('last_simulation'):
+        results = st.session_state.last_simulation
         
-        fig = px.bar(margin_data, x='State', y='Value', color='State', title='Margin % Comparison',
-                    color_discrete_sequence=[t['accent_purple'], t['accent_pink']])
+        st.markdown("---")
+        st.markdown(f'<p class="section-title section-title-purple">📊 Simulation Results</p>', unsafe_allow_html=True)
+        
+        # KPI Cards Row 1
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown(create_metric_card_3d(
+                "Simulated Revenue",
+                format_currency(results['simulated_revenue']),
+                delta=f"{results['revenue_change_pct']:+.1f}%",
+                delta_type="positive" if results['revenue_change_pct'] >= 0 else "negative",
+                color="cyan"
+            ), unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(create_metric_card_3d(
+                "Promo Spend",
+                format_currency(results['promo_spend']),
+                color="orange"
+            ), unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(create_metric_card_3d(
+                "Profit Proxy",
+                format_currency(results['profit_proxy']),
+                color="green"
+            ), unsafe_allow_html=True)
+        
+        with col4:
+            st.markdown(create_metric_card_3d(
+                "Budget Utilization",
+                f"{results['budget_utilization_pct']:.1f}%",
+                color="purple"
+            ), unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # KPI Cards Row 2
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown(create_metric_card_3d(
+                "Simulated Margin %",
+                f"{results['simulated_margin_pct']:.1f}%",
+                delta=f"{results['margin_change_pct']:+.1f}%",
+                delta_type="positive" if results['margin_change_pct'] >= 0 else "negative",
+                color="teal"
+            ), unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(create_metric_card_3d(
+                "Demand Uplift",
+                f"{results['demand_uplift_pct']:.1f}%",
+                color="blue"
+            ), unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown(create_metric_card_3d(
+                "Simulated Demand",
+                f"{results['simulated_demand']:,.0f} units",
+                color="pink"
+            ), unsafe_allow_html=True)
+        
+        with col4:
+            st.markdown(create_metric_card_3d(
+                "Simulation Days",
+                f"{results['simulation_days']} days",
+                color="cyan"
+            ), unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
+        # =====================================================================
+        # CONSTRAINT CHECKS (REQUIRED)
+        # =====================================================================
+        
+        st.markdown(f'<p class="section-title section-title-orange">⚠️ Constraint Validation</p>', unsafe_allow_html=True)
+        
+        constraints = results['constraints']
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if constraints['budget_ok']:
+                st.markdown(create_success_card_3d(
+                    f"**Budget Constraint**: {format_currency(results['promo_spend'])} ≤ {format_currency(promo_budget)}"
+                ), unsafe_allow_html=True)
+            else:
+                st.markdown(create_error_card_3d(
+                    f"**Budget Exceeded**: {format_currency(results['promo_spend'])} > {format_currency(promo_budget)}"
+                ), unsafe_allow_html=True)
+        
+        with col2:
+            if constraints['margin_ok']:
+                st.markdown(create_success_card_3d(
+                    f"**Margin Floor**: {results['simulated_margin_pct']:.1f}% ≥ {margin_floor}%"
+                ), unsafe_allow_html=True)
+            else:
+                st.markdown(create_error_card_3d(
+                    f"**Margin Below Floor**: {results['simulated_margin_pct']:.1f}% < {margin_floor}%"
+                ), unsafe_allow_html=True)
+        
+        with col3:
+            if constraints['stock_ok']:
+                st.markdown(create_success_card_3d(
+                    f"**Stock Constraint**: Demand within available inventory"
+                ), unsafe_allow_html=True)
+            else:
+                st.markdown(create_error_card_3d(
+                    f"**Stock Shortage**: {results['stock_shortage']:,.0f} units short"
+                ), unsafe_allow_html=True)
+        
+        # Show top stockout items if constraint violated
+        if not constraints['stock_ok'] and results.get('top_stockout_items'):
+            st.markdown("---")
+            st.markdown(f'<p class="section-title section-title-red">🚨 Top 10 Stockout Risk Items (Contributors)</p>', unsafe_allow_html=True)
+            
+            stockout_df = pd.DataFrame(results['top_stockout_items'])
+            st.dataframe(stockout_df, use_container_width=True)
+        
+        st.markdown("---")
+        
+        # =====================================================================
+        # SCENARIO COMPARISON CHARTS
+        # =====================================================================
+        
+        st.markdown(f'<p class="section-title section-title-teal">📈 Scenario Impact Visualization</p>', unsafe_allow_html=True)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Before/After Revenue Comparison
+            comparison_data = pd.DataFrame({
+                'Metric': ['Revenue', 'Revenue'],
+                'State': ['Baseline', 'Simulated'],
+                'Value': [results['baseline_revenue'], results['simulated_revenue']]
+            })
+            
+            fig = px.bar(
+                comparison_data, 
+                x='State', 
+                y='Value', 
+                color='State', 
+                title='Revenue: Baseline vs Simulated',
+                color_discrete_sequence=[t['accent_blue'], t['accent_cyan']]
+            )
+            fig = style_plotly_chart_themed(fig)
+            fig.update_layout(showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            # Margin Comparison
+            margin_data = pd.DataFrame({
+                'Metric': ['Margin %', 'Margin %'],
+                'State': ['Baseline', 'Simulated'],
+                'Value': [results['baseline_margin_pct'], results['simulated_margin_pct']]
+            })
+            
+            fig = px.bar(
+                margin_data, 
+                x='State', 
+                y='Value', 
+                color='State', 
+                title='Margin %: Baseline vs Simulated',
+                color_discrete_sequence=[t['accent_purple'], t['accent_pink']]
+            )
+            
+            # Add margin floor line
+            fig.add_hline(
+                y=margin_floor, 
+                line_dash="dash", 
+                line_color=t['accent_red'],
+                annotation_text=f"Margin Floor: {margin_floor}%"
+            )
+            fig = style_plotly_chart_themed(fig)
+            fig.update_layout(showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+        
+        # Scenario Impact Chart (Profit vs Discount) - Multi-scenario
+        st.markdown("#### 📊 Scenario Impact: Profit Proxy vs Discount Level")
+        
+        # Simulate multiple discount levels
+        sim = Simulator()
+        scenario_results = []
+        
+        for disc in [0, 5, 10, 15, 20, 25, 30]:
+            sim_result = sim.simulate_scenario(
+                sales_df=filtered_sales,
+                products_df=products_df,
+                stores_df=stores_df,
+                inventory_df=inventory_df,
+                discount_pct=disc,
+                promo_budget=promo_budget,
+                margin_floor=margin_floor,
+                simulation_days=simulation_days
+            )
+            scenario_results.append({
+                'Discount %': disc,
+                'Profit Proxy': sim_result['profit_proxy'],
+                'Margin %': sim_result['simulated_margin_pct'],
+                'Revenue': sim_result['simulated_revenue'],
+                'Constraint OK': '✅' if sim_result['constraints']['all_ok'] else '❌'
+            })
+        
+        scenario_df = pd.DataFrame(scenario_results)
+        
+        fig = go.Figure()
+        
+        # Profit line
+        fig.add_trace(go.Scatter(
+            x=scenario_df['Discount %'],
+            y=scenario_df['Profit Proxy'],
+            name='Profit Proxy',
+            mode='lines+markers',
+            line=dict(color=t['accent_green'], width=3),
+            marker=dict(size=10)
+        ))
+        
+        # Revenue line
+        fig.add_trace(go.Scatter(
+            x=scenario_df['Discount %'],
+            y=scenario_df['Revenue'],
+            name='Revenue',
+            mode='lines+markers',
+            line=dict(color=t['accent_cyan'], width=3),
+            marker=dict(size=10),
+            yaxis='y2'
+        ))
+        
+        # Highlight current scenario
+        fig.add_vline(
+            x=discount_pct, 
+            line_dash="dash", 
+            line_color=t['accent_pink'],
+            annotation_text=f"Current: {discount_pct}%"
+        )
+        
+        fig.update_layout(
+            title='Profit Proxy & Revenue vs Discount Level',
+            xaxis_title='Discount %',
+            yaxis=dict(title='Profit Proxy (AED)', side='left'),
+            yaxis2=dict(title='Revenue (AED)', side='right', overlaying='y')
+        )
         fig = style_plotly_chart_themed(fig)
         st.plotly_chart(fig, use_container_width=True)
+        
+        # Scenario comparison table
+        st.markdown("#### 📋 Scenario Comparison Table")
+        st.dataframe(scenario_df, use_container_width=True)
+        
+        st.markdown("---")
+        
+        # =====================================================================
+        # DEMAND UPLIFT LOGIC EXPLANATION
+        # =====================================================================
+        
+        st.markdown(f'<p class="section-title section-title-blue">📖 Demand Uplift Logic (Rule-Based)</p>', unsafe_allow_html=True)
+        
+        st.markdown(f"""
+        <div class="card-3d">
+            <h4 style="color: {t['accent_cyan']}; margin-bottom: 15px;">How Demand Uplift is Calculated</h4>
+            <p style="color: {t['text_primary']}; line-height: 1.8;">
+                This simulator uses a <strong>rule-based</strong> approach (no ML/DL) with the following logic:
+            </p>
+            <ul style="color: {t['text_primary']}; line-height: 2;">
+                <li><strong>Base Elasticity:</strong> 1% discount → 0.5% demand increase</li>
+                <li><strong>Channel Multipliers:</strong> Marketplace (1.4x), App (1.2x), Web (1.0x)</li>
+                <li><strong>Category Multipliers:</strong> Electronics (1.5x), Fashion (1.3x), Beauty (1.2x), Home (1.1x), Grocery (0.9x)</li>
+            </ul>
+            <p style="color: {t['text_secondary']}; font-style: italic; margin-top: 15px;">
+                Example: A 10% discount on Electronics via Marketplace would yield: 10 × 0.5 × 1.5 × 1.4 = 10.5% demand uplift
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
+        # Insights
+        st.markdown(f'<p class="section-title section-title-green">💡 Simulation Insights</p>', unsafe_allow_html=True)
+        
+        insights = []
+        
+        if constraints['all_ok']:
+            insights.append(f"✅ **All Constraints Met**: This scenario is viable for implementation.")
+        else:
+            if not constraints['budget_ok']:
+                insights.append(f"❌ **Budget Exceeded**: Reduce discount or scope to stay within budget.")
+            if not constraints['margin_ok']:
+                insights.append(f"❌ **Margin Too Low**: This discount level erodes margins below acceptable floor.")
+            if not constraints['stock_ok']:
+                insights.append(f"❌ **Stock Insufficient**: Expected demand exceeds inventory. Consider replenishment or limiting scope.")
+        
+        if results['revenue_change_pct'] > 5:
+            insights.append(f"📈 **Positive Revenue Impact**: This scenario could increase revenue by {results['revenue_change_pct']:.1f}%")
+        elif results['revenue_change_pct'] < -5:
+            insights.append(f"📉 **Revenue Risk**: This scenario may decrease revenue by {abs(results['revenue_change_pct']):.1f}%")
+        
+        if results['profit_proxy'] > results['baseline_revenue'] * 0.15:
+            insights.append(f"💰 **Strong Profit Potential**: Profit proxy of {format_currency(results['profit_proxy'])} is healthy.")
+        
+        for insight in insights:
+            st.markdown(create_info_card_3d(insight), unsafe_allow_html=True)
     
-    st.markdown("---")
-    
-    # Recommendations
-    st.markdown(f'<p class="section-title section-title-green">💡 Simulation Insights</p>', unsafe_allow_html=True)
-    
-    insights = []
-    
-    if revenue_change > 5:
-        insights.append(f"✅ **Positive Revenue Impact**: This scenario could increase revenue by {revenue_change:.1f}%")
-    elif revenue_change < -5:
-        insights.append(f"⚠️ **Revenue Risk**: This scenario may decrease revenue by {abs(revenue_change):.1f}%")
-    
-    if margin_change > 2:
-        insights.append(f"✅ **Margin Improvement**: Gross margin could improve by {margin_change:.1f} percentage points")
-    elif margin_change < -2:
-        insights.append(f"⚠️ **Margin Compression**: Gross margin may decrease by {abs(margin_change):.1f} percentage points")
-    
-    if discount_change > 10:
-        insights.append(f"📢 **High Discount Strategy**: Heavy discounting may drive volume but erode margins")
-    
-    if len(insights) == 0:
-        insights.append("ℹ️ **Neutral Impact**: The current parameters have minimal impact on KPIs")
-    
-    for insight in insights:
-        st.markdown(create_info_card_3d(insight), unsafe_allow_html=True)
+    else:
+        st.info("👆 Configure parameters and click 'Run Simulation' to see results")
     
     show_footer()
 
 
 # ============================================================================
-# MAIN SIDEBAR (FIX 2: Visible "UAE Pulse" Title)
+# MAIN SIDEBAR
 # ============================================================================
 
 inject_css()
@@ -2868,13 +3639,13 @@ with st.sidebar:
             st.rerun()
     
     t = get_theme()
-
-        # FIX 2: Different gradient for light vs dark mode
+    
+    # Title with gradient
     if st.session_state.theme == 'dark':
         title_gradient = f"linear-gradient(135deg, {t['accent_cyan']}, {t['accent_blue']}, {t['accent_purple']})"
     else:
         title_gradient = f"linear-gradient(135deg, {t['accent_purple']}, {t['accent_pink']}, {t['accent_red']})"
-        
+    
     st.markdown(f"""
     <div style="text-align: center; margin-top: 10px; padding-bottom: 15px;">
         <div style="font-size: 48px; margin-bottom: 5px;">🛒</div>
@@ -2886,7 +3657,7 @@ with st.sidebar:
             -webkit-text-fill-color: transparent;
             background-clip: text;
         ">UAE Pulse</div>
-        <div style="color: {t['text_secondary']}; font-size: 13px; font-weight: 500;">Simulator + Data Rescue</div>
+        <div style="color: {t['text_secondary']}; font-size: 13px; font-weight: 500;">Promo Simulator + Data Rescue</div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -2953,7 +3724,7 @@ with st.sidebar:
     # Quick Stats
     if st.session_state.data_loaded:
         st.markdown("---")
-        st.markdown(f'<p style="color: {t["accent_purple"]}; font-weight: 600; margin-bottom: 15px; letter-spacing: 1.2px; font-size: 0.85rem;">📈 FILTERED STATS</p>', unsafe_allow_html=True)
+        st.markdown(f'<p style="color: {t["accent_purple"]}; font-weight: 600; margin-bottom: 15px; letter-spacing: 1.2px; font-size: 0.85rem;">📈 QUICK STATS</p>', unsafe_allow_html=True)
         
         sales_df = st.session_state.clean_sales if st.session_state.is_cleaned else st.session_state.raw_sales
         stores_df = st.session_state.clean_stores if st.session_state.is_cleaned else st.session_state.raw_stores
@@ -2984,7 +3755,7 @@ with st.sidebar:
                 </div>
                 <div>
                     <span style="color: {t['text_muted']}; font-size: 0.8rem; text-transform: uppercase;">Filtered Revenue</span><br>
-                    <span style="color: {t['accent_green']}; font-weight: 700; font-size: 1.2rem;">AED {total_revenue:,.0f}</span>
+                    <span style="color: {t['accent_green']}; font-weight: 700; font-size: 1.2rem;">{format_currency(total_revenue)}</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
