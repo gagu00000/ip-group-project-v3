@@ -941,7 +941,7 @@ with st.sidebar:
 # ============================================================================
 
 def show_home_page():
-    # Add animated background CSS and HTML
+    # Add animated background
     st.markdown(get_animated_background_css(), unsafe_allow_html=True)
     st.markdown(get_animated_background_html(), unsafe_allow_html=True)
     
@@ -958,6 +958,8 @@ def show_home_page():
         </p>
     </div>
     """, unsafe_allow_html=True)
+    
+    # ... rest of your home page code ...
     
     st.markdown('<p class="section-title section-title-purple">✨ Powerful Features</p>', unsafe_allow_html=True)
     
