@@ -88,7 +88,7 @@ def get_theme_colors():
 # ============================================================================
 
 def get_theme_css():
-    /* Make Streamlit background transparent so animations show through */
+    
 .stApp {
     background: transparent !important;
 }
