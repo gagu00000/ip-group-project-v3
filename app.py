@@ -87,92 +87,49 @@ def get_theme_colors():
 # DYNAMIC THEME CSS GENERATOR
 # ============================================================================
 
+# ============================================================================
+# DYNAMIC THEME CSS GENERATOR
+# ============================================================================
+
 def get_theme_css():
-    
-.stApp {
-    background: transparent !important;
-}
-
-.stApp::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg-primary);
-    z-index: -2;
-}
-
-/* Ensure main content is above animations */
-.main .block-container {
-    position: relative;
-    z-index: 1;
-}
-
-section[data-testid="stSidebar"] {
-    z-index: 100;
-}
-
     """Generate CSS based on current theme state."""
-    
     is_dark = st.session_state.theme == 'dark'
     
     if is_dark:
-        colors = {
-            'bg_primary': '#0a0a0f',
-            'bg_secondary': '#12121a',
-            'bg_tertiary': '#1a1a24',
-            'bg_card': 'rgba(22, 22, 31, 0.95)',
-            'bg_card_hover': 'rgba(30, 30, 45, 0.98)',
-            'text_primary': '#f8fafc',
-            'text_secondary': '#cbd5e1',
-            'text_muted': '#64748b',
-            'border_default': 'rgba(148, 163, 184, 0.1)',
-            'border_hover': 'rgba(6, 182, 212, 0.4)',
-            'shadow_md': '0 4px 20px rgba(0, 0, 0, 0.4)',
-            'shadow_lg': '0 8px 40px rgba(0, 0, 0, 0.5)',
-            'gradient_card': 'linear-gradient(145deg, rgba(22, 22, 31, 0.9) 0%, rgba(26, 26, 36, 0.95) 100%)',
-            'gradient_sidebar': 'linear-gradient(180deg, #0d0d14 0%, #0f0f18 50%, #0a0a0f 100%)',
-            'gradient_hero': 'linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(139, 92, 246, 0.12) 50%, rgba(236, 72, 153, 0.08) 100%)',
-        }
+        bg_primary = '#0a0a0f'
+        bg_secondary = '#12121a'
+        bg_card = 'rgba(22, 22, 31, 0.95)'
+        text_primary = '#f8fafc'
+        text_secondary = '#cbd5e1'
+        text_muted = '#64748b'
+        border_default = 'rgba(148, 163, 184, 0.1)'
+        shadow_md = '0 4px 20px rgba(0, 0, 0, 0.4)'
+        shadow_lg = '0 8px 40px rgba(0, 0, 0, 0.5)'
     else:
-        colors = {
-            'bg_primary': '#f8fafc',
-            'bg_secondary': '#ffffff',
-            'bg_tertiary': '#f1f5f9',
-            'bg_card': 'rgba(255, 255, 255, 0.95)',
-            'bg_card_hover': 'rgba(248, 250, 252, 0.98)',
-            'text_primary': '#0f172a',
-            'text_secondary': '#475569',
-            'text_muted': '#64748b',
-            'border_default': 'rgba(0, 0, 0, 0.08)',
-            'border_hover': 'rgba(6, 182, 212, 0.5)',
-            'shadow_md': '0 4px 20px rgba(0, 0, 0, 0.08)',
-            'shadow_lg': '0 8px 40px rgba(0, 0, 0, 0.1)',
-            'gradient_card': 'linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.95) 100%)',
-            'gradient_sidebar': 'linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%)',
-            'gradient_hero': 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.05) 100%)',
-        }
+        bg_primary = '#f8fafc'
+        bg_secondary = '#ffffff'
+        bg_card = 'rgba(255, 255, 255, 0.95)'
+        text_primary = '#0f172a'
+        text_secondary = '#475569'
+        text_muted = '#64748b'
+        border_default = 'rgba(0, 0, 0, 0.08)'
+        shadow_md = '0 4px 20px rgba(0, 0, 0, 0.08)'
+        shadow_lg = '0 8px 40px rgba(0, 0, 0, 0.1)'
     
     return f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
         
         :root {{
-            --bg-primary: {colors['bg_primary']};
-            --bg-secondary: {colors['bg_secondary']};
-            --bg-tertiary: {colors['bg_tertiary']};
-            --bg-card: {colors['bg_card']};
-            --bg-card-hover: {colors['bg_card_hover']};
-            --text-primary: {colors['text_primary']};
-            --text-secondary: {colors['text_secondary']};
-            --text-muted: {colors['text_muted']};
-            --border-default: {colors['border_default']};
-            --border-hover: {colors['border_hover']};
-            --shadow-md: {colors['shadow_md']};
-            --shadow-lg: {colors['shadow_lg']};
+            --bg-primary: {bg_primary};
+            --bg-secondary: {bg_secondary};
+            --bg-card: {bg_card};
+            --text-primary: {text_primary};
+            --text-secondary: {text_secondary};
+            --text-muted: {text_muted};
+            --border-default: {border_default};
+            --shadow-md: {shadow_md};
+            --shadow-lg: {shadow_lg};
             --accent-cyan: #06b6d4;
             --accent-blue: #3b82f6;
             --accent-purple: #8b5cf6;
@@ -181,11 +138,6 @@ section[data-testid="stSidebar"] {
             --accent-orange: #f59e0b;
             --accent-red: #ef4444;
             --accent-teal: #14b8a6;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-xl: 24px;
-            --radius-2xl: 32px;
-            --transition-normal: 0.25s ease;
         }}
         
         #MainMenu {{visibility: hidden;}}
@@ -198,662 +150,397 @@ section[data-testid="stSidebar"] {
         }}
         
         [data-testid="stSidebar"] {{
-            background: {colors['gradient_sidebar']};
+            background: var(--bg-secondary);
             border-right: 1px solid var(--border-default);
         }}
         
-        h1, h2, h3, h4, h5, h6 {{ color: var(--text-primary); font-weight: 700; }}
+        h1, h2, h3, h4, h5, h6 {{ color: var(--text-primary); }}
         p, span, div, label {{ color: var(--text-secondary); }}
         
         .metric-card-3d {{
-            background: {colors['gradient_card']};
-            border-radius: var(--radius-xl);
-            padding: 28px 24px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
             border: 1px solid var(--border-default);
             box-shadow: var(--shadow-md);
             transition: all 0.3s ease;
-            height: 150px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            height: 140px;
         }}
         .metric-card-3d:hover {{
-            transform: translateY(-8px);
+            transform: translateY(-5px);
             box-shadow: var(--shadow-lg);
-            border-color: var(--border-hover);
         }}
-        .metric-label {{ font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }}
-        .metric-value {{ font-size: 2rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin: 8px 0; }}
+        .metric-label {{ font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }}
+        .metric-value {{ font-size: 1.8rem; font-weight: 800; margin: 8px 0; }}
         .metric-value-cyan {{ color: var(--accent-cyan); }}
-        .metric-value-blue {{ color: var(--accent-blue); }}
         .metric-value-purple {{ color: var(--accent-purple); }}
         .metric-value-pink {{ color: var(--accent-pink); }}
         .metric-value-green {{ color: var(--accent-green); }}
+        .metric-value-blue {{ color: var(--accent-blue); }}
         .metric-value-orange {{ color: var(--accent-orange); }}
         .metric-value-teal {{ color: var(--accent-teal); }}
-        .metric-delta {{ font-size: 0.85rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }}
+        .metric-delta {{ font-size: 0.85rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; }}
         .metric-delta-positive {{ color: var(--accent-green); background: rgba(16, 185, 129, 0.12); }}
         .metric-delta-negative {{ color: var(--accent-red); background: rgba(239, 68, 68, 0.12); }}
         
         .feature-card-3d {{
-            background: {colors['gradient_card']};
-            border-radius: var(--radius-xl);
-            padding: 40px 28px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px 24px;
             border: 1px solid var(--border-default);
             box-shadow: var(--shadow-md);
             transition: all 0.3s ease;
-            height: 240px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            height: 220px;
             text-align: center;
         }}
         .feature-card-3d:hover {{
-            transform: translateY(-12px) scale(1.02);
+            transform: translateY(-8px);
             box-shadow: var(--shadow-lg);
-            border-color: var(--border-hover);
         }}
-        .feature-icon {{ font-size: 3.5rem; margin-bottom: 20px; }}
-        .feature-title {{ font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }}
-        .feature-desc {{ font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }}
+        .feature-icon {{ font-size: 3rem; margin-bottom: 16px; }}
+        .feature-title {{ font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }}
+        .feature-desc {{ font-size: 0.9rem; color: var(--text-muted); }}
         
         .hero-container {{
-            background: {colors['gradient_hero']};
-            border-radius: var(--radius-2xl);
-            padding: 60px 50px;
-            margin-bottom: 40px;
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.1) 50%, rgba(236, 72, 153, 0.05) 100%);
+            border-radius: 24px;
+            padding: 50px 40px;
+            margin-bottom: 30px;
             border: 1px solid var(--border-default);
-            box-shadow: var(--shadow-lg);
         }}
         .hero-title {{
-            font-size: 4rem;
+            font-size: 3.5rem;
             font-weight: 900;
-            background: linear-gradient(135deg, var(--text-primary), var(--accent-cyan), var(--accent-purple), var(--accent-pink));
-            background-size: 200% 200%;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-cyan), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 20px;
-            animation: gradientFlow 5s ease infinite;
+            margin-bottom: 16px;
         }}
-        @keyframes gradientFlow {{
-            0% {{ background-position: 0% 50%; }}
-            50% {{ background-position: 100% 50%; }}
-            100% {{ background-position: 0% 50%; }}
-        }}
-        .hero-subtitle {{ font-size: 1.25rem; color: var(--text-secondary); line-height: 1.7; max-width: 700px; }}
+        .hero-subtitle {{ font-size: 1.2rem; color: var(--text-secondary); max-width: 600px; }}
         .hero-badge {{
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 24px;
+            display: inline-block;
+            padding: 8px 20px;
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
             border-radius: 50px;
             color: white;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            margin-right: 12px;
-            margin-bottom: 20px;
+            margin-right: 10px;
+            margin-bottom: 16px;
         }}
         
-        .page-title {{ font-size: 3rem; font-weight: 800; margin-bottom: 8px; }}
-        .page-title-cyan {{ color: var(--accent-cyan); }}
-        .page-title-blue {{ color: var(--accent-blue); }}
-        .page-title-purple {{ color: var(--accent-purple); }}
-        .page-title-pink {{ color: var(--accent-pink); }}
-        .page-title-green {{ color: var(--accent-green); }}
-        .page-title-teal {{ color: var(--accent-teal); }}
-        .page-title-orange {{ color: var(--accent-orange); }}
-        .page-description {{ color: var(--text-secondary); font-size: 1.15rem; margin-bottom: 24px; }}
-        
-        .section-title {{ font-size: 1.6rem; font-weight: 700; margin-bottom: 20px; color: var(--text-primary); }}
+        .section-title {{ font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; }}
         .section-title-cyan {{ color: var(--accent-cyan) !important; }}
-        .section-title-blue {{ color: var(--accent-blue) !important; }}
         .section-title-purple {{ color: var(--accent-purple) !important; }}
         .section-title-pink {{ color: var(--accent-pink) !important; }}
+        .section-title-blue {{ color: var(--accent-blue) !important; }}
         .section-title-green {{ color: var(--accent-green) !important; }}
-        .section-title-teal {{ color: var(--accent-teal) !important; }}
         .section-title-orange {{ color: var(--accent-orange) !important; }}
+        .section-title-teal {{ color: var(--accent-teal) !important; }}
         
         .info-card {{
-            background: {colors['gradient_card']};
-            border-radius: var(--radius-lg);
-            padding: 22px 28px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
             border: 1px solid var(--border-default);
             border-left: 4px solid var(--accent-cyan);
-            margin: 15px 0;
-            color: var(--text-secondary);
+            margin: 12px 0;
         }}
         .success-card {{
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(20, 184, 166, 0.08));
-            border-radius: var(--radius-lg);
-            padding: 22px 28px;
+            background: rgba(16, 185, 129, 0.08);
+            border-radius: 12px;
+            padding: 20px;
             border: 1px solid rgba(16, 185, 129, 0.2);
             border-left: 4px solid var(--accent-green);
-            margin: 15px 0;
+            margin: 12px 0;
             color: var(--text-primary);
         }}
         .warning-card {{
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(251, 146, 60, 0.08));
-            border-radius: var(--radius-lg);
-            padding: 22px 28px;
+            background: rgba(245, 158, 11, 0.08);
+            border-radius: 12px;
+            padding: 20px;
             border: 1px solid rgba(245, 158, 11, 0.2);
             border-left: 4px solid var(--accent-orange);
-            margin: 15px 0;
+            margin: 12px 0;
             color: var(--text-primary);
         }}
         .error-card {{
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(236, 72, 153, 0.08));
-            border-radius: var(--radius-lg);
-            padding: 22px 28px;
+            background: rgba(239, 68, 68, 0.08);
+            border-radius: 12px;
+            padding: 20px;
             border: 1px solid rgba(239, 68, 68, 0.2);
             border-left: 4px solid var(--accent-red);
-            margin: 15px 0;
+            margin: 12px 0;
             color: var(--text-primary);
-        }}
-        .insight-card {{
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.08));
-            border-radius: var(--radius-lg);
-            padding: 22px 28px;
-            border: 1px solid rgba(139, 92, 246, 0.25);
-            margin: 15px 0;
-        }}
-        .insight-title {{ color: #a78bfa; font-weight: 700; font-size: 1rem; margin-bottom: 8px; }}
-        .insight-text {{ color: var(--text-primary); font-size: 1rem; line-height: 1.6; }}
-        .recommendation-card {{
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(59, 130, 246, 0.08));
-            border-left: 4px solid var(--accent-purple);
-            padding: 16px 20px;
-            border-radius: var(--radius-md);
-            margin-bottom: 12px;
-        }}
-        .recommendation-card p {{ color: var(--text-primary); margin: 0; }}
-        .alert-card {{
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.08));
-            border-left: 4px solid var(--accent-orange);
-            padding: 16px 20px;
-            border-radius: var(--radius-md);
-            margin-bottom: 12px;
-        }}
-        .alert-card p {{ color: var(--text-primary); margin: 0; }}
-        
-        .stTabs [data-baseweb="tab-list"] {{ gap: 8px; background: transparent; }}
-        .stTabs [data-baseweb="tab"] {{
-            background: {colors['gradient_card']};
-            border-radius: var(--radius-md);
-            color: var(--text-secondary);
-            padding: 14px 28px;
-            border: 1px solid var(--border-default);
-            font-weight: 600;
-        }}
-        .stTabs [aria-selected="true"] {{
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)) !important;
-            color: white !important;
-            border: none !important;
         }}
         
         .stButton > button {{
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
             color: white;
             border: none;
-            border-radius: var(--radius-lg);
-            padding: 16px 36px;
-            font-weight: 700;
-            box-shadow: var(--shadow-md);
+            border-radius: 12px;
+            padding: 12px 28px;
+            font-weight: 600;
         }}
         .stButton > button:hover {{
             background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-            transform: translateY(-4px);
+            transform: translateY(-2px);
         }}
         
-        .status-dot {{ width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; }}
-        .status-dot-green {{ background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }}
-        .status-dot-yellow {{ background: var(--accent-orange); box-shadow: 0 0 10px var(--accent-orange); }}
-        .status-dot-red {{ background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }}
+        .stTabs [data-baseweb="tab-list"] {{ gap: 8px; background: transparent; }}
+        .stTabs [data-baseweb="tab"] {{
+            background: var(--bg-card);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            padding: 12px 24px;
+            border: 1px solid var(--border-default);
+        }}
+        .stTabs [aria-selected="true"] {{
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)) !important;
+            color: white !important;
+        }}
         
         .footer {{
-            background: {colors['gradient_card']};
-            padding: 40px;
+            background: var(--bg-card);
+            padding: 30px;
             text-align: center;
             border-top: 1px solid var(--border-default);
-            margin-top: 60px;
-            border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+            margin-top: 40px;
+            border-radius: 20px 20px 0 0;
         }}
-        .footer-title {{ color: var(--text-primary); font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; }}
-        .footer-subtitle {{ color: var(--text-muted); font-size: 0.95rem; margin-bottom: 12px; }}
+        .footer-title {{ color: var(--text-primary); font-size: 1.1rem; font-weight: 700; }}
         .footer-names {{
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-weight: 800;
-            font-size: 1.1rem;
+            background-clip: text;
+            font-weight: 700;
         }}
-        
-        ::-webkit-scrollbar {{ width: 10px; }}
-        ::-webkit-scrollbar-track {{ background: var(--bg-secondary); }}
-        ::-webkit-scrollbar-thumb {{ background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple)); border-radius: 5px; }}
     </style>
     """
 
 
-# Apply theme CSS
+# Apply theme CSS at module level
 st.markdown(get_theme_css(), unsafe_allow_html=True)
 
 
 # ============================================================================
-# ANIMATED BACKGROUND FOR HOME PAGE
+# ANIMATED BACKGROUND FUNCTIONS
 # ============================================================================
 
 def get_animated_background_css():
     """Generate CSS for animated background on home page."""
     return """
-    <style>
-    /* ===== ANIMATED BACKGROUND - FIXED FOR STREAMLIT ===== */
-    .animated-bg-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        z-index: 0;
-        pointer-events: none;
-    }
-    
-    /* Make sure Streamlit content is above the animation */
-    .stApp > div:first-child {
-        position: relative;
-        z-index: 1;
-    }
-    
-    /* ===== ANIMATED GRADIENT ORBS ===== */
-    .orb {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(60px);
-        opacity: 0.6;
-        animation: float-orb 20s ease-in-out infinite;
-    }
-    
-    .orb-1 {
-        width: 500px;
-        height: 500px;
-        background: radial-gradient(circle, rgba(6, 182, 212, 0.5) 0%, transparent 70%);
-        top: -100px;
-        left: -100px;
-        animation-duration: 25s;
-    }
-    
-    .orb-2 {
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%);
-        top: 40%;
-        right: -100px;
-        animation-delay: -5s;
-        animation-duration: 30s;
-    }
-    
-    .orb-3 {
-        width: 350px;
-        height: 350px;
-        background: radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%);
-        bottom: -50px;
-        left: 30%;
-        animation-delay: -10s;
-        animation-duration: 22s;
-    }
-    
-    .orb-4 {
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
-        top: 25%;
-        left: 40%;
-        animation-delay: -7s;
-        animation-duration: 28s;
-    }
-    
-    @keyframes float-orb {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        25% { transform: translate(60px, -100px) scale(1.15); }
-        50% { transform: translate(-40px, 60px) scale(0.85); }
-        75% { transform: translate(100px, 40px) scale(1.1); }
-    }
-    
-    /* ===== FLOATING PARTICLES ===== */
-    .particles-wrapper {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-    }
-    
-    .particle {
-        position: absolute;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        opacity: 0;
-        animation: particle-rise 12s ease-in-out infinite;
-    }
-    
-    .particle-cyan { background: #06b6d4; box-shadow: 0 0 15px #06b6d4, 0 0 30px #06b6d4; }
-    .particle-purple { background: #8b5cf6; box-shadow: 0 0 15px #8b5cf6, 0 0 30px #8b5cf6; }
-    .particle-pink { background: #ec4899; box-shadow: 0 0 15px #ec4899, 0 0 30px #ec4899; }
-    .particle-blue { background: #3b82f6; box-shadow: 0 0 15px #3b82f6, 0 0 30px #3b82f6; }
-    .particle-green { background: #10b981; box-shadow: 0 0 15px #10b981, 0 0 30px #10b981; }
-    .particle-orange { background: #f59e0b; box-shadow: 0 0 15px #f59e0b, 0 0 30px #f59e0b; }
-    
-    .particle:nth-child(1) { left: 5%; animation-delay: 0s; }
-    .particle:nth-child(2) { left: 15%; animation-delay: 1s; }
-    .particle:nth-child(3) { left: 25%; animation-delay: 2s; }
-    .particle:nth-child(4) { left: 35%; animation-delay: 0.5s; }
-    .particle:nth-child(5) { left: 45%; animation-delay: 1.5s; }
-    .particle:nth-child(6) { left: 55%; animation-delay: 2.5s; }
-    .particle:nth-child(7) { left: 65%; animation-delay: 0.8s; }
-    .particle:nth-child(8) { left: 75%; animation-delay: 1.8s; }
-    .particle:nth-child(9) { left: 85%; animation-delay: 2.8s; }
-    .particle:nth-child(10) { left: 95%; animation-delay: 0.3s; }
-    .particle:nth-child(11) { left: 10%; animation-delay: 3s; }
-    .particle:nth-child(12) { left: 30%; animation-delay: 3.5s; }
-    .particle:nth-child(13) { left: 50%; animation-delay: 4s; }
-    .particle:nth-child(14) { left: 70%; animation-delay: 4.5s; }
-    .particle:nth-child(15) { left: 90%; animation-delay: 5s; }
-    
-    @keyframes particle-rise {
-        0% {
-            bottom: -10px;
-            opacity: 0;
-            transform: translateX(0) scale(0.5);
-        }
-        10% {
-            opacity: 1;
-            transform: translateX(0) scale(1);
-        }
-        90% {
-            opacity: 1;
-        }
-        100% {
-            bottom: 100vh;
-            opacity: 0;
-            transform: translateX(100px) scale(0.5);
-        }
-    }
-    
-    /* ===== SHOOTING STARS ===== */
-    .shooting-stars-wrapper {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        overflow: hidden;
-    }
-    
-    .shooting-star {
-        position: absolute;
-        width: 150px;
-        height: 2px;
-        background: linear-gradient(90deg, rgba(6, 182, 212, 0), rgba(6, 182, 212, 1), rgba(6, 182, 212, 0));
-        border-radius: 50%;
-        animation: shoot 4s ease-in-out infinite;
-        opacity: 0;
-        transform: rotate(-45deg);
-    }
-    
-    .shooting-star::before {
-        content: '';
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #fff;
-        box-shadow: 0 0 10px #06b6d4, 0 0 20px #06b6d4;
-        right: 0;
-        top: -3px;
-    }
-    
-    .shooting-star:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
-    .shooting-star:nth-child(2) { top: 25%; left: 50%; animation-delay: 2s; background: linear-gradient(90deg, rgba(139, 92, 246, 0), rgba(139, 92, 246, 1), rgba(139, 92, 246, 0)); }
-    .shooting-star:nth-child(2)::before { box-shadow: 0 0 10px #8b5cf6, 0 0 20px #8b5cf6; }
-    .shooting-star:nth-child(3) { top: 40%; left: 30%; animation-delay: 4s; background: linear-gradient(90deg, rgba(236, 72, 153, 0), rgba(236, 72, 153, 1), rgba(236, 72, 153, 0)); }
-    .shooting-star:nth-child(3)::before { box-shadow: 0 0 10px #ec4899, 0 0 20px #ec4899; }
-    .shooting-star:nth-child(4) { top: 15%; left: 70%; animation-delay: 6s; }
-    .shooting-star:nth-child(5) { top: 50%; left: 80%; animation-delay: 3s; background: linear-gradient(90deg, rgba(16, 185, 129, 0), rgba(16, 185, 129, 1), rgba(16, 185, 129, 0)); }
-    .shooting-star:nth-child(5)::before { box-shadow: 0 0 10px #10b981, 0 0 20px #10b981; }
-    
-    @keyframes shoot {
-        0% {
-            transform: rotate(-45deg) translateX(0);
-            opacity: 0;
-        }
-        5% {
-            opacity: 1;
-        }
-        15% {
-            transform: rotate(-45deg) translateX(400px);
-            opacity: 0;
-        }
-        100% {
-            opacity: 0;
-        }
-    }
-    
-    /* ===== PULSE RINGS ===== */
-    .pulse-rings-wrapper {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-    }
-    
-    .pulse-ring {
-        position: absolute;
-        border: 3px solid;
-        border-radius: 50%;
-        animation: pulse-grow 4s ease-out infinite;
-        opacity: 0;
-    }
-    
-    .pulse-ring-1 { 
-        width: 80px; height: 80px; 
-        top: 20%; left: 10%; 
-        border-color: #06b6d4;
-        animation-delay: 0s;
-    }
-    .pulse-ring-2 { 
-        width: 60px; height: 60px; 
-        top: 60%; right: 15%; 
-        border-color: #8b5cf6;
-        animation-delay: 1.5s;
-    }
-    .pulse-ring-3 { 
-        width: 100px; height: 100px; 
-        bottom: 20%; left: 50%; 
-        border-color: #ec4899;
-        animation-delay: 3s;
-    }
-    .pulse-ring-4 { 
-        width: 70px; height: 70px; 
-        top: 40%; left: 70%; 
-        border-color: #10b981;
-        animation-delay: 2s;
-    }
-    
-    @keyframes pulse-grow {
-        0% {
-            transform: scale(0.5);
-            opacity: 0.8;
-        }
-        100% {
-            transform: scale(2.5);
-            opacity: 0;
-        }
-    }
-    
-    /* ===== FLOATING DATA ICONS ===== */
-    .floating-icons-wrapper {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-    }
-    
-    .float-icon {
-        position: absolute;
-        font-size: 28px;
-        opacity: 0.2;
-        animation: icon-bob 6s ease-in-out infinite;
-        filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.5));
-    }
-    
-    .float-icon:nth-child(1) { top: 12%; left: 5%; animation-delay: 0s; }
-    .float-icon:nth-child(2) { top: 22%; right: 8%; animation-delay: 1s; }
-    .float-icon:nth-child(3) { top: 42%; left: 3%; animation-delay: 2s; }
-    .float-icon:nth-child(4) { top: 62%; right: 5%; animation-delay: 1.5s; }
-    .float-icon:nth-child(5) { top: 78%; left: 8%; animation-delay: 2.5s; }
-    .float-icon:nth-child(6) { top: 32%; right: 3%; animation-delay: 0.5s; }
-    .float-icon:nth-child(7) { top: 52%; left: 6%; animation-delay: 3s; }
-    .float-icon:nth-child(8) { top: 88%; right: 10%; animation-delay: 3.5s; }
-    
-    @keyframes icon-bob {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        25% { transform: translateY(-20px) rotate(5deg); }
-        50% { transform: translateY(0) rotate(0deg); }
-        75% { transform: translateY(-10px) rotate(-5deg); }
-    }
-    
-    /* ===== GRID LINES ===== */
-    .grid-overlay {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
-        background-image: 
-            linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
-        background-size: 80px 80px;
-        animation: grid-scroll 30s linear infinite;
-    }
-    
-    @keyframes grid-scroll {
-        0% { transform: translate(0, 0); }
-        100% { transform: translate(80px, 80px); }
-    }
-    
-    /* ===== GLOWING LINES ===== */
-    .glow-line {
-        position: absolute;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
-        animation: line-glow 3s ease-in-out infinite;
-        opacity: 0;
-    }
-    
-    .glow-line-1 { width: 200px; top: 30%; left: 0; animation-delay: 0s; }
-    .glow-line-2 { width: 150px; top: 50%; right: 0; animation-delay: 1s; background: linear-gradient(90deg, transparent, #8b5cf6, transparent); }
-    .glow-line-3 { width: 180px; top: 70%; left: 0; animation-delay: 2s; background: linear-gradient(90deg, transparent, #ec4899, transparent); }
-    
-    @keyframes line-glow {
-        0% { opacity: 0; transform: translateX(-100%); }
-        50% { opacity: 0.8; }
-        100% { opacity: 0; transform: translateX(100vw); }
-    }
-    </style>
-    """
+<style>
+.animated-bg-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.6;
+    animation: float-orb 20s ease-in-out infinite;
+}
+
+.orb-1 {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(6, 182, 212, 0.5) 0%, transparent 70%);
+    top: -100px;
+    left: -100px;
+    animation-duration: 25s;
+}
+
+.orb-2 {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%);
+    top: 40%;
+    right: -100px;
+    animation-delay: -5s;
+    animation-duration: 30s;
+}
+
+.orb-3 {
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(236, 72, 153, 0.4) 0%, transparent 70%);
+    bottom: -50px;
+    left: 30%;
+    animation-delay: -10s;
+    animation-duration: 22s;
+}
+
+.orb-4 {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.4) 0%, transparent 70%);
+    top: 25%;
+    left: 40%;
+    animation-delay: -7s;
+    animation-duration: 28s;
+}
+
+@keyframes float-orb {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(60px, -100px) scale(1.15); }
+    50% { transform: translate(-40px, 60px) scale(0.85); }
+    75% { transform: translate(100px, 40px) scale(1.1); }
+}
+
+.particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    opacity: 0;
+    animation: particle-rise 12s ease-in-out infinite;
+}
+
+.particle-cyan { background: #06b6d4; box-shadow: 0 0 15px #06b6d4; }
+.particle-purple { background: #8b5cf6; box-shadow: 0 0 15px #8b5cf6; }
+.particle-pink { background: #ec4899; box-shadow: 0 0 15px #ec4899; }
+.particle-green { background: #10b981; box-shadow: 0 0 15px #10b981; }
+
+.particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+.particle:nth-child(2) { left: 20%; animation-delay: 1s; }
+.particle:nth-child(3) { left: 30%; animation-delay: 2s; }
+.particle:nth-child(4) { left: 40%; animation-delay: 0.5s; }
+.particle:nth-child(5) { left: 50%; animation-delay: 1.5s; }
+.particle:nth-child(6) { left: 60%; animation-delay: 2.5s; }
+.particle:nth-child(7) { left: 70%; animation-delay: 0.8s; }
+.particle:nth-child(8) { left: 80%; animation-delay: 1.8s; }
+.particle:nth-child(9) { left: 90%; animation-delay: 2.8s; }
+.particle:nth-child(10) { left: 15%; animation-delay: 3s; }
+
+@keyframes particle-rise {
+    0% { bottom: -10px; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { bottom: 100vh; opacity: 0; }
+}
+
+.shooting-star {
+    position: absolute;
+    width: 150px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+    animation: shoot 4s ease-in-out infinite;
+    opacity: 0;
+    transform: rotate(-45deg);
+}
+
+.shooting-star:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+.shooting-star:nth-child(2) { top: 25%; left: 50%; animation-delay: 2s; background: linear-gradient(90deg, transparent, #8b5cf6, transparent); }
+.shooting-star:nth-child(3) { top: 40%; left: 30%; animation-delay: 4s; background: linear-gradient(90deg, transparent, #ec4899, transparent); }
+
+@keyframes shoot {
+    0% { transform: rotate(-45deg) translateX(0); opacity: 0; }
+    5% { opacity: 1; }
+    15% { transform: rotate(-45deg) translateX(400px); opacity: 0; }
+    100% { opacity: 0; }
+}
+
+.pulse-ring {
+    position: absolute;
+    border: 3px solid;
+    border-radius: 50%;
+    animation: pulse-grow 4s ease-out infinite;
+    opacity: 0;
+}
+
+.pulse-ring-1 { width: 80px; height: 80px; top: 20%; left: 10%; border-color: #06b6d4; }
+.pulse-ring-2 { width: 60px; height: 60px; top: 60%; right: 15%; border-color: #8b5cf6; animation-delay: 1.5s; }
+.pulse-ring-3 { width: 100px; height: 100px; bottom: 20%; left: 50%; border-color: #ec4899; animation-delay: 3s; }
+
+@keyframes pulse-grow {
+    0% { transform: scale(0.5); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
+}
+
+.float-icon {
+    position: absolute;
+    font-size: 28px;
+    opacity: 0.2;
+    animation: icon-bob 6s ease-in-out infinite;
+}
+
+.float-icon:nth-child(1) { top: 12%; left: 5%; }
+.float-icon:nth-child(2) { top: 22%; right: 8%; animation-delay: 1s; }
+.float-icon:nth-child(3) { top: 42%; left: 3%; animation-delay: 2s; }
+.float-icon:nth-child(4) { top: 62%; right: 5%; animation-delay: 1.5s; }
+.float-icon:nth-child(5) { top: 78%; left: 8%; animation-delay: 2.5s; }
+.float-icon:nth-child(6) { top: 32%; right: 3%; animation-delay: 0.5s; }
+
+@keyframes icon-bob {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-20px) rotate(5deg); }
+    50% { transform: translateY(0) rotate(0deg); }
+    75% { transform: translateY(-10px) rotate(-5deg); }
+}
+</style>
+"""
 
 
 def get_animated_background_html():
     """Generate HTML elements for animated background."""
     return """
-    <div class="animated-bg-container">
-        <!-- Gradient Orbs -->
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-        <div class="orb orb-4"></div>
-        
-        <!-- Grid Overlay -->
-        <div class="grid-overlay"></div>
-        
-        <!-- Floating Particles -->
-        <div class="particles-wrapper">
-            <div class="particle particle-cyan"></div>
-            <div class="particle particle-purple"></div>
-            <div class="particle particle-pink"></div>
-            <div class="particle particle-blue"></div>
-            <div class="particle particle-green"></div>
-            <div class="particle particle-cyan"></div>
-            <div class="particle particle-orange"></div>
-            <div class="particle particle-purple"></div>
-            <div class="particle particle-pink"></div>
-            <div class="particle particle-blue"></div>
-            <div class="particle particle-green"></div>
-            <div class="particle particle-cyan"></div>
-            <div class="particle particle-purple"></div>
-            <div class="particle particle-pink"></div>
-            <div class="particle particle-orange"></div>
-        </div>
-        
-        <!-- Shooting Stars -->
-        <div class="shooting-stars-wrapper">
-            <div class="shooting-star"></div>
-            <div class="shooting-star"></div>
-            <div class="shooting-star"></div>
-            <div class="shooting-star"></div>
-            <div class="shooting-star"></div>
-        </div>
-        
-        <!-- Pulse Rings -->
-        <div class="pulse-rings-wrapper">
-            <div class="pulse-ring pulse-ring-1"></div>
-            <div class="pulse-ring pulse-ring-2"></div>
-            <div class="pulse-ring pulse-ring-3"></div>
-            <div class="pulse-ring pulse-ring-4"></div>
-        </div>
-        
-        <!-- Floating Icons -->
-        <div class="floating-icons-wrapper">
-            <div class="float-icon">📊</div>
-            <div class="float-icon">📈</div>
-            <div class="float-icon">🛒</div>
-            <div class="float-icon">💹</div>
-            <div class="float-icon">🎯</div>
-            <div class="float-icon">⚡</div>
-            <div class="float-icon">🔮</div>
-            <div class="float-icon">✨</div>
-        </div>
-        
-        <!-- Glowing Lines -->
-        <div class="glow-line glow-line-1"></div>
-        <div class="glow-line glow-line-2"></div>
-        <div class="glow-line glow-line-3"></div>
-    </div>
-    """
+<div class="animated-bg-container">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    
+    <div class="particle particle-cyan"></div>
+    <div class="particle particle-purple"></div>
+    <div class="particle particle-pink"></div>
+    <div class="particle particle-green"></div>
+    <div class="particle particle-cyan"></div>
+    <div class="particle particle-purple"></div>
+    <div class="particle particle-pink"></div>
+    <div class="particle particle-green"></div>
+    <div class="particle particle-cyan"></div>
+    <div class="particle particle-purple"></div>
+    
+    <div class="shooting-star"></div>
+    <div class="shooting-star"></div>
+    <div class="shooting-star"></div>
+    
+    <div class="pulse-ring pulse-ring-1"></div>
+    <div class="pulse-ring pulse-ring-2"></div>
+    <div class="pulse-ring pulse-ring-3"></div>
+    
+    <div class="float-icon">📊</div>
+    <div class="float-icon">📈</div>
+    <div class="float-icon">🛒</div>
+    <div class="float-icon">💹</div>
+    <div class="float-icon">🎯</div>
+    <div class="float-icon">⚡</div>
+</div>
+"""
+
 
 # ============================================================================
-# HELPER FUNCTIONS FOR UI
-# ============================================================================
-
-# ============================================================================
-# HELPER FUNCTIONS FOR UI
+# HELPER FUNCTIONS
 # ============================================================================
 
 def create_metric_card(label, value, delta=None, delta_type="positive", color="cyan"):
-    """Create a 3D styled metric card."""
+    """Create a styled metric card."""
     delta_html = ""
     if delta:
-        delta_class = "metric-delta metric-delta-positive" if delta_type == "positive" else "metric-delta metric-delta-negative"
+        delta_class = "metric-delta-positive" if delta_type == "positive" else "metric-delta-negative"
         delta_icon = "↑" if delta_type == "positive" else "↓"
-        delta_html = f'<div class="{delta_class}">{delta_icon} {delta}</div>'
-    else:
-        delta_html = '<div style="height: 28px;"></div>'
+        delta_html = f'<div class="metric-delta {delta_class}">{delta_icon} {delta}</div>'
     
     return f"""
     <div class="metric-card-3d">
@@ -863,123 +550,45 @@ def create_metric_card(label, value, delta=None, delta_type="positive", color="c
     </div>
     """
 
-def format_currency(value):
-    """Format large currency values for display."""
-    if value is None:
-        return "AED 0"
-    
-    abs_value = abs(value)
-    sign = "-" if value < 0 else ""
-    
-    if abs_value >= 1_000_000_000:
-        return f"{sign}AED {abs_value / 1_000_000_000:.1f}B"
-    elif abs_value >= 1_000_000:
-        return f"{sign}AED {abs_value / 1_000_000:.1f}M"
-    elif abs_value >= 1_000:
-        return f"{sign}AED {abs_value / 1_000:.1f}K"
-    else:
-        return f"{sign}AED {abs_value:,.0f}"
 
 def create_feature_card(icon, title, description, color="cyan"):
-    """Create a 3D feature card."""
-    color_map = {
-        "cyan": "var(--accent-cyan)",
-        "blue": "var(--accent-blue)",
-        "purple": "var(--accent-purple)",
-        "pink": "var(--accent-pink)",
-        "green": "var(--accent-green)",
-        "orange": "var(--accent-orange)",
-        "teal": "var(--accent-teal)",
-    }
-    accent = color_map.get(color, color_map["cyan"])
-    
+    """Create a styled feature card."""
     return f"""
     <div class="feature-card-3d">
         <div class="feature-icon">{icon}</div>
-        <div class="feature-title" style="color: {accent};">{title}</div>
+        <div class="feature-title">{title}</div>
         <div class="feature-desc">{description}</div>
     </div>
     """
 
-def create_info_card(content):
-    return f'<div class="info-card">{content}</div>'
 
-def create_success_card(content):
-    return f'<div class="success-card">✅ {content}</div>'
+def create_info_card(message):
+    """Create an info card."""
+    return f'<div class="info-card">{message}</div>'
 
-def create_warning_card(content):
-    return f'<div class="warning-card">⚠️ {content}</div>'
 
-def create_error_card(content):
-    return f'<div class="error-card">❌ {content}</div>'
+def create_success_card(message):
+    """Create a success card."""
+    return f'<div class="success-card">{message}</div>'
 
-def create_insight_card(title, insight_text):
-    return f"""
-    <div class="insight-card">
-        <div class="insight-title">💡 {title}</div>
-        <div class="insight-text">{insight_text}</div>
-    </div>
-    """
 
-def style_plotly_chart_themed(fig, height=None):
-    """Apply theme-aware styling to Plotly charts with visible axis text."""
-    colors = get_theme_colors()
-    
-    fig.update_layout(
-        paper_bgcolor=colors['chart_bg'],
-        plot_bgcolor=colors['chart_bg'],
-        font=dict(
-            color=colors['chart_text'],
-            family='Inter, sans-serif',
-            size=12
-        ),
-        title_font=dict(
-            size=18,
-            color=colors['chart_title'],
-            family='Inter, sans-serif'
-        ),
-        legend=dict(
-            bgcolor='rgba(0,0,0,0)',
-            font=dict(color=colors['chart_text'], size=11),
-            bordercolor='rgba(0,0,0,0)'
-        ),
-        margin=dict(l=20, r=20, t=60, b=40),
-        hoverlabel=dict(
-            bgcolor=colors['bg_card'],
-            font_size=12,
-            font_family='Inter'
-        )
-    )
-    
-    # Update axes with visible text colors
-    fig.update_xaxes(
-        gridcolor=colors['chart_grid'],
-        zerolinecolor=colors['chart_grid'],
-        tickfont=dict(color=colors['chart_text'], size=11),
-        title_font=dict(color=colors['chart_text'], size=12),
-        linecolor=colors['chart_grid']
-    )
-    
-    fig.update_yaxes(
-        gridcolor=colors['chart_grid'],
-        zerolinecolor=colors['chart_grid'],
-        tickfont=dict(color=colors['chart_text'], size=11),
-        title_font=dict(color=colors['chart_text'], size=12),
-        linecolor=colors['chart_grid']
-    )
-    
-    if height:
-        fig.update_layout(height=height)
-    
-    return fig
+def create_warning_card(message):
+    """Create a warning card."""
+    return f'<div class="warning-card">{message}</div>'
+
+
+def create_error_card(message):
+    """Create an error card."""
+    return f'<div class="error-card">{message}</div>'
+
 
 def show_footer():
-    """Display the footer."""
+    """Display footer."""
     st.markdown("""
     <div class="footer">
-        <div class="footer-title">🚀 UAE Pulse Simulator + Data Rescue Dashboard</div>
-        <div class="footer-subtitle">Built with ❤️ by</div>
-        <div class="footer-names">Kartik Joshi • Gagandeep Singh • Samuel Alex • Prem Kukreja</div>
+        <div class="footer-title">UAE Pulse Simulator</div>
+        <p style="color: var(--text-muted); margin: 8px 0;">Built with ❤️ by</p>
+        <div class="footer-names">Nabeel, Omar, Khalfan, Youssef, Abdul Rahman</div>
     </div>
     """, unsafe_allow_html=True)
 
