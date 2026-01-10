@@ -1,7 +1,7 @@
 # ============================================================================
 # UAE Pulse Simulator + Data Rescue Dashboard
-# Main Streamlit Application - EXECUTIVE THEME v3.0
-# Complete Visual Overhaul with Light/Dark Mode
+# Main Streamlit Application - EXECUTIVE THEME v3.1 COMPLETE
+# All Charts, Insights & Light/Dark Mode Fixed
 # ============================================================================
 
 import streamlit as st
@@ -43,6 +43,43 @@ def toggle_theme():
     st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
 
 # ============================================================================
+# GET THEME COLORS (for use in Python)
+# ============================================================================
+
+def get_theme_colors():
+    """Return color dictionary based on current theme."""
+    is_dark = st.session_state.theme == 'dark'
+    
+    if is_dark:
+        return {
+            'bg_primary': '#0a0a0f',
+            'bg_secondary': '#12121a',
+            'bg_card': 'rgba(22, 22, 31, 0.95)',
+            'text_primary': '#f8fafc',
+            'text_secondary': '#cbd5e1',
+            'text_muted': '#64748b',
+            'border_default': 'rgba(148, 163, 184, 0.1)',
+            'chart_bg': 'rgba(0,0,0,0)',
+            'chart_grid': '#1e293b',
+            'chart_text': '#e2e8f0',
+            'chart_title': '#f1f5f9',
+        }
+    else:
+        return {
+            'bg_primary': '#f8fafc',
+            'bg_secondary': '#ffffff',
+            'bg_card': 'rgba(255, 255, 255, 0.95)',
+            'text_primary': '#0f172a',
+            'text_secondary': '#475569',
+            'text_muted': '#64748b',
+            'border_default': 'rgba(0, 0, 0, 0.08)',
+            'chart_bg': 'rgba(0,0,0,0)',
+            'chart_grid': '#e2e8f0',
+            'chart_text': '#1e293b',
+            'chart_title': '#0f172a',
+        }
+
+# ============================================================================
 # DYNAMIC THEME CSS GENERATOR
 # ============================================================================
 
@@ -51,7 +88,6 @@ def get_theme_css():
     
     is_dark = st.session_state.theme == 'dark'
     
-    # Theme-specific color palettes
     if is_dark:
         colors = {
             'bg_primary': '#0a0a0f',
@@ -80,10 +116,6 @@ def get_theme_css():
             'gradient_hero': 'linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(139, 92, 246, 0.12) 50%, rgba(236, 72, 153, 0.08) 100%)',
             'gradient_card': 'linear-gradient(145deg, rgba(22, 22, 31, 0.9) 0%, rgba(26, 26, 36, 0.95) 100%)',
             'gradient_sidebar': 'linear-gradient(180deg, #0d0d14 0%, #0f0f18 50%, #0a0a0f 100%)',
-            
-            'chart_bg': 'rgba(0,0,0,0)',
-            'chart_grid': '#1e293b',
-            'chart_text': '#e2e8f0',
         }
     else:
         colors = {
@@ -97,7 +129,7 @@ def get_theme_css():
             
             'text_primary': '#0f172a',
             'text_secondary': '#475569',
-            'text_muted': '#94a3b8',
+            'text_muted': '#64748b',
             'text_inverse': '#f8fafc',
             
             'border_default': 'rgba(0, 0, 0, 0.08)',
@@ -113,31 +145,7 @@ def get_theme_css():
             'gradient_hero': 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.05) 100%)',
             'gradient_card': 'linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.95) 100%)',
             'gradient_sidebar': 'linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%)',
-            
-            'chart_bg': 'rgba(0,0,0,0)',
-            'chart_grid': '#e2e8f0',
-            'chart_text': '#334155',
         }
-    
-    # Accent colors (same for both themes)
-    accents = {
-        'cyan': '#06b6d4',
-        'cyan_light': '#22d3ee',
-        'blue': '#3b82f6',
-        'blue_light': '#60a5fa',
-        'purple': '#8b5cf6',
-        'purple_light': '#a78bfa',
-        'pink': '#ec4899',
-        'pink_light': '#f472b6',
-        'green': '#10b981',
-        'green_light': '#34d399',
-        'orange': '#f59e0b',
-        'orange_light': '#fbbf24',
-        'red': '#ef4444',
-        'red_light': '#f87171',
-        'teal': '#14b8a6',
-        'teal_light': '#2dd4bf',
-    }
     
     return f"""
     <style>
@@ -170,22 +178,22 @@ def get_theme_css():
             --shadow-glow-cyan: {colors['shadow_glow_cyan']};
             --shadow-glow-purple: {colors['shadow_glow_purple']};
             
-            --accent-cyan: {accents['cyan']};
-            --accent-cyan-light: {accents['cyan_light']};
-            --accent-blue: {accents['blue']};
-            --accent-blue-light: {accents['blue_light']};
-            --accent-purple: {accents['purple']};
-            --accent-purple-light: {accents['purple_light']};
-            --accent-pink: {accents['pink']};
-            --accent-pink-light: {accents['pink_light']};
-            --accent-green: {accents['green']};
-            --accent-green-light: {accents['green_light']};
-            --accent-orange: {accents['orange']};
-            --accent-orange-light: {accents['orange_light']};
-            --accent-red: {accents['red']};
-            --accent-red-light: {accents['red_light']};
-            --accent-teal: {accents['teal']};
-            --accent-teal-light: {accents['teal_light']};
+            --accent-cyan: #06b6d4;
+            --accent-cyan-light: #22d3ee;
+            --accent-blue: #3b82f6;
+            --accent-blue-light: #60a5fa;
+            --accent-purple: #8b5cf6;
+            --accent-purple-light: #a78bfa;
+            --accent-pink: #ec4899;
+            --accent-pink-light: #f472b6;
+            --accent-green: #10b981;
+            --accent-green-light: #34d399;
+            --accent-orange: #f59e0b;
+            --accent-orange-light: #fbbf24;
+            --accent-red: #ef4444;
+            --accent-red-light: #f87171;
+            --accent-teal: #14b8a6;
+            --accent-teal-light: #2dd4bf;
             
             --radius-sm: 8px;
             --radius-md: 12px;
@@ -204,16 +212,6 @@ def get_theme_css():
             to {{ opacity: 1; transform: translateY(0); }}
         }}
         
-        @keyframes fadeIn {{
-            from {{ opacity: 0; }}
-            to {{ opacity: 1; }}
-        }}
-        
-        @keyframes slideInLeft {{
-            from {{ opacity: 0; transform: translateX(-20px); }}
-            to {{ opacity: 1; transform: translateX(0); }}
-        }}
-        
         @keyframes pulse3D {{
             0%, 100% {{ 
                 box-shadow: var(--shadow-md), 0 0 20px rgba(6, 182, 212, 0.2);
@@ -230,21 +228,10 @@ def get_theme_css():
             50% {{ transform: translateY(-8px) rotateX(2deg); }}
         }}
         
-        @keyframes shimmer {{
-            0% {{ background-position: -200% 0; }}
-            100% {{ background-position: 200% 0; }}
-        }}
-        
         @keyframes gradientFlow {{
             0% {{ background-position: 0% 50%; }}
             50% {{ background-position: 100% 50%; }}
             100% {{ background-position: 0% 50%; }}
-        }}
-        
-        @keyframes borderGlow {{
-            0%, 100% {{ border-color: var(--accent-cyan); }}
-            33% {{ border-color: var(--accent-purple); }}
-            66% {{ border-color: var(--accent-pink); }}
         }}
         
         /* ===== HIDE STREAMLIT DEFAULTS ===== */
@@ -276,12 +263,11 @@ def get_theme_css():
             z-index: 0;
         }}
         
-        /* ===== SIDEBAR - EXECUTIVE STYLE ===== */
+        /* ===== SIDEBAR ===== */
         [data-testid="stSidebar"] {{
             background: {colors['gradient_sidebar']};
             border-right: 1px solid var(--border-default);
             box-shadow: 4px 0 30px rgba(0, 0, 0, 0.15);
-            transition: all var(--transition-normal);
         }}
         
         [data-testid="stSidebar"]::before {{
@@ -291,15 +277,8 @@ def get_theme_css():
             right: 0;
             width: 3px;
             height: 100%;
-            background: linear-gradient(180deg, 
-                var(--accent-cyan) 0%, 
-                var(--accent-purple) 50%, 
-                var(--accent-pink) 100%);
+            background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink));
             opacity: 0.8;
-        }}
-        
-        [data-testid="stSidebar"] > div {{
-            padding-top: 1rem;
         }}
         
         /* ===== TYPOGRAPHY ===== */
@@ -307,10 +286,9 @@ def get_theme_css():
             font-family: 'Inter', sans-serif;
             color: var(--text-primary);
             font-weight: 700;
-            letter-spacing: -0.02em;
         }}
         
-        p, span, div {{
+        p, span, div, label {{
             color: var(--text-secondary);
         }}
         
@@ -318,14 +296,10 @@ def get_theme_css():
         .metric-card-3d {{
             background: {colors['gradient_card']};
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-radius: var(--radius-xl);
             padding: 28px 24px;
             border: 1px solid var(--border-default);
-            box-shadow: 
-                var(--shadow-md),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.05);
             transition: all var(--transition-slow);
             position: relative;
             overflow: hidden;
@@ -333,8 +307,6 @@ def get_theme_css():
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transform-style: preserve-3d;
-            perspective: 1000px;
         }}
         
         .metric-card-3d::before {{
@@ -349,38 +321,14 @@ def get_theme_css():
             transition: opacity var(--transition-normal);
         }}
         
-        .metric-card-3d::after {{
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(
-                45deg,
-                transparent 40%,
-                rgba(255, 255, 255, 0.03) 50%,
-                transparent 60%
-            );
-            transform: translateX(-100%);
-            transition: transform 0.6s ease;
-        }}
-        
         .metric-card-3d:hover {{
             transform: translateY(-8px) rotateX(2deg);
-            box-shadow: 
-                var(--shadow-xl),
-                0 20px 40px rgba(6, 182, 212, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            box-shadow: var(--shadow-xl), 0 20px 40px rgba(6, 182, 212, 0.1);
             border-color: var(--border-hover);
         }}
         
         .metric-card-3d:hover::before {{
             opacity: 1;
-        }}
-        
-        .metric-card-3d:hover::after {{
-            transform: translateX(100%);
         }}
         
         .metric-label {{
@@ -389,16 +337,13 @@ def get_theme_css():
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            margin-bottom: 4px;
         }}
         
         .metric-value {{
             font-size: 2rem;
             font-weight: 800;
             font-family: 'JetBrains Mono', monospace;
-            letter-spacing: -0.02em;
             margin: 8px 0;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }}
         
         .metric-value-cyan {{ color: var(--accent-cyan); }}
@@ -433,13 +378,10 @@ def get_theme_css():
         .feature-card-3d {{
             background: {colors['gradient_card']};
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-radius: var(--radius-xl);
             padding: 40px 28px;
             border: 1px solid var(--border-default);
-            box-shadow: 
-                var(--shadow-md),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            box-shadow: var(--shadow-md);
             transition: all var(--transition-slow);
             height: 240px;
             display: flex;
@@ -447,41 +389,17 @@ def get_theme_css():
             align-items: center;
             justify-content: center;
             text-align: center;
-            position: relative;
-            overflow: hidden;
-            transform-style: preserve-3d;
-        }}
-        
-        .feature-card-3d::before {{
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60%;
-            height: 4px;
-            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
-            opacity: 0;
-            transition: all var(--transition-normal);
         }}
         
         .feature-card-3d:hover {{
             transform: translateY(-12px) scale(1.02);
-            box-shadow: 
-                var(--shadow-xl),
-                0 30px 60px rgba(6, 182, 212, 0.15);
+            box-shadow: var(--shadow-xl), 0 30px 60px rgba(6, 182, 212, 0.15);
             border-color: var(--border-hover);
-        }}
-        
-        .feature-card-3d:hover::before {{
-            opacity: 1;
-            width: 80%;
         }}
         
         .feature-icon {{
             font-size: 3.5rem;
             margin-bottom: 20px;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
             animation: float3D 4s ease-in-out infinite;
         }}
         
@@ -502,42 +420,20 @@ def get_theme_css():
         .hero-container {{
             background: {colors['gradient_hero']};
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-radius: var(--radius-2xl);
             padding: 60px 50px;
             margin-bottom: 40px;
             border: 1px solid var(--border-default);
-            box-shadow: 
-                var(--shadow-lg),
-                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            box-shadow: var(--shadow-lg);
             position: relative;
             overflow: hidden;
             animation: fadeInUp 0.8s ease-out;
         }}
         
-        .hero-container::before {{
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -30%;
-            width: 80%;
-            height: 200%;
-            background: radial-gradient(
-                ellipse,
-                rgba(6, 182, 212, 0.08) 0%,
-                transparent 60%
-            );
-            animation: float3D 8s ease-in-out infinite;
-        }}
-        
         .hero-title {{
             font-size: 4rem;
             font-weight: 900;
-            background: linear-gradient(135deg, 
-                var(--text-primary) 0%, 
-                var(--accent-cyan) 40%, 
-                var(--accent-purple) 70%, 
-                var(--accent-pink) 100%);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 40%, var(--accent-purple) 70%, var(--accent-pink) 100%);
             background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -545,16 +441,12 @@ def get_theme_css():
             margin-bottom: 20px;
             line-height: 1.1;
             animation: gradientFlow 5s ease infinite;
-            position: relative;
-            z-index: 1;
         }}
         
         .hero-subtitle {{
             font-size: 1.25rem;
             color: var(--text-secondary);
             line-height: 1.7;
-            position: relative;
-            z-index: 1;
             max-width: 700px;
         }}
         
@@ -571,7 +463,6 @@ def get_theme_css():
             margin-right: 12px;
             margin-bottom: 20px;
             box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
-            animation: pulse3D 3s ease-in-out infinite;
         }}
         
         /* ===== PAGE TITLES ===== */
@@ -579,7 +470,6 @@ def get_theme_css():
             font-size: 3rem;
             font-weight: 800;
             margin-bottom: 8px;
-            letter-spacing: -0.03em;
             animation: fadeInUp 0.5s ease-out;
         }}
         
@@ -595,7 +485,6 @@ def get_theme_css():
             color: var(--text-secondary);
             font-size: 1.15rem;
             margin-bottom: 24px;
-            animation: fadeInUp 0.6s ease-out;
         }}
         
         /* ===== SECTION TITLES ===== */
@@ -603,26 +492,16 @@ def get_theme_css():
             font-size: 1.6rem;
             font-weight: 700;
             margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            color: var(--text-primary);
         }}
         
-        .section-title::after {{
-            content: '';
-            flex: 1;
-            height: 2px;
-            background: linear-gradient(90deg, var(--border-default), transparent);
-            margin-left: 15px;
-        }}
-        
-        .section-title-cyan {{ color: var(--accent-cyan); }}
-        .section-title-blue {{ color: var(--accent-blue); }}
-        .section-title-purple {{ color: var(--accent-purple); }}
-        .section-title-pink {{ color: var(--accent-pink); }}
-        .section-title-green {{ color: var(--accent-green); }}
-        .section-title-teal {{ color: var(--accent-teal); }}
-        .section-title-orange {{ color: var(--accent-orange); }}
+        .section-title-cyan {{ color: var(--accent-cyan) !important; }}
+        .section-title-blue {{ color: var(--accent-blue) !important; }}
+        .section-title-purple {{ color: var(--accent-purple) !important; }}
+        .section-title-pink {{ color: var(--accent-pink) !important; }}
+        .section-title-green {{ color: var(--accent-green) !important; }}
+        .section-title-teal {{ color: var(--accent-teal) !important; }}
+        .section-title-orange {{ color: var(--accent-orange) !important; }}
         
         /* ===== INFO/ALERT CARDS ===== */
         .info-card {{
@@ -640,88 +519,55 @@ def get_theme_css():
         
         .info-card:hover {{
             transform: translateX(8px);
-            box-shadow: var(--shadow-md), var(--shadow-glow-cyan);
-            border-left-color: var(--accent-cyan-light);
+            box-shadow: var(--shadow-md);
         }}
         
         .success-card {{
-            background: linear-gradient(135deg, 
-                rgba(16, 185, 129, 0.08) 0%, 
-                rgba(20, 184, 166, 0.08) 100%);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(20, 184, 166, 0.08) 100%);
             backdrop-filter: blur(15px);
             border-radius: var(--radius-lg);
             padding: 22px 28px;
             border: 1px solid rgba(16, 185, 129, 0.2);
             border-left: 4px solid var(--accent-green);
-            box-shadow: var(--shadow-sm);
             margin: 15px 0;
             color: var(--text-primary);
-            transition: all var(--transition-normal);
-        }}
-        
-        .success-card:hover {{
-            transform: translateX(8px);
-            box-shadow: var(--shadow-md), 0 0 30px rgba(16, 185, 129, 0.1);
         }}
         
         .warning-card {{
-            background: linear-gradient(135deg, 
-                rgba(245, 158, 11, 0.08) 0%, 
-                rgba(251, 146, 60, 0.08) 100%);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(251, 146, 60, 0.08) 100%);
             backdrop-filter: blur(15px);
             border-radius: var(--radius-lg);
             padding: 22px 28px;
             border: 1px solid rgba(245, 158, 11, 0.2);
             border-left: 4px solid var(--accent-orange);
-            box-shadow: var(--shadow-sm);
             margin: 15px 0;
             color: var(--text-primary);
-            transition: all var(--transition-normal);
-        }}
-        
-        .warning-card:hover {{
-            transform: translateX(8px);
-            box-shadow: var(--shadow-md), 0 0 30px rgba(245, 158, 11, 0.1);
         }}
         
         .error-card {{
-            background: linear-gradient(135deg, 
-                rgba(239, 68, 68, 0.08) 0%, 
-                rgba(236, 72, 153, 0.08) 100%);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
             backdrop-filter: blur(15px);
             border-radius: var(--radius-lg);
             padding: 22px 28px;
             border: 1px solid rgba(239, 68, 68, 0.2);
             border-left: 4px solid var(--accent-red);
-            box-shadow: var(--shadow-sm);
             margin: 15px 0;
             color: var(--text-primary);
-            transition: all var(--transition-normal);
-        }}
-        
-        .error-card:hover {{
-            transform: translateX(8px);
-            box-shadow: var(--shadow-md), 0 0 30px rgba(239, 68, 68, 0.1);
         }}
         
         /* ===== INSIGHT CARD ===== */
         .insight-card {{
-            background: linear-gradient(135deg, 
-                rgba(139, 92, 246, 0.1) 0%, 
-                rgba(236, 72, 153, 0.08) 100%);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.08) 100%);
             backdrop-filter: blur(15px);
             border-radius: var(--radius-lg);
             padding: 22px 28px;
             border: 1px solid rgba(139, 92, 246, 0.25);
-            box-shadow: var(--shadow-sm);
             margin: 15px 0;
-            transition: all var(--transition-normal);
         }}
         
         .insight-card:hover {{
             transform: translateX(8px);
             border-color: var(--accent-purple);
-            box-shadow: var(--shadow-md), var(--shadow-glow-purple);
         }}
         
         .insight-title {{
@@ -729,9 +575,6 @@ def get_theme_css():
             font-weight: 700;
             font-size: 1rem;
             margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }}
         
         .insight-text {{
@@ -740,11 +583,40 @@ def get_theme_css():
             line-height: 1.6;
         }}
         
-        /* ===== TABS - 3D STYLE ===== */
+        /* ===== RECOMMENDATION CARD ===== */
+        .recommendation-card {{
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(59, 130, 246, 0.08));
+            border-left: 4px solid var(--accent-purple);
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+        }}
+        
+        .recommendation-card p {{
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 1rem;
+        }}
+        
+        /* ===== ALERT CARD ===== */
+        .alert-card {{
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.08));
+            border-left: 4px solid var(--accent-orange);
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+        }}
+        
+        .alert-card p {{
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 1rem;
+        }}
+        
+        /* ===== TABS ===== */
         .stTabs [data-baseweb="tab-list"] {{
             gap: 8px;
             background: transparent;
-            padding: 4px;
         }}
         
         .stTabs [data-baseweb="tab"] {{
@@ -754,17 +626,13 @@ def get_theme_css():
             padding: 14px 28px;
             border: 1px solid var(--border-default);
             font-weight: 600;
-            font-size: 0.95rem;
             box-shadow: var(--shadow-sm);
-            transition: all var(--transition-normal);
         }}
         
         .stTabs [data-baseweb="tab"]:hover {{
             background: var(--bg-card-hover);
             border-color: var(--border-hover);
             transform: translateY(-3px);
-            box-shadow: var(--shadow-md);
-            color: var(--text-primary);
         }}
         
         .stTabs [aria-selected="true"] {{
@@ -772,15 +640,9 @@ def get_theme_css():
             color: white !important;
             border: none !important;
             box-shadow: var(--shadow-md), 0 4px 20px rgba(6, 182, 212, 0.3);
-            transform: translateY(-2px);
         }}
         
-        .stTabs [aria-selected="true"]:hover {{
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg), 0 6px 30px rgba(6, 182, 212, 0.4);
-        }}
-        
-        /* ===== BUTTONS - 3D STYLE ===== */
+        /* ===== BUTTONS ===== */
         .stButton > button {{
             background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
             color: white;
@@ -788,170 +650,35 @@ def get_theme_css():
             border-radius: var(--radius-lg);
             padding: 16px 36px;
             font-weight: 700;
-            font-size: 1rem;
-            letter-spacing: 0.02em;
-            box-shadow: 
-                var(--shadow-md),
-                0 4px 15px rgba(6, 182, 212, 0.25),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            box-shadow: var(--shadow-md), 0 4px 15px rgba(6, 182, 212, 0.25);
             transition: all var(--transition-normal);
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        .stButton > button::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.2),
-                transparent
-            );
-            transition: left 0.5s ease;
         }}
         
         .stButton > button:hover {{
             background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
             transform: translateY(-4px);
-            box-shadow: 
-                var(--shadow-lg),
-                0 8px 30px rgba(59, 130, 246, 0.35),
-                inset 0 1px 0 rgba(255, 255, 255, 0.25);
+            box-shadow: var(--shadow-lg), 0 8px 30px rgba(59, 130, 246, 0.35);
         }}
         
-        .stButton > button:hover::before {{
-            left: 100%;
+        /* ===== STATUS INDICATOR ===== */
+        .status-dot {{
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+            animation: pulse3D 2s ease-in-out infinite;
         }}
         
-        .stButton > button:active {{
-            transform: translateY(-2px);
-        }}
-        
-        /* ===== THEME TOGGLE ===== */
-        .theme-toggle {{
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            background: {colors['gradient_card']};
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-default);
-            border-radius: 50px;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: var(--shadow-md);
-            cursor: pointer;
-            transition: all var(--transition-normal);
-        }}
-        
-        .theme-toggle:hover {{
-            transform: scale(1.05);
-            box-shadow: var(--shadow-lg);
-            border-color: var(--border-hover);
-        }}
-        
-        .theme-toggle-icon {{
-            font-size: 1.2rem;
-        }}
-        
-        .theme-toggle-label {{
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }}
-        
-        /* ===== DATA TABLES ===== */
-        .stDataFrame {{
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
-        }}
-        
-        .stDataFrame > div {{
-            background: var(--bg-card);
-        }}
-        
-        /* ===== INPUT ELEMENTS ===== */
-        .stSelectbox > div > div {{
-            background: var(--bg-card);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
-            transition: all var(--transition-normal);
-            color: var(--text-primary);
-        }}
-        
-        .stSelectbox > div > div:hover {{
-            border-color: var(--border-hover);
-        }}
-        
-        .stMultiSelect > div > div {{
-            background: var(--bg-card);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
-        }}
-        
-        .stSlider > div > div > div {{
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)) !important;
-        }}
-        
-        .stTextInput > div > div {{
-            background: var(--bg-card);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
-        }}
-        
-        .stNumberInput > div > div {{
-            background: var(--bg-card);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
-        }}
-        
-        /* ===== FILE UPLOADER ===== */
-        .stFileUploader > div {{
-            background: var(--bg-card);
-            border: 2px dashed var(--border-default);
-            border-radius: var(--radius-lg);
-            padding: 30px;
-            transition: all var(--transition-normal);
-        }}
-        
-        .stFileUploader > div:hover {{
-            border-color: var(--accent-cyan);
-            background: var(--bg-card-hover);
-        }}
-        
-        /* ===== EXPANDER ===== */
-        .streamlit-expanderHeader {{
-            background: var(--bg-card);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
-            padding: 16px 20px;
-            font-weight: 600;
-            color: var(--text-primary);
-            transition: all var(--transition-normal);
-        }}
-        
-        .streamlit-expanderHeader:hover {{
-            background: var(--bg-card-hover);
-            border-color: var(--border-hover);
-        }}
+        .status-dot-green {{ background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }}
+        .status-dot-yellow {{ background: var(--accent-orange); box-shadow: 0 0 10px var(--accent-orange); }}
+        .status-dot-red {{ background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }}
         
         /* ===== DIVIDER ===== */
         hr {{
             border: none;
             height: 1px;
-            background: linear-gradient(90deg, 
-                transparent, 
-                var(--border-default) 20%, 
-                var(--border-default) 80%, 
-                transparent);
+            background: linear-gradient(90deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
             margin: 35px 0;
         }}
         
@@ -965,7 +692,6 @@ def get_theme_css():
             margin-top: 60px;
             border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
             position: relative;
-            overflow: hidden;
         }}
         
         .footer::before {{
@@ -975,163 +701,51 @@ def get_theme_css():
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, 
-                var(--accent-cyan), 
-                var(--accent-blue), 
-                var(--accent-purple), 
-                var(--accent-pink));
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple), var(--accent-pink));
         }}
         
-        .footer-title {{
-            color: var(--text-primary);
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }}
-        
-        .footer-subtitle {{
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            margin-bottom: 12px;
-        }}
-        
+        .footer-title {{ color: var(--text-primary); font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; }}
+        .footer-subtitle {{ color: var(--text-muted); font-size: 0.95rem; margin-bottom: 12px; }}
         .footer-names {{
-            background: linear-gradient(90deg, 
-                var(--accent-cyan), 
-                var(--accent-blue), 
-                var(--accent-purple));
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
             font-weight: 800;
             font-size: 1.1rem;
         }}
         
         /* ===== SCROLLBAR ===== */
-        ::-webkit-scrollbar {{
-            width: 10px;
-            height: 10px;
-        }}
+        ::-webkit-scrollbar {{ width: 10px; height: 10px; }}
+        ::-webkit-scrollbar-track {{ background: var(--bg-secondary); border-radius: 5px; }}
+        ::-webkit-scrollbar-thumb {{ background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple)); border-radius: 5px; }}
         
-        ::-webkit-scrollbar-track {{
-            background: var(--bg-secondary);
-            border-radius: 5px;
-        }}
-        
-        ::-webkit-scrollbar-thumb {{
-            background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple));
-            border-radius: 5px;
-        }}
-        
-        ::-webkit-scrollbar-thumb:hover {{
-            background: linear-gradient(180deg, var(--accent-blue), var(--accent-pink));
-        }}
-        
-        /* ===== STATUS INDICATOR ===== */
-        .status-indicator {{
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-        }}
-        
-        .status-dot {{
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            animation: pulse3D 2s ease-in-out infinite;
-        }}
-        
-        .status-dot-green {{
-            background: var(--accent-green);
-            box-shadow: 0 0 10px var(--accent-green);
-        }}
-        
-        .status-dot-yellow {{
-            background: var(--accent-orange);
-            box-shadow: 0 0 10px var(--accent-orange);
-        }}
-        
-        .status-dot-red {{
-            background: var(--accent-red);
-            box-shadow: 0 0 10px var(--accent-red);
-        }}
-        
-        .status-text {{
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }}
-        
-        /* ===== DOWNLOAD BUTTON ===== */
-        .stDownloadButton > button {{
-            background: linear-gradient(135deg, var(--accent-green) 0%, var(--accent-teal) 100%);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            padding: 12px 24px;
-            font-weight: 600;
-            box-shadow: var(--shadow-sm), 0 4px 15px rgba(16, 185, 129, 0.2);
-            transition: all var(--transition-normal);
-        }}
-        
-        .stDownloadButton > button:hover {{
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-md), 0 6px 25px rgba(16, 185, 129, 0.3);
-        }}
-        
-        /* ===== RADIO BUTTONS ===== */
-        .stRadio > div {{
-            gap: 8px;
-        }}
-        
-        .stRadio > div > label {{
+        /* ===== INPUTS ===== */
+        .stSelectbox > div > div, .stMultiSelect > div > div, .stTextInput > div > div, .stNumberInput > div > div {{
             background: var(--bg-card);
             border: 1px solid var(--border-default);
             border-radius: var(--radius-md);
-            padding: 12px 20px;
-            transition: all var(--transition-normal);
-            cursor: pointer;
+            color: var(--text-primary);
         }}
         
-        .stRadio > div > label:hover {{
-            background: var(--bg-card-hover);
-            border-color: var(--border-hover);
-            transform: translateX(4px);
-        }}
+        .stSlider > div > div > div {{ background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)) !important; }}
         
-        /* ===== PLOTLY CHARTS CONTAINER ===== */
-        .js-plotly-plot {{
+        /* ===== FILE UPLOADER ===== */
+        .stFileUploader > div {{
+            background: var(--bg-card);
+            border: 2px dashed var(--border-default);
             border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: var(--shadow-md);
         }}
+        
+        .stFileUploader > div:hover {{ border-color: var(--accent-cyan); }}
         
     </style>
     """
 
-# Apply dynamic theme CSS
+# Apply theme CSS
 st.markdown(get_theme_css(), unsafe_allow_html=True)
 
 # ============================================================================
-# THEME TOGGLE BUTTON (Fixed Position)
-# ============================================================================
-
-def render_theme_toggle():
-    """Render the theme toggle button."""
-    is_dark = st.session_state.theme == 'dark'
-    icon = "🌙" if is_dark else "☀️"
-    label = "Dark" if is_dark else "Light"
-    
-    st.markdown(f"""
-    <div class="theme-toggle" id="theme-toggle">
-        <span class="theme-toggle-icon">{icon}</span>
-        <span class="theme-toggle-label">{label} Mode</span>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ============================================================================
-# HELPER FUNCTIONS FOR UI (Updated for 3D Theme)
+# HELPER FUNCTIONS FOR UI
 # ============================================================================
 
 def create_metric_card(label, value, delta=None, delta_type="positive", color="cyan"):
@@ -1191,23 +805,18 @@ def create_feature_card(icon, title, description, color="cyan"):
     """
 
 def create_info_card(content):
-    """Create an info card."""
     return f'<div class="info-card">{content}</div>'
 
 def create_success_card(content):
-    """Create a success card."""
     return f'<div class="success-card">✅ {content}</div>'
 
 def create_warning_card(content):
-    """Create a warning card."""
     return f'<div class="warning-card">⚠️ {content}</div>'
 
 def create_error_card(content):
-    """Create an error card."""
     return f'<div class="error-card">❌ {content}</div>'
 
 def create_insight_card(title, insight_text):
-    """Create a business insight card."""
     return f"""
     <div class="insight-card">
         <div class="insight-title">💡 {title}</div>
@@ -1215,32 +824,60 @@ def create_insight_card(title, insight_text):
     </div>
     """
 
-def style_plotly_chart_themed(fig):
-    """Apply theme-aware styling to Plotly charts."""
-    is_dark = st.session_state.theme == 'dark'
-    
-    bg_color = 'rgba(0,0,0,0)'
-    grid_color = '#1e293b' if is_dark else '#e2e8f0'
-    text_color = '#e2e8f0' if is_dark else '#334155'
+def style_plotly_chart_themed(fig, height=None):
+    """Apply theme-aware styling to Plotly charts with visible axis text."""
+    colors = get_theme_colors()
     
     fig.update_layout(
-        paper_bgcolor=bg_color,
-        plot_bgcolor=bg_color,
-        font=dict(color=text_color, family='Inter'),
-        title_font=dict(size=18, color=text_color),
+        paper_bgcolor=colors['chart_bg'],
+        plot_bgcolor=colors['chart_bg'],
+        font=dict(
+            color=colors['chart_text'],
+            family='Inter, sans-serif',
+            size=12
+        ),
+        title_font=dict(
+            size=18,
+            color=colors['chart_title'],
+            family='Inter, sans-serif'
+        ),
         legend=dict(
             bgcolor='rgba(0,0,0,0)',
-            font=dict(color=text_color)
+            font=dict(color=colors['chart_text'], size=11),
+            bordercolor='rgba(0,0,0,0)'
         ),
-        margin=dict(l=20, r=20, t=50, b=20)
+        margin=dict(l=20, r=20, t=60, b=40),
+        hoverlabel=dict(
+            bgcolor=colors['bg_card'],
+            font_size=12,
+            font_family='Inter'
+        )
     )
-    fig.update_xaxes(gridcolor=grid_color, zerolinecolor=grid_color)
-    fig.update_yaxes(gridcolor=grid_color, zerolinecolor=grid_color)
+    
+    # Update axes with visible text colors
+    fig.update_xaxes(
+        gridcolor=colors['chart_grid'],
+        zerolinecolor=colors['chart_grid'],
+        tickfont=dict(color=colors['chart_text'], size=11),
+        title_font=dict(color=colors['chart_text'], size=12),
+        linecolor=colors['chart_grid']
+    )
+    
+    fig.update_yaxes(
+        gridcolor=colors['chart_grid'],
+        zerolinecolor=colors['chart_grid'],
+        tickfont=dict(color=colors['chart_text'], size=11),
+        title_font=dict(color=colors['chart_text'], size=12),
+        linecolor=colors['chart_grid']
+    )
+    
+    if height:
+        fig.update_layout(height=height)
     
     return fig
 
 def show_footer():
-    """Display the footer with team names."""
+    """Display the footer."""
     st.markdown("""
     <div class="footer">
         <div class="footer-title">🚀 UAE Pulse Simulator + Data Rescue Dashboard</div>
@@ -1269,6 +906,8 @@ def generate_insights(kpis, city_kpis=None, channel_kpis=None, cat_kpis=None):
     return_rate = kpis.get('return_rate_pct', 0)
     if return_rate > 10:
         insights.append(("High Returns", f"Return rate of {return_rate:.1f}% is above normal. Investigate product quality or description accuracy."))
+    elif return_rate < 3:
+        insights.append(("Excellent Quality", f"Low return rate of {return_rate:.1f}% indicates high customer satisfaction."))
     
     if city_kpis is not None and len(city_kpis) > 0:
         top_city = city_kpis.iloc[0]['city'] if 'city' in city_kpis.columns else None
@@ -1276,9 +915,9 @@ def generate_insights(kpis, city_kpis=None, channel_kpis=None, cat_kpis=None):
             top_revenue = city_kpis.iloc[0]['revenue']
             total_revenue = city_kpis['revenue'].sum()
             pct = (top_revenue / total_revenue * 100) if total_revenue > 0 else 0
-            insights.append(("Market Concentration", f"{top_city} contributes {pct:.0f}% of total revenue."))
+            insights.append(("Market Concentration", f"{top_city} contributes {pct:.0f}% of total revenue. {'Diversify to reduce risk.' if pct > 50 else 'Healthy market distribution.'}"))
     
-    return insights[:3]
+    return insights[:4]
 
 # ============================================================================
 # INITIALIZE SESSION STATE
@@ -1308,15 +947,12 @@ if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
 
 # ============================================================================
-# SIDEBAR NAVIGATION (Executive Style)
+# SIDEBAR NAVIGATION
 # ============================================================================
 
 with st.sidebar:
-    # Theme Toggle in Sidebar
-    st.markdown("""
-    <div style="text-align: center; padding: 10px 0 20px 0;">
-    """, unsafe_allow_html=True)
-    
+    # Theme Toggle
+    st.markdown("<div style='padding: 10px 0 20px 0;'>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         theme_icon = "🌙" if st.session_state.theme == 'dark' else "☀️"
@@ -1324,48 +960,27 @@ with st.sidebar:
         if st.button(f"{theme_icon} {theme_label}", key="theme_toggle_btn", use_container_width=True):
             toggle_theme()
             st.rerun()
-    
     st.markdown("</div>", unsafe_allow_html=True)
     
-    # Logo & Branding
+    # Logo
     st.markdown(f"""
     <div style="text-align: center; padding: 20px 0 30px 0;">
-        <div style="
-            font-size: 56px; 
-            margin-bottom: 10px;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-        ">🛒</div>
+        <div style="font-size: 56px; margin-bottom: 10px;">🛒</div>
         <div style="
             font-size: 28px;
             font-weight: 900;
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.02em;
         ">UAE Pulse</div>
-        <div style="
-            color: var(--text-muted); 
-            font-size: 13px;
-            margin-top: 5px;
-            letter-spacing: 1px;
-        ">SIMULATOR + DATA RESCUE</div>
+        <div style="color: var(--text-muted); font-size: 13px; margin-top: 5px;">SIMULATOR + DATA RESCUE</div>
     </div>
     """, unsafe_allow_html=True)
     
     st.markdown("---")
     
     # Navigation
-    st.markdown("""
-    <p style="
-        color: var(--accent-pink); 
-        font-weight: 700; 
-        margin-bottom: 15px; 
-        letter-spacing: 2px; 
-        font-size: 0.75rem;
-        text-transform: uppercase;
-    ">📍 Navigation</p>
-    """, unsafe_allow_html=True)
+    st.markdown('<p style="color: var(--accent-pink); font-weight: 700; letter-spacing: 2px; font-size: 0.75rem;">📍 NAVIGATION</p>', unsafe_allow_html=True)
     
     page = st.radio(
         "Navigate",
@@ -1375,17 +990,8 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # Status Panel
-    st.markdown("""
-    <p style="
-        color: var(--accent-blue); 
-        font-weight: 700; 
-        margin-bottom: 15px; 
-        letter-spacing: 2px; 
-        font-size: 0.75rem;
-        text-transform: uppercase;
-    ">📡 System Status</p>
-    """, unsafe_allow_html=True)
+    # Status
+    st.markdown('<p style="color: var(--accent-blue); font-weight: 700; letter-spacing: 2px; font-size: 0.75rem;">📡 STATUS</p>', unsafe_allow_html=True)
     
     data_loaded = st.session_state.data_loaded
     data_cleaned = st.session_state.is_cleaned
@@ -1394,37 +1000,22 @@ with st.sidebar:
     status_class_cleaned = "status-dot-green" if data_cleaned else ("status-dot-yellow" if data_loaded else "status-dot-red")
     
     st.markdown(f"""
-    <div style="
-        background: var(--bg-card);
-        border-radius: var(--radius-lg);
-        padding: 20px;
-        border: 1px solid var(--border-default);
-        box-shadow: var(--shadow-sm);
-    ">
-        <div class="status-indicator">
-            <div class="status-dot {status_class_loaded}"></div>
-            <span class="status-text">Data Loaded</span>
+    <div style="background: var(--bg-card); border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--border-default);">
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <span class="status-dot {status_class_loaded}"></span>
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">Data Loaded</span>
         </div>
-        <div class="status-indicator">
-            <div class="status-dot {status_class_cleaned}"></div>
-            <span class="status-text">Data Cleaned</span>
+        <div style="display: flex; align-items: center; margin: 8px 0;">
+            <span class="status-dot {status_class_cleaned}"></span>
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">Data Cleaned</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    # Quick Stats (if data loaded)
+    # Quick Stats
     if st.session_state.data_loaded:
         st.markdown("---")
-        st.markdown("""
-        <p style="
-            color: var(--accent-purple); 
-            font-weight: 700; 
-            margin-bottom: 15px; 
-            letter-spacing: 2px; 
-            font-size: 0.75rem;
-            text-transform: uppercase;
-        ">📈 Quick Stats</p>
-        """, unsafe_allow_html=True)
+        st.markdown('<p style="color: var(--accent-purple); font-weight: 700; letter-spacing: 2px; font-size: 0.75rem;">📈 QUICK STATS</p>', unsafe_allow_html=True)
         
         sales_df = st.session_state.clean_sales if st.session_state.is_cleaned else st.session_state.raw_sales
         if sales_df is not None:
@@ -1436,64 +1027,25 @@ with st.sidebar:
             except:
                 total_revenue = 0
             
-            formatted_revenue = format_currency(total_revenue)
-            
             st.markdown(f"""
-            <div style="
-                background: var(--bg-card);
-                border-radius: var(--radius-lg);
-                padding: 20px;
-                border: 1px solid var(--border-default);
-                box-shadow: var(--shadow-sm);
-            ">
+            <div style="background: var(--bg-card); border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--border-default);">
                 <div style="margin-bottom: 16px;">
-                    <span style="
-                        color: var(--text-muted); 
-                        font-size: 0.7rem; 
-                        text-transform: uppercase;
-                        letter-spacing: 1px;
-                    ">Total Records</span><br>
-                    <span style="
-                        color: var(--accent-cyan); 
-                        font-weight: 800; 
-                        font-size: 1.6rem;
-                        font-family: 'JetBrains Mono', monospace;
-                    ">{total_records:,}</span>
+                    <span style="color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase;">Records</span><br>
+                    <span style="color: var(--accent-cyan); font-weight: 800; font-size: 1.6rem;">{total_records:,}</span>
                 </div>
                 <div>
-                    <span style="
-                        color: var(--text-muted); 
-                        font-size: 0.7rem; 
-                        text-transform: uppercase;
-                        letter-spacing: 1px;
-                    ">Revenue</span><br>
-                    <span style="
-                        color: var(--accent-green); 
-                        font-weight: 800; 
-                        font-size: 1.4rem;
-                        font-family: 'JetBrains Mono', monospace;
-                    ">{formatted_revenue}</span>
+                    <span style="color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase;">Revenue</span><br>
+                    <span style="color: var(--accent-green); font-weight: 800; font-size: 1.4rem;">{format_currency(total_revenue)}</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
     
-    # Download Section
+    # Download
     if st.session_state.data_loaded and st.session_state.is_cleaned:
         st.markdown("---")
-        st.markdown("""
-        <p style="
-            color: var(--accent-green); 
-            font-weight: 700; 
-            margin-bottom: 15px; 
-            letter-spacing: 2px; 
-            font-size: 0.75rem;
-            text-transform: uppercase;
-        ">📥 Export</p>
-        """, unsafe_allow_html=True)
+        st.markdown('<p style="color: var(--accent-green); font-weight: 700; letter-spacing: 2px; font-size: 0.75rem;">📥 EXPORT</p>', unsafe_allow_html=True)
         
-        import io
-        import zipfile
-        
+        import io, zipfile
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             if st.session_state.clean_products is not None:
@@ -1504,145 +1056,20 @@ with st.sidebar:
                 zip_file.writestr("cleaned_sales.csv", st.session_state.clean_sales.to_csv(index=False))
             if st.session_state.clean_inventory is not None:
                 zip_file.writestr("cleaned_inventory.csv", st.session_state.clean_inventory.to_csv(index=False))
-        
         zip_buffer.seek(0)
         
-        st.download_button(
-            label="📦 Download All (ZIP)",
-            data=zip_buffer,
-            file_name="cleaned_data.zip",
-            mime="application/zip",
-            use_container_width=True
-        )
-    
-    # Footer
-    st.markdown("---")
-    st.markdown("""
-    <p style="
-        color: var(--accent-teal); 
-        font-weight: 700; 
-        margin-bottom: 10px; 
-        letter-spacing: 2px; 
-        font-size: 0.75rem;
-        text-transform: uppercase;
-    ">🔬 Tech Stack</p>
-    <div style="
-        color: var(--text-muted); 
-        font-size: 11px; 
-        line-height: 1.8;
-    ">
-        Python • Pandas • Plotly<br>
-        Streamlit • NumPy
-    </div>
-    """, unsafe_allow_html=True)
-
-# ============================================================================
-# FILE VALIDATION HELPER
-# ============================================================================
-
-def validate_file_columns(df, file_type):
-    """Validate that uploaded file has required columns for its type."""
-    
-    required_columns = {
-        'products': {
-            'must_have': ['sku'],
-            'should_have': ['product_name', 'category', 'cost', 'price'],
-            'alternate_names': {
-                'sku': ['sku', 'SKU', 'product_id', 'ProductID', 'product_sku'],
-                'product_name': ['product_name', 'name', 'product', 'ProductName'],
-                'category': ['category', 'Category', 'product_category', 'cat'],
-                'cost': ['cost', 'cost_aed', 'Cost', 'unit_cost'],
-                'price': ['price', 'selling_price', 'selling_price_aed', 'Price', 'unit_price']
-            }
-        },
-        'stores': {
-            'must_have': ['store_id'],
-            'should_have': ['city', 'channel'],
-            'alternate_names': {
-                'store_id': ['store_id', 'StoreID', 'store', 'Store'],
-                'city': ['city', 'City', 'location', 'store_city'],
-                'channel': ['channel', 'Channel', 'sales_channel', 'store_channel']
-            }
-        },
-        'sales': {
-            'must_have': ['sku', 'store_id'],
-            'should_have': ['date', 'qty', 'revenue'],
-            'alternate_names': {
-                'sku': ['sku', 'SKU', 'product_id', 'ProductID'],
-                'store_id': ['store_id', 'StoreID', 'store', 'Store'],
-                'date': ['date', 'Date', 'transaction_taken_date', 'sale_date', 'order_date'],
-                'qty': ['qty', 'quantity', 'Qty', 'Quantity', 'units'],
-                'revenue': ['revenue', 'Revenue', 'sales', 'total', 'amount']
-            }
-        },
-        'inventory': {
-            'must_have': ['sku', 'store_id'],
-            'should_have': ['stock_on_hand'],
-            'alternate_names': {
-                'sku': ['sku', 'SKU', 'product_id', 'ProductID'],
-                'store_id': ['store_id', 'StoreID', 'store', 'Store'],
-                'stock_on_hand': ['stock_on_hand', 'stock', 'inventory', 'qty', 'quantity', 'on_hand']
-            }
-        }
-    }
-    
-    if file_type not in required_columns:
-        return True, "Unknown file type", []
-    
-    config = required_columns[file_type]
-    df_columns = [col.lower().strip() for col in df.columns]
-    df_columns_original = list(df.columns)
-    
-    missing_must_have = []
-    found_columns = []
-    
-    for col in config['must_have']:
-        alternates = config['alternate_names'].get(col, [col])
-        found = False
-        for alt in alternates:
-            if alt.lower() in df_columns:
-                found = True
-                found_columns.append(alt)
-                break
-        if not found:
-            missing_must_have.append(col)
-    
-    should_have_found = 0
-    for col in config['should_have']:
-        alternates = config['alternate_names'].get(col, [col])
-        for alt in alternates:
-            if alt.lower() in df_columns:
-                should_have_found += 1
-                found_columns.append(alt)
-                break
-    
-    if len(missing_must_have) > 0:
-        return False, f"Missing required columns: {', '.join(missing_must_have)}", found_columns
-    
-    total_expected = len(config['must_have']) + len(config['should_have'])
-    total_found = len(config['must_have']) - len(missing_must_have) + should_have_found
-    confidence = total_found / total_expected * 100
-    
-    if confidence < 40:
-        return False, f"This doesn't look like a {file_type} file. Only {confidence:.0f}% columns match.", found_columns
-    
-    return True, f"Valid {file_type} file ({confidence:.0f}% confidence)", found_columns
+        st.download_button("📦 Download All (ZIP)", data=zip_buffer, file_name="cleaned_data.zip", mime="application/zip", use_container_width=True)
 
 # ============================================================================
 # PAGE: HOME
 # ============================================================================
 
 def show_home_page():
-    """Display the home page."""
-    
-    # Hero Section
     st.markdown("""
     <div class="hero-container">
         <div style="margin-bottom: 24px;">
             <span class="hero-badge">✨ UAE E-Commerce Analytics</span>
-            <span class="hero-badge" style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));">
-                🚀 v3.0 Executive
-            </span>
+            <span class="hero-badge" style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));">🚀 v3.1</span>
         </div>
         <div class="hero-title">UAE Pulse Simulator</div>
         <p class="hero-subtitle">
@@ -1652,112 +1079,20 @@ def show_home_page():
     </div>
     """, unsafe_allow_html=True)
     
-    # Feature Cards
     st.markdown('<p class="section-title section-title-purple">✨ Powerful Features</p>', unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
-    
     with col1:
-        st.markdown(create_feature_card(
-            "📂", "Data Upload", 
-            "Upload and preview your e-commerce CSV files with instant validation",
-            "cyan"
-        ), unsafe_allow_html=True)
-    
+        st.markdown(create_feature_card("📂", "Data Upload", "Upload and preview your e-commerce CSV files", "cyan"), unsafe_allow_html=True)
     with col2:
-        st.markdown(create_feature_card(
-            "🧹", "Data Rescue", 
-            "Detect & auto-fix 15+ types of data quality issues",
-            "blue"
-        ), unsafe_allow_html=True)
-    
+        st.markdown(create_feature_card("🧹", "Data Rescue", "Detect & auto-fix 15+ data quality issues", "blue"), unsafe_allow_html=True)
     with col3:
-        st.markdown(create_feature_card(
-            "🎯", "Simulator", 
-            "Run what-if scenarios and forecast campaign ROI",
-            "purple"
-        ), unsafe_allow_html=True)
-    
+        st.markdown(create_feature_card("🎯", "Simulator", "Run what-if scenarios and forecast ROI", "purple"), unsafe_allow_html=True)
     with col4:
-        st.markdown(create_feature_card(
-            "📊", "Analytics", 
-            "Interactive dashboards with real-time KPI tracking",
-            "pink"
-        ), unsafe_allow_html=True)
-    
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    
-    # Capabilities Section
-    st.markdown('<p class="section-title section-title-teal">🔥 What You Can Do</p>', unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        <div class="info-card">
-            <h4 style="color: var(--accent-cyan); margin-top: 0; font-size: 1.15rem; font-weight: 700;">🧹 Data Cleaning Capabilities</h4>
-            <ul style="color: var(--text-secondary); margin-bottom: 0; font-size: 0.95rem; line-height: 2;">
-                <li>Missing value detection & imputation</li>
-                <li>Duplicate record removal</li>
-                <li>Outlier detection & capping</li>
-                <li>Format standardization</li>
-                <li>Foreign key validation</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class="info-card" style="border-left-color: var(--accent-purple);">
-            <h4 style="color: var(--accent-purple); margin-top: 0; font-size: 1.15rem; font-weight: 700;">🎯 Simulation Features</h4>
-            <ul style="color: var(--text-secondary); margin-bottom: 0; font-size: 0.95rem; line-height: 2;">
-                <li>Discount impact modeling</li>
-                <li>Category elasticity analysis</li>
-                <li>Channel performance comparison</li>
-                <li>ROI & margin forecasting</li>
-                <li>Risk warning system</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    
-    # Quick Start Guide
-    st.markdown('<p class="section-title section-title-blue">🚀 Quick Start Guide</p>', unsafe_allow_html=True)
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    steps = [
-        ("1️⃣", "Load Data", "Go to 📂 Data page and upload your files or load sample data", "cyan"),
-        ("2️⃣", "Clean Data", "Go to 🧹 Cleaner to detect and fix data issues", "blue"),
-        ("3️⃣", "View Insights", "Check 📊 Dashboard for Executive & Manager views", "purple"),
-        ("4️⃣", "Simulate", "Go to 🎯 Simulator to run what-if campaigns", "pink"),
-    ]
-    
-    for col, (num, title, desc, color) in zip([col1, col2, col3, col4], steps):
-        with col:
-            st.markdown(f"""
-            <div style="
-                text-align: center; 
-                padding: 30px 20px;
-                background: var(--bg-card);
-                border-radius: var(--radius-xl);
-                border: 1px solid var(--border-default);
-                box-shadow: var(--shadow-sm);
-                transition: all var(--transition-normal);
-            ">
-                <div style="font-size: 52px; margin-bottom: 15px;">{num}</div>
-                <div style="color: var(--accent-{color}); font-weight: 700; margin-bottom: 8px; font-size: 1.1rem;">{title}</div>
-                <div style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">{desc}</div>
-            </div>
-            """, unsafe_allow_html=True)
+        st.markdown(create_feature_card("📊", "Analytics", "Interactive dashboards with KPI tracking", "pink"), unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Data Status
     if st.session_state.data_loaded:
         st.markdown(create_success_card("Data is loaded! Go to 📊 Dashboard to see your KPIs."), unsafe_allow_html=True)
     else:
@@ -1766,12 +1101,10 @@ def show_home_page():
     show_footer()
 
 # ============================================================================
-# PAGE: DASHBOARD
+# PAGE: DASHBOARD - COMPLETE WITH ALL CHARTS & INSIGHTS
 # ============================================================================
 
 def show_dashboard_page():
-    """Display the dashboard page."""
-    
     st.markdown('<h1 class="page-title page-title-cyan">📊 Dashboard</h1>', unsafe_allow_html=True)
     st.markdown('<p class="page-description">Business performance insights and operational metrics</p>', unsafe_allow_html=True)
     
@@ -1792,7 +1125,7 @@ def show_dashboard_page():
     
     st.markdown("---")
     
-    # Global Filters
+    # ===== GLOBAL FILTERS =====
     st.markdown('<p class="section-title section-title-blue">🎛️ Global Filters</p>', unsafe_allow_html=True)
     st.caption("💡 Leave empty to include all")
     
@@ -1807,13 +1140,7 @@ def show_dashboard_page():
                 if len(valid_dates) > 0:
                     min_date = valid_dates.min().date()
                     max_date = valid_dates.max().date()
-                    date_range = st.date_input(
-                        "📅 Date Range",
-                        value=(min_date, max_date),
-                        min_value=min_date,
-                        max_value=max_date,
-                        key="global_date_filter"
-                    )
+                    date_range = st.date_input("📅 Date Range", value=(min_date, max_date), min_value=min_date, max_value=max_date, key="global_date_filter")
             except:
                 st.caption("Date filter unavailable")
     
@@ -1822,13 +1149,7 @@ def show_dashboard_page():
         selected_cities = []
         if stores_df is not None and 'city' in stores_df.columns:
             all_cities = sorted(stores_df['city'].dropna().unique().tolist())
-            selected_cities = st.multiselect(
-                "🏙️ City",
-                options=all_cities,
-                default=[],
-                placeholder="All Cities",
-                key="global_city_filter"
-            )
+            selected_cities = st.multiselect("🏙️ City", options=all_cities, default=[], placeholder="All Cities", key="global_city_filter")
             if len(selected_cities) == 0:
                 selected_cities = all_cities
     
@@ -1837,13 +1158,7 @@ def show_dashboard_page():
         selected_channels = []
         if stores_df is not None and 'channel' in stores_df.columns:
             all_channels = sorted(stores_df['channel'].dropna().unique().tolist())
-            selected_channels = st.multiselect(
-                "📱 Channel",
-                options=all_channels,
-                default=[],
-                placeholder="All Channels",
-                key="global_channel_filter"
-            )
+            selected_channels = st.multiselect("📱 Channel", options=all_channels, default=[], placeholder="All Channels", key="global_channel_filter")
             if len(selected_channels) == 0:
                 selected_channels = all_channels
     
@@ -1852,17 +1167,11 @@ def show_dashboard_page():
         selected_categories = []
         if products_df is not None and 'category' in products_df.columns:
             all_categories = sorted(products_df['category'].dropna().unique().tolist())
-            selected_categories = st.multiselect(
-                "📦 Category",
-                options=all_categories,
-                default=[],
-                placeholder="All Categories",
-                key="global_category_filter"
-            )
+            selected_categories = st.multiselect("📦 Category", options=all_categories, default=[], placeholder="All Categories", key="global_category_filter")
             if len(selected_categories) == 0:
                 selected_categories = all_categories
     
-    # Apply Filters
+    # Apply filters
     filtered_sales = sales_df.copy()
     filtered_stores = stores_df.copy() if stores_df is not None else None
     filtered_products = products_df.copy() if products_df is not None else None
@@ -1870,51 +1179,45 @@ def show_dashboard_page():
     
     if date_range and len(date_range) == 2 and 'order_time' in filtered_sales.columns:
         start_date, end_date = date_range
-        filtered_sales = filtered_sales[
-            (filtered_sales['order_time'].dt.date >= start_date) &
-            (filtered_sales['order_time'].dt.date <= end_date)
-        ]
+        filtered_sales = filtered_sales[(filtered_sales['order_time'].dt.date >= start_date) & (filtered_sales['order_time'].dt.date <= end_date)]
     
     if filtered_stores is not None:
         if selected_cities:
             filtered_stores = filtered_stores[filtered_stores['city'].isin(selected_cities)]
         if selected_channels:
             filtered_stores = filtered_stores[filtered_stores['channel'].isin(selected_channels)]
-        
         if 'store_id' in filtered_sales.columns and 'store_id' in filtered_stores.columns:
             valid_store_ids = filtered_stores['store_id'].unique()
             filtered_sales = filtered_sales[filtered_sales['store_id'].isin(valid_store_ids)]
     
     if filtered_products is not None and selected_categories:
         filtered_products = filtered_products[filtered_products['category'].isin(selected_categories)]
-        
         if 'sku' in filtered_sales.columns and 'sku' in filtered_products.columns:
             valid_skus = filtered_products['sku'].unique()
             filtered_sales = filtered_sales[filtered_sales['sku'].isin(valid_skus)]
+    
+    if filtered_inventory is not None:
+        if filtered_stores is not None and 'store_id' in filtered_inventory.columns:
+            valid_store_ids = filtered_stores['store_id'].unique()
+            filtered_inventory = filtered_inventory[filtered_inventory['store_id'].isin(valid_store_ids)]
+        if filtered_products is not None and 'sku' in filtered_inventory.columns:
+            valid_skus = filtered_products['sku'].unique()
+            filtered_inventory = filtered_inventory[filtered_inventory['sku'].isin(valid_skus)]
     
     original_count = len(sales_df)
     filtered_count = len(filtered_sales)
     filter_pct = (filtered_count / original_count * 100) if original_count > 0 else 0
     
     st.markdown(f"""
-    <div style="
-        background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(59, 130, 246, 0.1)); 
-        padding: 12px 24px; 
-        border-radius: var(--radius-md); 
-        margin: 15px 0;
-        border: 1px solid var(--border-default);
-    ">
+    <div style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(59, 130, 246, 0.1)); padding: 12px 24px; border-radius: var(--radius-md); margin: 15px 0; border: 1px solid var(--border-default);">
         <span style="color: var(--accent-cyan); font-weight: 700;">📊 Showing {filtered_count:,} of {original_count:,} records ({filter_pct:.1f}%)</span>
     </div>
     """, unsafe_allow_html=True)
     
     st.markdown("---")
     
-    # Tabs for Executive and Manager Views
-    tab_exec, tab_mgr = st.tabs([
-        "👔 Executive View — Financial & Strategic",
-        "📋 Manager View — Operational Risk & Execution"
-    ])
+    # Tabs
+    tab_exec, tab_mgr = st.tabs(["👔 Executive View — Financial & Strategic", "📋 Manager View — Operational Risk & Execution"])
     
     sim = Simulator()
     kpis = sim.calculate_overall_kpis(filtered_sales, filtered_products)
@@ -1945,83 +1248,48 @@ def show_dashboard_page():
 
 
 def show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, products_df, stores_df):
-    """Display Executive View - Financial & Strategic KPIs."""
+    """Display Executive View - Financial & Strategic KPIs with ALL charts."""
     
+    # ===== KPI CARDS =====
     st.markdown('<p class="section-title section-title-cyan">💰 Financial KPIs</p>', unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     
+    gross_revenue = kpis.get('total_revenue', 0)
+    refund_amount = kpis.get('refund_amount', 0)
+    net_revenue = kpis.get('net_revenue', gross_revenue - refund_amount)
+    cogs = kpis.get('total_cogs', 0)
+    
     with col1:
-        gross_revenue = kpis.get('total_revenue', 0)
-        st.markdown(create_metric_card(
-            "Gross Revenue",
-            format_currency(gross_revenue),
-            color="cyan"
-        ), unsafe_allow_html=True)
-    
+        st.markdown(create_metric_card("Gross Revenue", format_currency(gross_revenue), color="cyan"), unsafe_allow_html=True)
     with col2:
-        refund_amount = kpis.get('refund_amount', 0)
-        st.markdown(create_metric_card(
-            "Refund Amount",
-            format_currency(refund_amount),
-            color="pink"
-        ), unsafe_allow_html=True)
-    
+        st.markdown(create_metric_card("Refund Amount", format_currency(refund_amount), color="pink"), unsafe_allow_html=True)
     with col3:
-        net_revenue = kpis.get('net_revenue', gross_revenue - refund_amount)
-        st.markdown(create_metric_card(
-            "Net Revenue",
-            format_currency(net_revenue),
-            color="green"
-        ), unsafe_allow_html=True)
-    
+        st.markdown(create_metric_card("Net Revenue", format_currency(net_revenue), color="green"), unsafe_allow_html=True)
     with col4:
-        cogs = kpis.get('total_cogs', 0)
-        st.markdown(create_metric_card(
-            "COGS",
-            format_currency(cogs),
-            color="orange"
-        ), unsafe_allow_html=True)
+        st.markdown(create_metric_card("COGS", format_currency(cogs), color="orange"), unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     
+    gross_margin = kpis.get('total_profit', 0)
+    gross_margin_pct = kpis.get('profit_margin_pct', 0)
+    avg_discount = kpis.get('avg_discount_pct', 0)
+    avg_order_value = kpis.get('avg_order_value', 0)
+    
     with col1:
-        gross_margin = kpis.get('total_profit', 0)
-        st.markdown(create_metric_card(
-            "Gross Margin (AED)",
-            format_currency(gross_margin),
-            color="teal"
-        ), unsafe_allow_html=True)
-    
+        st.markdown(create_metric_card("Gross Margin (AED)", format_currency(gross_margin), color="teal"), unsafe_allow_html=True)
     with col2:
-        gross_margin_pct = kpis.get('profit_margin_pct', 0)
-        st.markdown(create_metric_card(
-            "Gross Margin %",
-            f"{gross_margin_pct:.1f}%",
-            color="purple"
-        ), unsafe_allow_html=True)
-    
+        st.markdown(create_metric_card("Gross Margin %", f"{gross_margin_pct:.1f}%", color="purple"), unsafe_allow_html=True)
     with col3:
-        avg_discount = kpis.get('avg_discount_pct', 0)
-        st.markdown(create_metric_card(
-            "Avg Discount %",
-            f"{avg_discount:.1f}%",
-            color="blue"
-        ), unsafe_allow_html=True)
-    
+        st.markdown(create_metric_card("Avg Discount %", f"{avg_discount:.1f}%", color="blue"), unsafe_allow_html=True)
     with col4:
-        avg_order_value = kpis.get('avg_order_value', 0)
-        st.markdown(create_metric_card(
-            "Avg Order Value",
-            format_currency(avg_order_value),
-            color="cyan"
-        ), unsafe_allow_html=True)
+        st.markdown(create_metric_card("Avg Order Value", format_currency(avg_order_value), color="cyan"), unsafe_allow_html=True)
     
     st.markdown("---")
     
-    # Charts
+    # ===== CHART 1: WATERFALL - Profit Bridge =====
     st.markdown('<p class="section-title section-title-blue">📊 Profit Bridge Analysis</p>', unsafe_allow_html=True)
     
     gross_rev = kpis.get('total_revenue', 0)
@@ -2040,23 +1308,24 @@ def show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, 
         decreasing={"marker": {"color": "#ef4444"}},
         increasing={"marker": {"color": "#10b981"}},
         totals={"marker": {"color": "#06b6d4"}},
-        text=[format_currency(gross_rev), format_currency(-refunds), format_currency(-discounts), 
-              format_currency(-cogs_val), format_currency(net_profit)],
+        text=[format_currency(gross_rev), format_currency(-refunds), format_currency(-discounts), format_currency(-cogs_val), format_currency(net_profit)],
         textposition="outside"
     ))
     
-    fig_waterfall = style_plotly_chart_themed(fig_waterfall)
-    fig_waterfall.update_layout(height=400, showlegend=False)
-    
+    fig_waterfall = style_plotly_chart_themed(fig_waterfall, height=400)
+    fig_waterfall.update_layout(showlegend=False, title="")
     st.plotly_chart(fig_waterfall, use_container_width=True)
     st.caption("📌 How Net Profit is built: Gross Revenue minus Refunds, Discounts, and COGS.")
     
     st.markdown("---")
+    
+    # ===== CHART 2 & 3: Revenue Trend + Margin by Category =====
     st.markdown('<p class="section-title section-title-green">📈 Revenue & Margin Analysis</p>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
     
     with col1:
+        # CHART 2: Area Chart - Revenue Trend
         if sales_df is not None and 'order_time' in sales_df.columns:
             time_group = st.selectbox("Group by", ["Monthly", "Weekly", "Daily"], index=0, key="revenue_trend_time_group")
             
@@ -2100,23 +1369,16 @@ def show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, 
                     name='Revenue'
                 ))
                 
-                fig_area = style_plotly_chart_themed(fig_area)
-                fig_area.update_layout(
-                    title=f"{time_group} Revenue Trend",
-                    height=380,
-                    xaxis_title=time_group,
-                    yaxis_title="Revenue (AED)",
-                    xaxis=dict(type='category')
-                )
-                
+                fig_area = style_plotly_chart_themed(fig_area, height=380)
+                fig_area.update_layout(title=f"{time_group} Revenue Trend", xaxis_title=time_group, yaxis_title="Revenue (AED)", xaxis=dict(type='category'))
                 st.plotly_chart(fig_area, use_container_width=True)
-                st.caption(f"📌 {time_group} revenue pattern to identify seasonality and plan promotions.")
             else:
                 st.info("No valid dates in data range")
         else:
             st.info("Revenue trend requires order_time column")
     
     with col2:
+        # CHART 3: Bar Chart - Margin % by Category
         if category_kpis is not None and len(category_kpis) > 0:
             filter_col1, filter_col2 = st.columns(2)
             with filter_col1:
@@ -2125,7 +1387,6 @@ def show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, 
                 sort_margin = st.selectbox("Sort by", ["Margin %", "Revenue"], index=0, key="margin_sort")
             
             cat_data = category_kpis.copy()
-            
             if 'margin_pct' not in cat_data.columns:
                 if 'profit' in cat_data.columns and 'revenue' in cat_data.columns:
                     cat_data['margin_pct'] = (cat_data['profit'] / cat_data['revenue'] * 100).fillna(0)
@@ -2151,56 +1412,163 @@ def show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, 
                 textposition='outside'
             ))
             
-            fig_margin = style_plotly_chart_themed(fig_margin)
-            fig_margin.update_layout(
-                title="Gross Margin % by Category",
-                height=380,
-                xaxis_title="Margin %",
-                yaxis_title=""
-            )
-            
+            fig_margin = style_plotly_chart_themed(fig_margin, height=380)
+            fig_margin.update_layout(title="Gross Margin % by Category", xaxis_title="Margin %", yaxis_title="")
             st.plotly_chart(fig_margin, use_container_width=True)
             st.caption("📌 Red < 20%, Yellow < 30%, Green ≥ 30%.")
         else:
             st.info("Category data not available")
     
     st.markdown("---")
+    
+    # ===== CHART 4 & 5: Sunburst + Discount Impact =====
+    st.markdown('<p class="section-title section-title-purple">🎯 Revenue Mix & Discount Impact</p>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # CHART 4: Sunburst - Revenue Mix
+        if sales_df is not None and stores_df is not None and products_df is not None:
+            try:
+                sunburst_df = sales_df.copy()
+                
+                if 'store_id' in sunburst_df.columns and 'store_id' in stores_df.columns:
+                    sunburst_df = sunburst_df.merge(stores_df[['store_id', 'city', 'channel']], on='store_id', how='left')
+                
+                if 'sku' in sunburst_df.columns and 'sku' in products_df.columns:
+                    sunburst_df = sunburst_df.merge(products_df[['sku', 'category']], on='sku', how='left')
+                elif 'product_id' in sunburst_df.columns and 'product_id' in products_df.columns:
+                    sunburst_df = sunburst_df.merge(products_df[['product_id', 'category']], on='product_id', how='left')
+                
+                if all(col in sunburst_df.columns for col in ['city', 'channel', 'category', 'selling_price_aed']):
+                    if 'qty' in sunburst_df.columns:
+                        sunburst_df['revenue'] = sunburst_df['qty'] * sunburst_df['selling_price_aed']
+                    else:
+                        sunburst_df['revenue'] = sunburst_df['selling_price_aed']
+                    
+                    if 'payment_status' in sunburst_df.columns:
+                        sunburst_df = sunburst_df[sunburst_df['payment_status'] == 'Paid']
+                    
+                    sunburst_agg = sunburst_df.groupby(['city', 'channel', 'category']).agg({'revenue': 'sum'}).reset_index()
+                    sunburst_agg.columns = ['City', 'Channel', 'Category', 'Revenue']
+                    sunburst_agg = sunburst_agg.nlargest(30, 'Revenue')
+                    
+                    fig_sunburst = px.sunburst(
+                        sunburst_agg,
+                        path=['City', 'Channel', 'Category'],
+                        values='Revenue',
+                        color='Revenue',
+                        color_continuous_scale=['#1e3a5f', '#06b6d4', '#10b981']
+                    )
+                    
+                    fig_sunburst = style_plotly_chart_themed(fig_sunburst, height=400)
+                    fig_sunburst.update_layout(title="Revenue Mix: City → Channel → Category")
+                    st.plotly_chart(fig_sunburst, use_container_width=True)
+                    st.caption("📌 Click to drill down: City → Channel → Category revenue contribution.")
+                else:
+                    # Fallback: Pie chart by channel
+                    if 'channel' in sunburst_df.columns and 'selling_price_aed' in sunburst_df.columns:
+                        if 'qty' in sunburst_df.columns:
+                            sunburst_df['revenue'] = sunburst_df['qty'] * sunburst_df['selling_price_aed']
+                        else:
+                            sunburst_df['revenue'] = sunburst_df['selling_price_aed']
+                        
+                        channel_rev = sunburst_df.groupby('channel')['revenue'].sum().reset_index()
+                        fig_fallback = px.pie(channel_rev, values='revenue', names='channel', title='Revenue by Channel', color_discrete_sequence=['#06b6d4', '#8b5cf6', '#ec4899'], hole=0.4)
+                        fig_fallback = style_plotly_chart_themed(fig_fallback, height=400)
+                        st.plotly_chart(fig_fallback, use_container_width=True)
+                    else:
+                        st.info("Revenue mix data not available")
+            except Exception as e:
+                st.info(f"Unable to create revenue mix chart")
+        else:
+            st.info("Sales, stores, or products data not available")
+    
+    with col2:
+        # CHART 5: Combo Chart - Discount Impact
+        st.markdown("**Discount Impact Analysis**")
+        
+        margin_floor = st.slider("Margin Floor %", min_value=10, max_value=40, value=20, step=5, key="discount_margin_floor")
+        
+        base_revenue = kpis.get('total_revenue', 0)
+        base_cogs = kpis.get('total_cogs', 0)
+        
+        discount_levels = [0, 5, 10, 15, 20, 25, 30]
+        profits = []
+        margins = []
+        
+        for disc in discount_levels:
+            volume_uplift = 1 + (disc * 0.02)
+            simulated_revenue = base_revenue * volume_uplift * (1 - disc/100)
+            simulated_cogs = base_cogs * volume_uplift
+            profit = simulated_revenue - simulated_cogs
+            margin = (profit / simulated_revenue * 100) if simulated_revenue > 0 else 0
+            profits.append(profit)
+            margins.append(margin)
+        
+        fig_combo = go.Figure()
+        
+        bar_colors = ['#10b981' if m >= margin_floor else '#ef4444' for m in margins]
+        fig_combo.add_trace(go.Bar(
+            x=discount_levels,
+            y=profits,
+            name='Profit',
+            marker_color=bar_colors,
+            text=[format_currency(p) for p in profits],
+            textposition='outside'
+        ))
+        
+        fig_combo.add_hline(y=base_revenue * margin_floor / 100, line_dash="dash", line_color="#f59e0b", annotation_text=f"Margin Floor ({margin_floor}%)", annotation_position="top right")
+        
+        fig_combo = style_plotly_chart_themed(fig_combo, height=380)
+        fig_combo.update_layout(title="Profit at Different Discount Levels", xaxis_title="Discount %", yaxis_title="Profit (AED)", showlegend=False)
+        st.plotly_chart(fig_combo, use_container_width=True)
+        st.caption("📌 Green = above margin floor, Red = below margin floor.")
+    
+    st.markdown("---")
+    
+    # ===== EXECUTIVE RECOMMENDATIONS =====
     st.markdown('<p class="section-title section-title-purple">💡 Executive Recommendations</p>', unsafe_allow_html=True)
     
     recommendations = []
     
     if gross_margin_pct >= 30:
-        recommendations.append(f"✅ **Healthy Margin**: Gross margin at {gross_margin_pct:.1f}% is strong.")
+        recommendations.append(f"✅ **Healthy Margin**: Gross margin at {gross_margin_pct:.1f}% is strong. Room for promotional activity.")
     elif gross_margin_pct >= 20:
-        recommendations.append(f"⚠️ **Moderate Margin**: Gross margin at {gross_margin_pct:.1f}%. Monitor discounts.")
+        recommendations.append(f"⚠️ **Moderate Margin**: Gross margin at {gross_margin_pct:.1f}%. Monitor discount levels carefully.")
     else:
-        recommendations.append(f"🔴 **Low Margin Alert**: Gross margin at {gross_margin_pct:.1f}%. Reduce discounts or optimize COGS.")
+        recommendations.append(f"🔴 **Low Margin Alert**: Gross margin at {gross_margin_pct:.1f}% is below healthy threshold. Reduce discounts or optimize COGS.")
     
-    avg_discount = kpis.get('avg_discount_pct', 0)
     if avg_discount > 15:
-        recommendations.append(f"⚠️ **High Discounting**: Average discount at {avg_discount:.1f}%.")
+        recommendations.append(f"⚠️ **High Discounting**: Average discount at {avg_discount:.1f}%. Consider reducing to protect margins.")
+    elif avg_discount < 5:
+        recommendations.append(f"💡 **Low Discount Opportunity**: Average discount at {avg_discount:.1f}%. Consider targeted promotions to drive volume.")
     
     if city_kpis is not None and len(city_kpis) > 0:
         top_city = city_kpis.nlargest(1, 'revenue')['city'].values[0]
-        recommendations.append(f"🏆 **Top Market**: {top_city} leads in revenue.")
+        recommendations.append(f"🏆 **Top Market**: {top_city} leads in revenue. Consider increasing inventory allocation.")
+    
+    if channel_kpis is not None and len(channel_kpis) > 0:
+        top_channel = channel_kpis.nlargest(1, 'revenue')['channel'].values[0]
+        recommendations.append(f"📱 **Best Channel**: {top_channel} generates highest revenue. Prioritize marketing spend here.")
     
     for rec in recommendations:
-        st.markdown(f"""
-        <div style="
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(59, 130, 246, 0.08)); 
-            border-left: 4px solid var(--accent-purple); 
-            padding: 16px 20px; 
-            border-radius: var(--radius-md); 
-            margin-bottom: 12px;
-        ">
-            <p style="color: var(--text-primary); margin: 0; font-size: 1rem;">{rec}</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f'<div class="recommendation-card"><p>{rec}</p></div>', unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # ===== BUSINESS INSIGHTS =====
+    st.markdown('<p class="section-title section-title-teal">🔍 Business Insights</p>', unsafe_allow_html=True)
+    
+    insights = generate_insights(kpis, city_kpis, channel_kpis, category_kpis)
+    for title, text in insights:
+        st.markdown(create_insight_card(title, text), unsafe_allow_html=True)
 
 
 def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, products_df, stores_df, inventory_df):
-    """Display Manager View - Operational Risk & Execution."""
+    """Display Manager View - Operational Risk & Execution with ALL charts."""
     
+    # ===== OPERATIONAL KPIs =====
     st.markdown('<p class="section-title section-title-blue">⚙️ Operational KPIs</p>', unsafe_allow_html=True)
     
     return_rate = kpis.get('return_rate_pct', 0)
@@ -2216,7 +1584,6 @@ def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, pr
     high_risk_skus = 0
     if inventory_df is not None and 'stock_on_hand' in inventory_df.columns:
         total_inventory = len(inventory_df)
-        
         if 'reorder_point' in inventory_df.columns:
             inventory_df['_stock'] = pd.to_numeric(inventory_df['stock_on_hand'], errors='coerce').fillna(0)
             inventory_df['_reorder'] = pd.to_numeric(inventory_df['reorder_point'], errors='coerce').fillna(10)
@@ -2225,59 +1592,51 @@ def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, pr
             avg_stock = inventory_df['stock_on_hand'].mean()
             threshold = max(10, avg_stock * 0.1)
             low_stock = (inventory_df['stock_on_hand'] < threshold).sum()
-        
         stockout_risk = (low_stock / total_inventory * 100) if total_inventory > 0 else 0
         high_risk_skus = int(low_stock)
     
     col1, col2, col3, col4 = st.columns(4)
-    
     with col1:
         st.markdown(create_metric_card("Stockout Risk %", f"{stockout_risk:.1f}%", color="pink"), unsafe_allow_html=True)
-    
     with col2:
         st.markdown(create_metric_card("Return Rate %", f"{return_rate:.1f}%", color="orange"), unsafe_allow_html=True)
-    
     with col3:
         st.markdown(create_metric_card("Payment Failure %", f"{payment_failure_rate:.1f}%", color="purple"), unsafe_allow_html=True)
-    
     with col4:
         st.markdown(create_metric_card("High-Risk SKUs", f"{high_risk_skus:,}", color="blue"), unsafe_allow_html=True)
     
     st.markdown("---")
+    
+    # ===== CHART 1 & 2: Gauge + Risk by City-Channel =====
     st.markdown('<p class="section-title section-title-teal">📊 Risk Overview</p>', unsafe_allow_html=True)
     
     col1, col2 = st.columns([1, 2])
     
     with col1:
+        # CHART 1: Gauge - Stockout Risk
         fig_gauge = go.Figure(go.Indicator(
             mode="gauge+number",
             value=stockout_risk,
             domain={'x': [0, 1], 'y': [0, 1]},
-            title={'text': "Stockout Risk %", 'font': {'size': 16}},
-            number={'suffix': "%", 'font': {'size': 32}},
+            title={'text': "Stockout Risk %", 'font': {'size': 16, 'color': get_theme_colors()['chart_text']}},
+            number={'suffix': "%", 'font': {'size': 32, 'color': get_theme_colors()['chart_text']}},
             gauge={
-                'axis': {'range': [0, 100]},
+                'axis': {'range': [0, 100], 'tickcolor': get_theme_colors()['chart_text']},
                 'bar': {'color': '#06b6d4'},
                 'steps': [
                     {'range': [0, 30], 'color': 'rgba(16, 185, 129, 0.3)'},
                     {'range': [30, 60], 'color': 'rgba(245, 158, 11, 0.3)'},
                     {'range': [60, 100], 'color': 'rgba(239, 68, 68, 0.3)'}
                 ],
-                'threshold': {
-                    'line': {'color': '#ef4444', 'width': 4},
-                    'thickness': 0.75,
-                    'value': 60
-                }
+                'threshold': {'line': {'color': '#ef4444', 'width': 4}, 'thickness': 0.75, 'value': 60}
             }
         ))
-        
-        fig_gauge = style_plotly_chart_themed(fig_gauge)
-        fig_gauge.update_layout(height=300)
-        
+        fig_gauge = style_plotly_chart_themed(fig_gauge, height=300)
         st.plotly_chart(fig_gauge, use_container_width=True)
         st.caption("📌 Green = Safe (0-30%), Yellow = Caution (30-60%), Red = Critical (60%+)")
     
     with col2:
+        # CHART 2: Horizontal Bar - Risk by City-Channel
         if inventory_df is not None and stores_df is not None and 'store_id' in inventory_df.columns:
             inv_with_store = inventory_df.merge(stores_df[['store_id', 'city', 'channel']], on='store_id', how='left')
             
@@ -2285,11 +1644,7 @@ def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, pr
                 top_n_risk = st.selectbox("Show Top", [5, 10, "All"], index=0, key="city_channel_risk_top_n")
                 
                 inv_with_store['city_channel'] = inv_with_store['city'] + ' - ' + inv_with_store['channel']
-                
-                city_channel_risk = inv_with_store.groupby('city_channel').apply(
-                    lambda x: (x['stock_on_hand'] < 10).sum() / len(x) * 100 if len(x) > 0 else 0,
-                    include_groups=False
-                ).reset_index()
+                city_channel_risk = inv_with_store.groupby('city_channel').apply(lambda x: (x['stock_on_hand'] < 10).sum() / len(x) * 100 if len(x) > 0 else 0, include_groups=False).reset_index()
                 city_channel_risk.columns = ['City-Channel', 'Risk %']
                 city_channel_risk = city_channel_risk.sort_values('Risk %', ascending=False)
                 
@@ -2297,7 +1652,6 @@ def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, pr
                     city_channel_risk = city_channel_risk.head(int(top_n_risk))
                 
                 city_channel_risk = city_channel_risk.sort_values('Risk %', ascending=True)
-                
                 colors = ['#10b981' if x < 30 else '#f59e0b' if x < 60 else '#ef4444' for x in city_channel_risk['Risk %']]
                 
                 fig_risk_bar = go.Figure(go.Bar(
@@ -2308,93 +1662,208 @@ def show_manager_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, pr
                     text=[f"{x:.1f}%" for x in city_channel_risk['Risk %']],
                     textposition='outside'
                 ))
-                
-                fig_risk_bar = style_plotly_chart_themed(fig_risk_bar)
-                fig_risk_bar.update_layout(
-                    title="Stockout Risk by City-Channel",
-                    height=300,
-                    xaxis_title="Risk %",
-                    yaxis_title=""
-                )
-                
+                fig_risk_bar = style_plotly_chart_themed(fig_risk_bar, height=300)
+                fig_risk_bar.update_layout(title="Stockout Risk by City-Channel", xaxis_title="Risk %", yaxis_title="")
                 st.plotly_chart(fig_risk_bar, use_container_width=True)
-                st.caption("📌 Prioritize replenishment for red/yellow areas.")
             else:
                 st.info("City-channel risk data not available")
         else:
             st.info("Inventory or store data not available")
     
     st.markdown("---")
+    
+    # ===== CHART 3 & 4: Demand vs Stock + Top SKU Risk =====
+    st.markdown('<p class="section-title section-title-orange">📦 Inventory Analysis</p>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # CHART 3: Bar Chart - Demand vs Stock by Category
+        if sales_df is not None and inventory_df is not None and products_df is not None:
+            try:
+                sales_with_cat = sales_df.copy()
+                sku_col = 'sku' if 'sku' in sales_with_cat.columns else 'product_id'
+                
+                if sku_col in sales_with_cat.columns and sku_col in products_df.columns:
+                    sales_with_cat = sales_with_cat.merge(products_df[[sku_col, 'category']], on=sku_col, how='left')
+                
+                if 'category' in sales_with_cat.columns and 'qty' in sales_with_cat.columns:
+                    demand_by_cat = sales_with_cat.groupby('category')['qty'].sum().reset_index()
+                    demand_by_cat.columns = ['Category', 'Demand']
+                    
+                    inv_with_cat = inventory_df.copy()
+                    if sku_col in inv_with_cat.columns and sku_col in products_df.columns:
+                        inv_with_cat = inv_with_cat.merge(products_df[[sku_col, 'category']], on=sku_col, how='left')
+                    
+                    if 'category' in inv_with_cat.columns and 'stock_on_hand' in inv_with_cat.columns:
+                        stock_by_cat = inv_with_cat.groupby('category')['stock_on_hand'].sum().reset_index()
+                        stock_by_cat.columns = ['Category', 'Stock']
+                        
+                        demand_stock = demand_by_cat.merge(stock_by_cat, on='Category', how='outer').fillna(0)
+                        demand_stock = demand_stock.nlargest(8, 'Demand')
+                        
+                        fig_demand_stock = go.Figure()
+                        fig_demand_stock.add_trace(go.Bar(name='Demand', x=demand_stock['Category'], y=demand_stock['Demand'], marker_color='#8b5cf6'))
+                        fig_demand_stock.add_trace(go.Bar(name='Stock', x=demand_stock['Category'], y=demand_stock['Stock'], marker_color='#06b6d4'))
+                        
+                        fig_demand_stock = style_plotly_chart_themed(fig_demand_stock, height=350)
+                        fig_demand_stock.update_layout(title="Demand vs Stock by Category", barmode='group', xaxis_title="Category", yaxis_title="Units", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+                        st.plotly_chart(fig_demand_stock, use_container_width=True)
+                        st.caption("📌 Purple > Cyan = potential stockout.")
+                    else:
+                        st.info("Stock by category not available")
+                else:
+                    st.info("Category demand data not available")
+            except Exception as e:
+                st.info("Unable to create demand vs stock chart")
+        else:
+            st.info("Required data not available")
+    
+    with col2:
+        # CHART 4: Horizontal Bar - Top N SKU-Store Stockout Risk
+        if inventory_df is not None and 'stock_on_hand' in inventory_df.columns:
+            sku_col = 'sku' if 'sku' in inventory_df.columns else 'product_id'
+            
+            if sku_col in inventory_df.columns:
+                top_n_sku = st.selectbox("Show Top", [5, 10, 15, 20], index=1, key="sku_stockout_top_n")
+                
+                risk_df = inventory_df.nsmallest(int(top_n_sku), 'stock_on_hand').copy()
+                
+                if stores_df is not None and 'store_id' in risk_df.columns and 'store_id' in stores_df.columns:
+                    risk_df = risk_df.merge(stores_df[['store_id', 'city']], on='store_id', how='left')
+                    risk_df['SKU-Location'] = risk_df[sku_col].astype(str) + ' @ ' + risk_df['city'].fillna('Unknown')
+                else:
+                    risk_df['SKU-Location'] = risk_df[sku_col].astype(str)
+                
+                max_stock = risk_df['stock_on_hand'].max() + 1
+                risk_df['risk_score'] = ((max_stock - risk_df['stock_on_hand']) / max_stock * 100).clip(0, 100)
+                risk_df = risk_df.sort_values('risk_score', ascending=True)
+                
+                colors = ['#10b981' if x < 50 else '#f59e0b' if x < 80 else '#ef4444' for x in risk_df['risk_score']]
+                
+                fig_sku_risk = go.Figure(go.Bar(
+                    x=risk_df['risk_score'],
+                    y=risk_df['SKU-Location'],
+                    orientation='h',
+                    marker_color=colors,
+                    text=[f"{x:.0f}% risk" for x in risk_df['risk_score']],
+                    textposition='outside'
+                ))
+                fig_sku_risk = style_plotly_chart_themed(fig_sku_risk, height=350)
+                fig_sku_risk.update_layout(title=f"Top {top_n_sku} Stockout Risk SKU-Store", xaxis_title="Risk Score %", yaxis_title="")
+                st.plotly_chart(fig_sku_risk, use_container_width=True)
+                st.caption("📌 Action list for ops team.")
+            else:
+                st.info("SKU data not available")
+        else:
+            st.info("Inventory data not available")
+    
+    st.markdown("---")
+    
+    # ===== CHART 5: PARETO - Issues Log =====
+    st.markdown('<p class="section-title section-title-pink">📋 Data Quality Analysis</p>', unsafe_allow_html=True)
+    
+    if st.session_state.is_cleaned and hasattr(st.session_state, 'issues_df') and st.session_state.issues_df is not None:
+        issues_df = st.session_state.issues_df
+        if len(issues_df) > 0 and 'issue_type' in issues_df.columns:
+            pareto_df = issues_df.copy()
+            pareto_df['Count'] = pareto_df['record_identifier'].str.extract(r'(\d+)').astype(float).fillna(1)
+            
+            issue_counts = pareto_df.groupby('issue_type')['Count'].sum().reset_index()
+            issue_counts.columns = ['Issue Type', 'Count']
+            issue_counts = issue_counts.sort_values('Count', ascending=False)
+            
+            top_n_pareto = st.selectbox("Show Top Issue Types", [5, 10, "All"], index=1, key="pareto_top_n")
+            if top_n_pareto != "All":
+                issue_counts = issue_counts.head(int(top_n_pareto))
+            
+            total_issues = issue_counts['Count'].sum()
+            issue_counts['Cumulative'] = issue_counts['Count'].cumsum()
+            issue_counts['Cumulative %'] = (issue_counts['Cumulative'] / total_issues * 100)
+            
+            fig_pareto = go.Figure()
+            fig_pareto.add_trace(go.Bar(x=issue_counts['Issue Type'], y=issue_counts['Count'], name='Count', marker_color='#8b5cf6', text=issue_counts['Count'].astype(int), textposition='outside'))
+            fig_pareto.add_trace(go.Scatter(x=issue_counts['Issue Type'], y=issue_counts['Cumulative %'], name='Cumulative %', mode='lines+markers', line=dict(color='#f59e0b', width=3), marker=dict(size=8), yaxis='y2'))
+            fig_pareto.add_hline(y=80, line_dash="dash", line_color="#ef4444", yref='y2', annotation_text="80% threshold")
+            
+            fig_pareto = style_plotly_chart_themed(fig_pareto, height=400)
+            fig_pareto.update_layout(title="Data Quality Issues - Pareto Analysis", xaxis_title="Issue Type", yaxis=dict(title='Count', side='left'), yaxis2=dict(title='Cumulative %', side='right', overlaying='y', range=[0, 105]), legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1), barmode='group')
+            fig_pareto.update_xaxes(tickangle=45)
+            
+            st.plotly_chart(fig_pareto, use_container_width=True)
+            st.caption("📌 Fix issues from left to right until orange line crosses 80%.")
+        else:
+            st.info("No issues logged")
+    else:
+        st.info("Clean data first to see issues Pareto analysis")
+    
+    st.markdown("---")
+    
+    # ===== TOP RISK TABLE =====
+    st.markdown('<p class="section-title section-title-orange">🚨 Top Stockout Risk Items - Action List</p>', unsafe_allow_html=True)
+    
+    if inventory_df is not None and 'stock_on_hand' in inventory_df.columns:
+        sku_col = 'sku' if 'sku' in inventory_df.columns else 'product_id'
+        
+        if sku_col in inventory_df.columns:
+            risk_table = inventory_df.nsmallest(10, 'stock_on_hand').copy()
+            
+            if stores_df is not None and 'store_id' in risk_table.columns and 'store_id' in stores_df.columns:
+                risk_table = risk_table.merge(stores_df[['store_id', 'city', 'channel']], on='store_id', how='left')
+            
+            risk_table['Risk Level'] = risk_table['stock_on_hand'].apply(lambda x: '🔴 Critical' if x < 5 else ('🟠 High' if x < 10 else '🟡 Medium'))
+            
+            display_cols = [col for col in [sku_col, 'store_id', 'city', 'channel', 'stock_on_hand', 'Risk Level'] if col in risk_table.columns]
+            st.dataframe(risk_table[display_cols], use_container_width=True, hide_index=True)
+            st.caption("📌 Operations action list: SKU-Store pairs with lowest stock.")
+        else:
+            st.info("SKU data not available")
+    else:
+        st.info("Inventory data not available for risk analysis")
+    
+    st.markdown("---")
+    
+    # ===== OPERATIONAL ALERTS =====
     st.markdown('<p class="section-title section-title-pink">⚠️ Operational Alerts</p>', unsafe_allow_html=True)
     
     alerts = []
     
     if stockout_risk > 15:
-        alerts.append(f"🔴 **High Stockout Risk**: {stockout_risk:.1f}% of inventory at risk.")
+        alerts.append(f"🔴 **High Stockout Risk**: {stockout_risk:.1f}% of inventory at risk. Review replenishment urgently.")
     
     if return_rate > 5:
-        alerts.append(f"🟠 **Elevated Return Rate**: {return_rate:.1f}% returns.")
+        alerts.append(f"🟠 **Elevated Return Rate**: {return_rate:.1f}% returns. Investigate product quality issues.")
     
     if payment_failure_rate > 3:
-        alerts.append(f"🟡 **Payment Failures**: {payment_failure_rate:.1f}% orders failed.")
+        alerts.append(f"🟡 **Payment Failures**: {payment_failure_rate:.1f}% orders failed. Check payment gateway.")
     
     if high_risk_skus > 50:
-        alerts.append(f"🔴 **{high_risk_skus} SKUs** at critically low stock.")
+        alerts.append(f"🔴 **{high_risk_skus} SKUs** at critically low stock. Expedite orders.")
     
     if len(alerts) == 0:
         st.markdown(create_success_card("All operational metrics within healthy ranges."), unsafe_allow_html=True)
     else:
         for alert in alerts:
-            st.markdown(f"""
-            <div style="
-                background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.08)); 
-                border-left: 4px solid var(--accent-orange); 
-                padding: 16px 20px; 
-                border-radius: var(--radius-md); 
-                margin-bottom: 12px;
-            ">
-                <p style="color: var(--text-primary); margin: 0; font-size: 1rem;">{alert}</p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f'<div class="alert-card"><p>{alert}</p></div>', unsafe_allow_html=True)
+
 
 # ============================================================================
 # PAGE: DATA
 # ============================================================================
 
 def show_data_page():
-    """Display the data management page."""
-    
     st.markdown('<h1 class="page-title page-title-cyan">📂 Data Management</h1>', unsafe_allow_html=True)
     st.markdown('<p class="page-description">Upload, view, and manage your e-commerce data files</p>', unsafe_allow_html=True)
     
     st.markdown("---")
-    
     st.markdown('<p class="section-title section-title-blue">📤 Upload Data Files</p>', unsafe_allow_html=True)
     
-    with st.expander("ℹ️ Expected File Formats (Click to Expand)"):
+    with st.expander("ℹ️ Expected File Formats"):
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown("""
-            **📦 Products File:**
-            - Required: `sku`, `category`, `base_price_aed`
-            - Optional: `unit_cost_aed`, `brand`, `launch_flag`
-            
-            **🛒 Sales File:**
-            - Required: `order_id`, `sku`, `store_id`, `qty`, `selling_price_aed`
-            - Optional: `order_time`, `discount_pct`, `payment_status`, `return_flag`
-            """)
+            st.markdown("""**📦 Products:** `sku`, `category`, `base_price_aed`\n**🛒 Sales:** `order_id`, `sku`, `store_id`, `qty`, `selling_price_aed`""")
         with col2:
-            st.markdown("""
-            **🏪 Stores File:**
-            - Required: `store_id`, `city`, `channel`
-            - Optional: `fulfillment_type`, `store_name`
-            
-            **📋 Inventory File:**
-            - Required: `sku`, `store_id`, `stock_on_hand`
-            - Optional: `snapshot_date`, `reorder_point`, `lead_time_days`
-            """)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
+            st.markdown("""**🏪 Stores:** `store_id`, `city`, `channel`\n**📋 Inventory:** `sku`, `store_id`, `stock_on_hand`""")
     
     valid_files = {}
     
@@ -2407,16 +1876,13 @@ def show_data_page():
                 products_df = pd.read_csv(products_file)
                 products_file.seek(0)
                 validation = FileValidator.validate_file(products_df, 'products')
-                
                 if validation['valid']:
-                    st.success(f"✅ Valid products file ({len(products_df):,} rows)")
+                    st.success(f"✅ Valid ({len(products_df):,} rows)")
                     valid_files['products'] = products_df
                 else:
                     st.error(f"❌ {validation['message']}")
             except Exception as e:
-                st.error(f"❌ Cannot read file: {str(e)}")
-        
-        st.markdown("<br>", unsafe_allow_html=True)
+                st.error(f"❌ Cannot read file")
         
         sales_file = st.file_uploader("🛒 Sales CSV", type=['csv'], key='sales_upload')
         if sales_file:
@@ -2424,14 +1890,13 @@ def show_data_page():
                 sales_df = pd.read_csv(sales_file)
                 sales_file.seek(0)
                 validation = FileValidator.validate_file(sales_df, 'sales')
-                
                 if validation['valid']:
-                    st.success(f"✅ Valid sales file ({len(sales_df):,} rows)")
+                    st.success(f"✅ Valid ({len(sales_df):,} rows)")
                     valid_files['sales'] = sales_df
                 else:
                     st.error(f"❌ {validation['message']}")
             except Exception as e:
-                st.error(f"❌ Cannot read file: {str(e)}")
+                st.error(f"❌ Cannot read file")
     
     with col2:
         stores_file = st.file_uploader("🏪 Stores CSV", type=['csv'], key='stores_upload')
@@ -2440,16 +1905,13 @@ def show_data_page():
                 stores_df = pd.read_csv(stores_file)
                 stores_file.seek(0)
                 validation = FileValidator.validate_file(stores_df, 'stores')
-                
                 if validation['valid']:
-                    st.success(f"✅ Valid stores file ({len(stores_df):,} rows)")
+                    st.success(f"✅ Valid ({len(stores_df):,} rows)")
                     valid_files['stores'] = stores_df
                 else:
                     st.error(f"❌ {validation['message']}")
             except Exception as e:
-                st.error(f"❌ Cannot read file: {str(e)}")
-        
-        st.markdown("<br>", unsafe_allow_html=True)
+                st.error(f"❌ Cannot read file")
         
         inventory_file = st.file_uploader("📋 Inventory CSV", type=['csv'], key='inventory_upload')
         if inventory_file:
@@ -2457,53 +1919,39 @@ def show_data_page():
                 inventory_df = pd.read_csv(inventory_file)
                 inventory_file.seek(0)
                 validation = FileValidator.validate_file(inventory_df, 'inventory')
-                
                 if validation['valid']:
-                    st.success(f"✅ Valid inventory file ({len(inventory_df):,} rows)")
+                    st.success(f"✅ Valid ({len(inventory_df):,} rows)")
                     valid_files['inventory'] = inventory_df
                 else:
                     st.error(f"❌ {validation['message']}")
             except Exception as e:
-                st.error(f"❌ Cannot read file: {str(e)}")
+                st.error(f"❌ Cannot read file")
     
     st.markdown("---")
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        required_files = ['products', 'stores', 'sales', 'inventory']
-        missing_files = [f for f in required_files if f not in valid_files]
-        
         if len(valid_files) == 4:
-            st.success(f"✅ All 4 files valid and ready to load!")
+            st.success("✅ All 4 files valid!")
         elif len(valid_files) > 0:
-            st.warning(f"⚠️ {len(valid_files)}/4 files valid. Missing: {', '.join(missing_files)}")
+            st.warning(f"⚠️ {len(valid_files)}/4 files valid")
         else:
-            st.info("📤 Please upload all 4 files: Products, Stores, Sales, Inventory")
+            st.info("📤 Upload all 4 files")
         
-        button_disabled = len(valid_files) != 4
-        
-        if st.button("📥 Load All Files", use_container_width=True, disabled=button_disabled):
-            if 'products' in valid_files:
-                st.session_state.raw_products = valid_files['products']
-            if 'stores' in valid_files:
-                st.session_state.raw_stores = valid_files['stores']
-            if 'sales' in valid_files:
-                st.session_state.raw_sales = valid_files['sales']
-            if 'inventory' in valid_files:
-                st.session_state.raw_inventory = valid_files['inventory']
-            
+        if st.button("📥 Load All Files", use_container_width=True, disabled=len(valid_files) != 4):
+            for key, df in valid_files.items():
+                setattr(st.session_state, f'raw_{key}', df)
             st.session_state.data_loaded = True
             st.session_state.is_cleaned = False
-            st.success(f"✅ {len(valid_files)} file(s) loaded successfully!")
+            st.success("✅ Loaded!")
             st.rerun()
     
     st.markdown("---")
-    
     st.markdown('<p class="section-title section-title-purple">📦 Or Use Sample Data</p>', unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("📥 Load Sample Data", use_container_width=True, key='sample_data_btn'):
+        if st.button("📥 Load Sample Data", use_container_width=True):
             try:
                 st.session_state.raw_products = pd.read_csv('data/products.csv')
                 st.session_state.raw_stores = pd.read_csv('data/stores.csv')
@@ -2522,69 +1970,22 @@ def show_data_page():
         
         tab1, tab2, tab3, tab4 = st.tabs(["📦 Products", "🏪 Stores", "🛒 Sales", "📋 Inventory"])
         
-        with tab1:
-            if st.session_state.raw_products is not None:
-                df = st.session_state.raw_products
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.markdown(create_metric_card("Rows", f"{len(df):,}", color="cyan"), unsafe_allow_html=True)
-                with col2:
-                    st.markdown(create_metric_card("Columns", f"{len(df.columns)}", color="blue"), unsafe_allow_html=True)
-                with col3:
-                    null_pct = (df.isnull().sum().sum() / (len(df) * len(df.columns)) * 100) if len(df) > 0 else 0
-                    st.markdown(create_metric_card("Null %", f"{null_pct:.1f}%", color="orange"), unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.dataframe(df.head(100), use_container_width=True)
-            else:
-                st.info("📦 No products data loaded")
-        
-        with tab2:
-            if st.session_state.raw_stores is not None:
-                df = st.session_state.raw_stores
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.markdown(create_metric_card("Rows", f"{len(df):,}", color="cyan"), unsafe_allow_html=True)
-                with col2:
-                    st.markdown(create_metric_card("Columns", f"{len(df.columns)}", color="blue"), unsafe_allow_html=True)
-                with col3:
-                    null_pct = (df.isnull().sum().sum() / (len(df) * len(df.columns)) * 100) if len(df) > 0 else 0
-                    st.markdown(create_metric_card("Null %", f"{null_pct:.1f}%", color="orange"), unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.dataframe(df.head(100), use_container_width=True)
-            else:
-                st.info("🏪 No stores data loaded")
-        
-        with tab3:
-            if st.session_state.raw_sales is not None:
-                df = st.session_state.raw_sales
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.markdown(create_metric_card("Rows", f"{len(df):,}", color="cyan"), unsafe_allow_html=True)
-                with col2:
-                    st.markdown(create_metric_card("Columns", f"{len(df.columns)}", color="blue"), unsafe_allow_html=True)
-                with col3:
-                    null_pct = (df.isnull().sum().sum() / (len(df) * len(df.columns)) * 100) if len(df) > 0 else 0
-                    st.markdown(create_metric_card("Null %", f"{null_pct:.1f}%", color="orange"), unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.dataframe(df.head(100), use_container_width=True)
-            else:
-                st.info("🛒 No sales data loaded")
-        
-        with tab4:
-            if st.session_state.raw_inventory is not None:
-                df = st.session_state.raw_inventory
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.markdown(create_metric_card("Rows", f"{len(df):,}", color="cyan"), unsafe_allow_html=True)
-                with col2:
-                    st.markdown(create_metric_card("Columns", f"{len(df.columns)}", color="blue"), unsafe_allow_html=True)
-                with col3:
-                    null_pct = (df.isnull().sum().sum() / (len(df) * len(df.columns)) * 100) if len(df) > 0 else 0
-                    st.markdown(create_metric_card("Null %", f"{null_pct:.1f}%", color="orange"), unsafe_allow_html=True)
-                st.markdown("<br>", unsafe_allow_html=True)
-                st.dataframe(df.head(100), use_container_width=True)
-            else:
-                st.info("📋 No inventory data loaded")
+        for tab, name, key in [(tab1, "Products", "raw_products"), (tab2, "Stores", "raw_stores"), (tab3, "Sales", "raw_sales"), (tab4, "Inventory", "raw_inventory")]:
+            with tab:
+                df = getattr(st.session_state, key)
+                if df is not None:
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.markdown(create_metric_card("Rows", f"{len(df):,}", color="cyan"), unsafe_allow_html=True)
+                    with col2:
+                        st.markdown(create_metric_card("Columns", f"{len(df.columns)}", color="blue"), unsafe_allow_html=True)
+                    with col3:
+                        null_pct = (df.isnull().sum().sum() / (len(df) * len(df.columns)) * 100) if len(df) > 0 else 0
+                        st.markdown(create_metric_card("Null %", f"{null_pct:.1f}%", color="orange"), unsafe_allow_html=True)
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    st.dataframe(df.head(100), use_container_width=True)
+                else:
+                    st.info(f"No {name.lower()} data loaded")
     
     show_footer()
 
@@ -2593,77 +1994,39 @@ def show_data_page():
 # ============================================================================
 
 def show_cleaner_page():
-    """Display the data cleaner page."""
-    
     st.markdown('<h1 class="page-title page-title-green">🧹 Data Rescue Center</h1>', unsafe_allow_html=True)
     st.markdown('<p class="page-description">Validate, detect issues, and clean your dirty data automatically</p>', unsafe_allow_html=True)
-    
-    st.markdown("---")
     
     if not st.session_state.data_loaded:
         st.markdown(create_warning_card("Please load data first. Go to 📂 Data page."), unsafe_allow_html=True)
         show_footer()
         return
     
+    st.markdown("---")
     st.markdown('<p class="section-title section-title-cyan">🔍 Issues We Detect & Fix</p>', unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3)
-    
     with col1:
-        st.markdown("""
-        <div class="info-card">
-            <strong style="color: var(--accent-cyan); font-size: 1.1rem;">Data Quality</strong>
-            <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0; line-height: 1.8;">
-                <li>Missing values</li>
-                <li>Duplicate records</li>
-                <li>Whitespace issues</li>
-                <li>Text standardization</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
+        st.markdown("""<div class="info-card"><strong style="color: var(--accent-cyan);">Data Quality</strong><ul style="color: var(--text-secondary);"><li>Missing values</li><li>Duplicates</li><li>Whitespace</li></ul></div>""", unsafe_allow_html=True)
     with col2:
-        st.markdown("""
-        <div class="info-card" style="border-left-color: var(--accent-purple);">
-            <strong style="color: var(--accent-purple); font-size: 1.1rem;">Format Issues</strong>
-            <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0; line-height: 1.8;">
-                <li>Multi-language text</li>
-                <li>Non-English values</li>
-                <li>Fuzzy matching</li>
-                <li>Case normalization</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-    
+        st.markdown("""<div class="info-card" style="border-left-color: var(--accent-purple);"><strong style="color: var(--accent-purple);">Format Issues</strong><ul style="color: var(--text-secondary);"><li>Multi-language</li><li>Case normalization</li><li>Fuzzy matching</li></ul></div>""", unsafe_allow_html=True)
     with col3:
-        st.markdown("""
-        <div class="info-card" style="border-left-color: var(--accent-pink);">
-            <strong style="color: var(--accent-pink); font-size: 1.1rem;">Value Issues</strong>
-            <ul style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0; line-height: 1.8;">
-                <li>Negative values</li>
-                <li>Outliers (IQR)</li>
-                <li>FK violations</li>
-                <li>Invalid references</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="info-card" style="border-left-color: var(--accent-pink);"><strong style="color: var(--accent-pink);">Value Issues</strong><ul style="color: var(--text-secondary);"><li>Negative values</li><li>Outliers (IQR)</li><li>FK violations</li></ul></div>""", unsafe_allow_html=True)
     
     st.markdown("---")
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("🚀 Run Data Cleaning", use_container_width=True, type="primary"):
-            with st.spinner("🔄 Analyzing and cleaning data..."):
+            with st.spinner("🔄 Cleaning..."):
                 try:
                     cleaner = DataCleaner()
-                    
                     clean_products, clean_stores, clean_sales, clean_inventory = cleaner.clean_all(
                         st.session_state.raw_products.copy(),
                         st.session_state.raw_stores.copy(),
                         st.session_state.raw_sales.copy(),
                         st.session_state.raw_inventory.copy()
                     )
-                    
                     st.session_state.clean_products = clean_products
                     st.session_state.clean_stores = clean_stores
                     st.session_state.clean_sales = clean_sales
@@ -2672,107 +2035,52 @@ def show_cleaner_page():
                     st.session_state.cleaner_stats = cleaner.stats
                     st.session_state.cleaning_report = cleaner.cleaning_report
                     st.session_state.is_cleaned = True
-                    
-                    st.success("✅ Data cleaning complete!")
+                    st.success("✅ Done!")
                     st.rerun()
                 except Exception as e:
-                    st.error(f"❌ Error during cleaning: {str(e)}")
+                    st.error(f"❌ Error: {str(e)}")
     
     if st.session_state.is_cleaned:
         st.markdown("---")
-        st.markdown('<p class="section-title section-title-blue">📊 Cleaning Results</p>', unsafe_allow_html=True)
+        st.markdown('<p class="section-title section-title-blue">📊 Results</p>', unsafe_allow_html=True)
         
         stats = st.session_state.cleaner_stats
-        report = st.session_state.cleaning_report
         
         col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            after = len(st.session_state.clean_products) if st.session_state.clean_products is not None else 0
-            st.markdown(create_metric_card("Products", f"{after:,}", color="cyan"), unsafe_allow_html=True)
-        
-        with col2:
-            after = len(st.session_state.clean_stores) if st.session_state.clean_stores is not None else 0
-            st.markdown(create_metric_card("Stores", f"{after:,}", color="blue"), unsafe_allow_html=True)
-        
-        with col3:
-            after = len(st.session_state.clean_sales) if st.session_state.clean_sales is not None else 0
-            st.markdown(create_metric_card("Sales", f"{after:,}", color="purple"), unsafe_allow_html=True)
-        
-        with col4:
-            after = len(st.session_state.clean_inventory) if st.session_state.clean_inventory is not None else 0
-            st.markdown(create_metric_card("Inventory", f"{after:,}", color="pink"), unsafe_allow_html=True)
-        
-        st.markdown("---")
-        st.markdown('<p class="section-title section-title-teal">📈 Cleaning Summary</p>', unsafe_allow_html=True)
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
         with col1:
             st.markdown(create_metric_card("Missing Fixed", f"{stats.get('missing_values_fixed', 0):,}", color="cyan"), unsafe_allow_html=True)
-        
         with col2:
             st.markdown(create_metric_card("Duplicates Removed", f"{stats.get('duplicates_removed', 0):,}", color="blue"), unsafe_allow_html=True)
-        
         with col3:
             st.markdown(create_metric_card("Outliers Fixed", f"{stats.get('outliers_fixed', 0):,}", color="purple"), unsafe_allow_html=True)
-        
         with col4:
             st.markdown(create_metric_card("Text Standardized", f"{stats.get('text_standardized', 0):,}", color="pink"), unsafe_allow_html=True)
         
         issues_df = st.session_state.issues_df
-        
         if len(issues_df) > 0:
             st.markdown("---")
-            st.markdown('<p class="section-title section-title-orange">🔍 Issues Detected & Fixed</p>', unsafe_allow_html=True)
-            
-            total_fixed = stats.get('total_issues_fixed', 0)
-            st.markdown(create_success_card(f"Total {total_fixed} issues detected and fixed automatically!"), unsafe_allow_html=True)
+            st.markdown('<p class="section-title section-title-orange">🔍 Issues Log</p>', unsafe_allow_html=True)
             
             col1, col2 = st.columns(2)
-            
             with col1:
                 issue_counts = issues_df.groupby('issue_type').size().reset_index(name='count')
-                
-                fig = px.bar(
-                    issue_counts,
-                    x='count',
-                    y='issue_type',
-                    orientation='h',
-                    title='Issues by Type',
-                    color='count',
-                    color_continuous_scale=['#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899']
-                )
+                fig = px.bar(issue_counts, x='count', y='issue_type', orientation='h', title='Issues by Type', color='count', color_continuous_scale=['#06b6d4', '#8b5cf6'])
                 fig = style_plotly_chart_themed(fig)
                 fig.update_layout(coloraxis_showscale=False)
                 st.plotly_chart(fig, use_container_width=True)
             
             with col2:
                 table_counts = issues_df.groupby('table').size().reset_index(name='count')
-                
-                fig = px.pie(
-                    table_counts,
-                    values='count',
-                    names='table',
-                    title='Issues by Table',
-                    color_discrete_sequence=['#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'],
-                    hole=0.45
-                )
+                fig = px.pie(table_counts, values='count', names='table', title='Issues by Table', color_discrete_sequence=['#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'], hole=0.45)
                 fig = style_plotly_chart_themed(fig)
                 st.plotly_chart(fig, use_container_width=True)
             
-            st.markdown('<p class="section-title section-title-blue">📋 Detailed Issues Log</p>', unsafe_allow_html=True)
             st.dataframe(issues_df, use_container_width=True)
             
             csv = issues_df.to_csv(index=False)
-            st.download_button(
-                label="📥 Download Issues Log (CSV)",
-                data=csv,
-                file_name="data_issues_log.csv",
-                mime="text/csv"
-            )
+            st.download_button("📥 Download Issues Log", data=csv, file_name="issues_log.csv", mime="text/csv")
         else:
-            st.markdown(create_success_card("No major issues found! Your data is already clean."), unsafe_allow_html=True)
+            st.markdown(create_success_card("No major issues found!"), unsafe_allow_html=True)
     
     show_footer()
 
@@ -2781,15 +2089,11 @@ def show_cleaner_page():
 # ============================================================================
 
 def show_simulator_page():
-    """Display the campaign simulator page."""
-    
     st.markdown('<h1 class="page-title page-title-purple">🎯 Campaign Simulator</h1>', unsafe_allow_html=True)
     st.markdown('<p class="page-description">Run what-if scenarios and forecast campaign outcomes</p>', unsafe_allow_html=True)
     
-    st.markdown("---")
-    
     if not st.session_state.data_loaded:
-        st.warning("⚠️ Please load data first. Go to 📂 Data page.")
+        st.warning("⚠️ Please load data first.")
         show_footer()
         return
     
@@ -2797,33 +2101,27 @@ def show_simulator_page():
     stores_df = st.session_state.clean_stores if st.session_state.is_cleaned else st.session_state.raw_stores
     products_df = st.session_state.clean_products if st.session_state.is_cleaned else st.session_state.raw_products
     
+    st.markdown("---")
     st.markdown('<p class="section-title section-title-cyan">⚙️ Campaign Parameters</p>', unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.markdown('<p style="color: var(--accent-cyan); font-weight: 700; margin-bottom: 12px;">💰 Pricing</p>', unsafe_allow_html=True)
+        st.markdown('<p style="color: var(--accent-cyan); font-weight: 700;">💰 Pricing</p>', unsafe_allow_html=True)
         discount_pct = st.slider("Discount %", 0, 50, 15)
         promo_budget = st.number_input("Promo Budget (AED)", 1000, 500000, 25000, step=5000)
     
     with col2:
-        st.markdown('<p style="color: var(--accent-purple); font-weight: 700; margin-bottom: 12px;">📊 Constraints</p>', unsafe_allow_html=True)
+        st.markdown('<p style="color: var(--accent-purple); font-weight: 700;">📊 Constraints</p>', unsafe_allow_html=True)
         margin_floor = st.slider("Margin Floor %", 0, 50, 15)
         campaign_days = st.slider("Campaign Days", 1, 30, 7)
     
     with col3:
-        st.markdown('<p style="color: var(--accent-pink); font-weight: 700; margin-bottom: 12px;">🎯 Targeting</p>', unsafe_allow_html=True)
+        st.markdown('<p style="color: var(--accent-pink); font-weight: 700;">🎯 Targeting</p>', unsafe_allow_html=True)
         
-        cities = ['All']
-        channels = ['All']
-        categories = ['All']
-        
-        if stores_df is not None and 'city' in stores_df.columns:
-            cities += stores_df['city'].dropna().unique().tolist()
-        if stores_df is not None and 'channel' in stores_df.columns:
-            channels += stores_df['channel'].dropna().unique().tolist()
-        if products_df is not None and 'category' in products_df.columns:
-            categories += products_df['category'].dropna().unique().tolist()
+        cities = ['All'] + (sorted(stores_df['city'].dropna().unique().tolist()) if stores_df is not None and 'city' in stores_df.columns else [])
+        channels = ['All'] + (sorted(stores_df['channel'].dropna().unique().tolist()) if stores_df is not None and 'channel' in stores_df.columns else [])
+        categories = ['All'] + (sorted(products_df['category'].dropna().unique().tolist()) if products_df is not None and 'category' in products_df.columns else [])
         
         city = st.selectbox("Target City", cities)
         channel = st.selectbox("Target Channel", channels)
@@ -2836,25 +2134,13 @@ def show_simulator_page():
         run_simulation = st.button("🚀 Run Simulation", use_container_width=True, type="primary")
     
     if run_simulation:
-        with st.spinner("🔄 Running simulation..."):
+        with st.spinner("🔄 Running..."):
             try:
                 sim = Simulator()
-                
-                results = sim.simulate_campaign(
-                    sales_df, stores_df, products_df,
-                    discount_pct=discount_pct,
-                    promo_budget=promo_budget,
-                    margin_floor=margin_floor,
-                    city=city,
-                    channel=channel,
-                    category=category,
-                    campaign_days=campaign_days
-                )
-                
+                results = sim.simulate_campaign(sales_df, stores_df, products_df, discount_pct=discount_pct, promo_budget=promo_budget, margin_floor=margin_floor, city=city, channel=channel, category=category, campaign_days=campaign_days)
                 st.session_state.sim_results = results
-                
             except Exception as e:
-                st.error(f"❌ Simulation error: {str(e)}")
+                st.error(f"❌ Error: {str(e)}")
     
     if 'sim_results' in st.session_state and st.session_state.sim_results:
         results = st.session_state.sim_results
@@ -2864,95 +2150,45 @@ def show_simulator_page():
         
         if outputs:
             st.markdown("---")
-            st.markdown('<p class="section-title section-title-teal">📊 Simulation Results</p>', unsafe_allow_html=True)
+            st.markdown('<p class="section-title section-title-teal">📊 Results</p>', unsafe_allow_html=True)
             
             col1, col2, col3, col4 = st.columns(4)
-            
             with col1:
                 delta = f"{comparison['revenue_change_pct']:+.1f}%"
-                delta_type = "positive" if comparison['revenue_change_pct'] > 0 else "negative"
-                st.markdown(create_metric_card("Expected Revenue", f"AED {outputs['expected_revenue']:,.0f}", delta, delta_type, "cyan"), unsafe_allow_html=True)
-            
+                st.markdown(create_metric_card("Expected Revenue", f"AED {outputs['expected_revenue']:,.0f}", delta, "positive" if comparison['revenue_change_pct'] > 0 else "negative", "cyan"), unsafe_allow_html=True)
             with col2:
                 delta = f"{comparison['order_change_pct']:+.1f}%"
-                delta_type = "positive" if comparison['order_change_pct'] > 0 else "negative"
-                st.markdown(create_metric_card("Expected Orders", f"{outputs['expected_orders']:,}", delta, delta_type, "blue"), unsafe_allow_html=True)
-            
+                st.markdown(create_metric_card("Expected Orders", f"{outputs['expected_orders']:,}", delta, "positive" if comparison['order_change_pct'] > 0 else "negative", "blue"), unsafe_allow_html=True)
             with col3:
                 delta = f"{comparison['profit_change_pct']:+.1f}%"
-                delta_type = "positive" if comparison['profit_change_pct'] > 0 else "negative"
-                st.markdown(create_metric_card("Net Profit", f"AED {outputs['expected_net_profit']:,.0f}", delta, delta_type, "green"), unsafe_allow_html=True)
-            
+                st.markdown(create_metric_card("Net Profit", f"AED {outputs['expected_net_profit']:,.0f}", delta, "positive" if comparison['profit_change_pct'] > 0 else "negative", "green"), unsafe_allow_html=True)
             with col4:
-                color = "green" if outputs['roi_pct'] > 0 else "pink"
-                st.markdown(create_metric_card("ROI", f"{outputs['roi_pct']:.1f}%", color=color), unsafe_allow_html=True)
-            
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                st.markdown(create_metric_card("Demand Lift", f"+{outputs['demand_lift_pct']:.1f}%", color="purple"), unsafe_allow_html=True)
-            
-            with col2:
-                color = "green" if outputs['expected_margin_pct'] >= margin_floor else "orange"
-                st.markdown(create_metric_card("Margin", f"{outputs['expected_margin_pct']:.1f}%", color=color), unsafe_allow_html=True)
-            
-            with col3:
-                st.markdown(create_metric_card("Promo Cost", f"AED {outputs['promo_cost']:,.0f}", color="orange"), unsafe_allow_html=True)
-            
-            with col4:
-                st.markdown(create_metric_card("Fulfillment", f"AED {outputs['fulfillment_cost']:,.0f}", color="blue"), unsafe_allow_html=True)
+                st.markdown(create_metric_card("ROI", f"{outputs['roi_pct']:.1f}%", color="green" if outputs['roi_pct'] > 0 else "pink"), unsafe_allow_html=True)
             
             if warnings:
                 st.markdown("---")
-                st.markdown('<p class="section-title section-title-orange">⚠️ Risk Alerts</p>', unsafe_allow_html=True)
-                for warning in warnings:
-                    st.warning(warning)
+                for w in warnings:
+                    st.warning(w)
             else:
-                st.markdown("---")
-                st.success("✅ All metrics within acceptable range. Campaign looks healthy!")
+                st.success("✅ Campaign looks healthy!")
             
             st.markdown("---")
             st.markdown('<p class="section-title section-title-blue">📈 Baseline vs Campaign</p>', unsafe_allow_html=True)
             
             col1, col2 = st.columns(2)
-            
             with col1:
-                comp_data = pd.DataFrame({
-                    'Metric': ['Revenue', 'Profit'],
-                    'Baseline': [comparison['baseline_revenue'], comparison['baseline_profit']],
-                    'Campaign': [outputs['expected_revenue'], outputs['expected_net_profit']]
-                })
-                
                 fig = go.Figure()
-                fig.add_trace(go.Bar(name='Baseline', x=comp_data['Metric'], y=comp_data['Baseline'], marker_color='#3b82f6'))
-                fig.add_trace(go.Bar(name='Campaign', x=comp_data['Metric'], y=comp_data['Campaign'], marker_color='#06b6d4'))
+                fig.add_trace(go.Bar(name='Baseline', x=['Revenue', 'Profit'], y=[comparison['baseline_revenue'], comparison['baseline_profit']], marker_color='#3b82f6'))
+                fig.add_trace(go.Bar(name='Campaign', x=['Revenue', 'Profit'], y=[outputs['expected_revenue'], outputs['expected_net_profit']], marker_color='#06b6d4'))
                 fig = style_plotly_chart_themed(fig)
-                fig.update_layout(barmode='group', title='Revenue & Profit Comparison')
+                fig.update_layout(barmode='group', title='Comparison')
                 st.plotly_chart(fig, use_container_width=True)
             
             with col2:
-                orders_data = pd.DataFrame({
-                    'Type': ['Baseline', 'Campaign'],
-                    'Orders': [comparison['baseline_orders'], outputs['expected_orders']]
-                })
-                
-                fig = px.bar(
-                    orders_data,
-                    x='Type',
-                    y='Orders',
-                    title='Orders Comparison',
-                    color='Type',
-                    color_discrete_sequence=['#8b5cf6', '#ec4899']
-                )
+                fig = px.bar(pd.DataFrame({'Type': ['Baseline', 'Campaign'], 'Orders': [comparison['baseline_orders'], outputs['expected_orders']]}), x='Type', y='Orders', title='Orders', color='Type', color_discrete_sequence=['#8b5cf6', '#ec4899'])
                 fig = style_plotly_chart_themed(fig)
                 fig.update_layout(showlegend=False)
                 st.plotly_chart(fig, use_container_width=True)
-        
-        elif warnings:
-            for warning in warnings:
-                st.warning(warning)
     
     show_footer()
 
