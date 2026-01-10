@@ -83,17 +83,346 @@ def get_theme_colors():
 # DYNAMIC THEME CSS GENERATOR
 # ============================================================================
 
+# ============================================================================
+# DYNAMIC THEME CSS GENERATOR
+# ============================================================================
+
 def get_theme_css():
-    # Add this function after your get_theme_css() function
+    """Generate CSS based on current theme state."""
     
+    is_dark = st.session_state.theme == 'dark'
+    
+    if is_dark:
+        colors = {
+            'bg_primary': '#0a0a0f',
+            'bg_secondary': '#12121a',
+            'bg_tertiary': '#1a1a24',
+            'bg_card': 'rgba(22, 22, 31, 0.95)',
+            'bg_card_hover': 'rgba(30, 30, 45, 0.98)',
+            'text_primary': '#f8fafc',
+            'text_secondary': '#cbd5e1',
+            'text_muted': '#64748b',
+            'border_default': 'rgba(148, 163, 184, 0.1)',
+            'border_hover': 'rgba(6, 182, 212, 0.4)',
+            'shadow_md': '0 4px 20px rgba(0, 0, 0, 0.4)',
+            'shadow_lg': '0 8px 40px rgba(0, 0, 0, 0.5)',
+            'gradient_card': 'linear-gradient(145deg, rgba(22, 22, 31, 0.9) 0%, rgba(26, 26, 36, 0.95) 100%)',
+            'gradient_sidebar': 'linear-gradient(180deg, #0d0d14 0%, #0f0f18 50%, #0a0a0f 100%)',
+            'gradient_hero': 'linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(139, 92, 246, 0.12) 50%, rgba(236, 72, 153, 0.08) 100%)',
+        }
+    else:
+        colors = {
+            'bg_primary': '#f8fafc',
+            'bg_secondary': '#ffffff',
+            'bg_tertiary': '#f1f5f9',
+            'bg_card': 'rgba(255, 255, 255, 0.95)',
+            'bg_card_hover': 'rgba(248, 250, 252, 0.98)',
+            'text_primary': '#0f172a',
+            'text_secondary': '#475569',
+            'text_muted': '#64748b',
+            'border_default': 'rgba(0, 0, 0, 0.08)',
+            'border_hover': 'rgba(6, 182, 212, 0.5)',
+            'shadow_md': '0 4px 20px rgba(0, 0, 0, 0.08)',
+            'shadow_lg': '0 8px 40px rgba(0, 0, 0, 0.1)',
+            'gradient_card': 'linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.95) 100%)',
+            'gradient_sidebar': 'linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%)',
+            'gradient_hero': 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.05) 100%)',
+        }
+    
+    return f"""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+        
+        :root {{
+            --bg-primary: {colors['bg_primary']};
+            --bg-secondary: {colors['bg_secondary']};
+            --bg-tertiary: {colors['bg_tertiary']};
+            --bg-card: {colors['bg_card']};
+            --bg-card-hover: {colors['bg_card_hover']};
+            --text-primary: {colors['text_primary']};
+            --text-secondary: {colors['text_secondary']};
+            --text-muted: {colors['text_muted']};
+            --border-default: {colors['border_default']};
+            --border-hover: {colors['border_hover']};
+            --shadow-md: {colors['shadow_md']};
+            --shadow-lg: {colors['shadow_lg']};
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-teal: #14b8a6;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --radius-2xl: 32px;
+            --transition-normal: 0.25s ease;
+        }}
+        
+        #MainMenu {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
+        header {{visibility: hidden;}}
+        
+        .stApp {{
+            background: var(--bg-primary);
+            font-family: 'Inter', sans-serif;
+        }}
+        
+        [data-testid="stSidebar"] {{
+            background: {colors['gradient_sidebar']};
+            border-right: 1px solid var(--border-default);
+        }}
+        
+        h1, h2, h3, h4, h5, h6 {{ color: var(--text-primary); font-weight: 700; }}
+        p, span, div, label {{ color: var(--text-secondary); }}
+        
+        .metric-card-3d {{
+            background: {colors['gradient_card']};
+            border-radius: var(--radius-xl);
+            padding: 28px 24px;
+            border: 1px solid var(--border-default);
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }}
+        .metric-card-3d:hover {{
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--border-hover);
+        }}
+        .metric-label {{ font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }}
+        .metric-value {{ font-size: 2rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin: 8px 0; }}
+        .metric-value-cyan {{ color: var(--accent-cyan); }}
+        .metric-value-blue {{ color: var(--accent-blue); }}
+        .metric-value-purple {{ color: var(--accent-purple); }}
+        .metric-value-pink {{ color: var(--accent-pink); }}
+        .metric-value-green {{ color: var(--accent-green); }}
+        .metric-value-orange {{ color: var(--accent-orange); }}
+        .metric-value-teal {{ color: var(--accent-teal); }}
+        .metric-delta {{ font-size: 0.85rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }}
+        .metric-delta-positive {{ color: var(--accent-green); background: rgba(16, 185, 129, 0.12); }}
+        .metric-delta-negative {{ color: var(--accent-red); background: rgba(239, 68, 68, 0.12); }}
+        
+        .feature-card-3d {{
+            background: {colors['gradient_card']};
+            border-radius: var(--radius-xl);
+            padding: 40px 28px;
+            border: 1px solid var(--border-default);
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            height: 240px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }}
+        .feature-card-3d:hover {{
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--border-hover);
+        }}
+        .feature-icon {{ font-size: 3.5rem; margin-bottom: 20px; }}
+        .feature-title {{ font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }}
+        .feature-desc {{ font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }}
+        
+        .hero-container {{
+            background: {colors['gradient_hero']};
+            border-radius: var(--radius-2xl);
+            padding: 60px 50px;
+            margin-bottom: 40px;
+            border: 1px solid var(--border-default);
+            box-shadow: var(--shadow-lg);
+        }}
+        .hero-title {{
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-cyan), var(--accent-purple), var(--accent-pink));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            animation: gradientFlow 5s ease infinite;
+        }}
+        @keyframes gradientFlow {{
+            0% {{ background-position: 0% 50%; }}
+            50% {{ background-position: 100% 50%; }}
+            100% {{ background-position: 0% 50%; }}
+        }}
+        .hero-subtitle {{ font-size: 1.25rem; color: var(--text-secondary); line-height: 1.7; max-width: 700px; }}
+        .hero-badge {{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: 50px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-right: 12px;
+            margin-bottom: 20px;
+        }}
+        
+        .page-title {{ font-size: 3rem; font-weight: 800; margin-bottom: 8px; }}
+        .page-title-cyan {{ color: var(--accent-cyan); }}
+        .page-title-blue {{ color: var(--accent-blue); }}
+        .page-title-purple {{ color: var(--accent-purple); }}
+        .page-title-pink {{ color: var(--accent-pink); }}
+        .page-title-green {{ color: var(--accent-green); }}
+        .page-title-teal {{ color: var(--accent-teal); }}
+        .page-title-orange {{ color: var(--accent-orange); }}
+        .page-description {{ color: var(--text-secondary); font-size: 1.15rem; margin-bottom: 24px; }}
+        
+        .section-title {{ font-size: 1.6rem; font-weight: 700; margin-bottom: 20px; color: var(--text-primary); }}
+        .section-title-cyan {{ color: var(--accent-cyan) !important; }}
+        .section-title-blue {{ color: var(--accent-blue) !important; }}
+        .section-title-purple {{ color: var(--accent-purple) !important; }}
+        .section-title-pink {{ color: var(--accent-pink) !important; }}
+        .section-title-green {{ color: var(--accent-green) !important; }}
+        .section-title-teal {{ color: var(--accent-teal) !important; }}
+        .section-title-orange {{ color: var(--accent-orange) !important; }}
+        
+        .info-card {{
+            background: {colors['gradient_card']};
+            border-radius: var(--radius-lg);
+            padding: 22px 28px;
+            border: 1px solid var(--border-default);
+            border-left: 4px solid var(--accent-cyan);
+            margin: 15px 0;
+            color: var(--text-secondary);
+        }}
+        .success-card {{
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(20, 184, 166, 0.08));
+            border-radius: var(--radius-lg);
+            padding: 22px 28px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-left: 4px solid var(--accent-green);
+            margin: 15px 0;
+            color: var(--text-primary);
+        }}
+        .warning-card {{
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(251, 146, 60, 0.08));
+            border-radius: var(--radius-lg);
+            padding: 22px 28px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-left: 4px solid var(--accent-orange);
+            margin: 15px 0;
+            color: var(--text-primary);
+        }}
+        .error-card {{
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(236, 72, 153, 0.08));
+            border-radius: var(--radius-lg);
+            padding: 22px 28px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-left: 4px solid var(--accent-red);
+            margin: 15px 0;
+            color: var(--text-primary);
+        }}
+        .insight-card {{
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.08));
+            border-radius: var(--radius-lg);
+            padding: 22px 28px;
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            margin: 15px 0;
+        }}
+        .insight-title {{ color: #a78bfa; font-weight: 700; font-size: 1rem; margin-bottom: 8px; }}
+        .insight-text {{ color: var(--text-primary); font-size: 1rem; line-height: 1.6; }}
+        .recommendation-card {{
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(59, 130, 246, 0.08));
+            border-left: 4px solid var(--accent-purple);
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+        }}
+        .recommendation-card p {{ color: var(--text-primary); margin: 0; }}
+        .alert-card {{
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.08));
+            border-left: 4px solid var(--accent-orange);
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+        }}
+        .alert-card p {{ color: var(--text-primary); margin: 0; }}
+        
+        .stTabs [data-baseweb="tab-list"] {{ gap: 8px; background: transparent; }}
+        .stTabs [data-baseweb="tab"] {{
+            background: {colors['gradient_card']};
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            padding: 14px 28px;
+            border: 1px solid var(--border-default);
+            font-weight: 600;
+        }}
+        .stTabs [aria-selected="true"] {{
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)) !important;
+            color: white !important;
+            border: none !important;
+        }}
+        
+        .stButton > button {{
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            padding: 16px 36px;
+            font-weight: 700;
+            box-shadow: var(--shadow-md);
+        }}
+        .stButton > button:hover {{
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            transform: translateY(-4px);
+        }}
+        
+        .status-dot {{ width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 10px; }}
+        .status-dot-green {{ background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }}
+        .status-dot-yellow {{ background: var(--accent-orange); box-shadow: 0 0 10px var(--accent-orange); }}
+        .status-dot-red {{ background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }}
+        
+        .footer {{
+            background: {colors['gradient_card']};
+            padding: 40px;
+            text-align: center;
+            border-top: 1px solid var(--border-default);
+            margin-top: 60px;
+            border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+        }}
+        .footer-title {{ color: var(--text-primary); font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; }}
+        .footer-subtitle {{ color: var(--text-muted); font-size: 0.95rem; margin-bottom: 12px; }}
+        .footer-names {{
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            font-size: 1.1rem;
+        }}
+        
+        ::-webkit-scrollbar {{ width: 10px; }}
+        ::-webkit-scrollbar-track {{ background: var(--bg-secondary); }}
+        ::-webkit-scrollbar-thumb {{ background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple)); border-radius: 5px; }}
+    </style>
+    """
+
+
 # Apply theme CSS
 st.markdown(get_theme_css(), unsafe_allow_html=True)
+
+
+# ============================================================================
+# ANIMATED BACKGROUND FOR HOME PAGE
+# ============================================================================
 
 def get_animated_background_css():
     """Generate CSS for animated background on home page."""
     return """
     <style>
-    /* ===== ANIMATED BACKGROUND CONTAINER ===== */
     .animated-bg-container {
         position: fixed;
         top: 0;
@@ -105,7 +434,6 @@ def get_animated_background_css():
         pointer-events: none;
     }
     
-    /* ===== ANIMATED GRADIENT ORBS ===== */
     .orb {
         position: absolute;
         border-radius: 50%;
@@ -120,7 +448,6 @@ def get_animated_background_css():
         background: radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, transparent 70%);
         top: -10%;
         left: -10%;
-        animation-delay: 0s;
         animation-duration: 25s;
     }
     
@@ -155,27 +482,10 @@ def get_animated_background_css():
     }
     
     @keyframes float-orb {
-        0%, 100% {
-            transform: translate(0, 0) scale(1);
-        }
-        25% {
-            transform: translate(50px, -80px) scale(1.1);
-        }
-        50% {
-            transform: translate(-30px, 50px) scale(0.9);
-        }
-        75% {
-            transform: translate(80px, 30px) scale(1.05);
-        }
-    }
-    
-    /* ===== FLOATING PARTICLES ===== */
-    .particles-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        25% { transform: translate(50px, -80px) scale(1.1); }
+        50% { transform: translate(-30px, 50px) scale(0.9); }
+        75% { transform: translate(80px, 30px) scale(1.05); }
     }
     
     .particle {
@@ -186,7 +496,7 @@ def get_animated_background_css():
         border-radius: 50%;
         opacity: 0;
         animation: particle-float 15s ease-in-out infinite;
-        box-shadow: 0 0 10px var(--accent-cyan), 0 0 20px var(--accent-cyan);
+        box-shadow: 0 0 10px var(--accent-cyan);
     }
     
     .particle:nth-child(1) { left: 10%; animation-delay: 0s; animation-duration: 12s; }
@@ -199,119 +509,34 @@ def get_animated_background_css():
     .particle:nth-child(8) { left: 80%; animation-delay: 0.5s; animation-duration: 14s; background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }
     .particle:nth-child(9) { left: 90%; animation-delay: 3.5s; animation-duration: 12s; }
     .particle:nth-child(10) { left: 15%; animation-delay: 6s; animation-duration: 18s; background: var(--accent-teal); box-shadow: 0 0 10px var(--accent-teal); }
-    .particle:nth-child(11) { left: 25%; animation-delay: 7s; animation-duration: 13s; }
-    .particle:nth-child(12) { left: 35%; animation-delay: 1.5s; animation-duration: 15s; background: var(--accent-orange); box-shadow: 0 0 10px var(--accent-orange); }
-    .particle:nth-child(13) { left: 45%; animation-delay: 4.5s; animation-duration: 16s; }
-    .particle:nth-child(14) { left: 55%; animation-delay: 2.2s; animation-duration: 14s; background: var(--accent-purple); box-shadow: 0 0 10px var(--accent-purple); }
-    .particle:nth-child(15) { left: 65%; animation-delay: 5.5s; animation-duration: 12s; }
-    .particle:nth-child(16) { left: 75%; animation-delay: 0.8s; animation-duration: 17s; background: var(--accent-cyan); box-shadow: 0 0 10px var(--accent-cyan); }
-    .particle:nth-child(17) { left: 85%; animation-delay: 3.8s; animation-duration: 15s; }
-    .particle:nth-child(18) { left: 95%; animation-delay: 6.5s; animation-duration: 13s; background: var(--accent-pink); box-shadow: 0 0 10px var(--accent-pink); }
-    .particle:nth-child(19) { left: 5%; animation-delay: 1.2s; animation-duration: 16s; }
-    .particle:nth-child(20) { left: 88%; animation-delay: 4.2s; animation-duration: 14s; background: var(--accent-blue); box-shadow: 0 0 10px var(--accent-blue); }
     
     @keyframes particle-float {
-        0% {
-            transform: translateY(100vh) rotate(0deg);
-            opacity: 0;
-        }
-        10% {
-            opacity: 1;
-        }
-        90% {
-            opacity: 1;
-        }
-        100% {
-            transform: translateY(-100vh) rotate(720deg);
-            opacity: 0;
-        }
+        0% { transform: translateY(100vh); opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { transform: translateY(-100vh); opacity: 0; }
     }
     
-    /* ===== ANIMATED GRID ===== */
-    .grid-container {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image: 
-            linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
-        background-size: 60px 60px;
-        animation: grid-move 20s linear infinite;
-    }
-    
-    @keyframes grid-move {
-        0% {
-            transform: perspective(500px) rotateX(60deg) translateY(0);
-        }
-        100% {
-            transform: perspective(500px) rotateX(60deg) translateY(60px);
-        }
-    }
-    
-    /* ===== SHOOTING STARS ===== */
     .shooting-star {
         position: absolute;
         width: 100px;
         height: 2px;
         background: linear-gradient(90deg, var(--accent-cyan), transparent);
-        border-radius: 50%;
         animation: shooting 3s ease-in-out infinite;
         opacity: 0;
     }
     
-    .shooting-star:nth-child(1) {
-        top: 10%;
-        left: 20%;
-        animation-delay: 0s;
-    }
-    
-    .shooting-star:nth-child(2) {
-        top: 30%;
-        left: 60%;
-        animation-delay: 2s;
-        background: linear-gradient(90deg, var(--accent-purple), transparent);
-    }
-    
-    .shooting-star:nth-child(3) {
-        top: 50%;
-        left: 40%;
-        animation-delay: 4s;
-        background: linear-gradient(90deg, var(--accent-pink), transparent);
-    }
-    
-    .shooting-star:nth-child(4) {
-        top: 70%;
-        left: 80%;
-        animation-delay: 1s;
-    }
-    
-    .shooting-star:nth-child(5) {
-        top: 20%;
-        left: 70%;
-        animation-delay: 3s;
-        background: linear-gradient(90deg, var(--accent-green), transparent);
-    }
+    .shooting-star:nth-child(1) { top: 10%; left: 20%; }
+    .shooting-star:nth-child(2) { top: 30%; left: 60%; animation-delay: 2s; background: linear-gradient(90deg, var(--accent-purple), transparent); }
+    .shooting-star:nth-child(3) { top: 50%; left: 40%; animation-delay: 4s; background: linear-gradient(90deg, var(--accent-pink), transparent); }
     
     @keyframes shooting {
-        0% {
-            transform: translateX(0) translateY(0) rotate(-45deg);
-            opacity: 0;
-        }
-        5% {
-            opacity: 1;
-        }
-        20% {
-            transform: translateX(300px) translateY(300px) rotate(-45deg);
-            opacity: 0;
-        }
-        100% {
-            opacity: 0;
-        }
+        0% { transform: translateX(0) translateY(0) rotate(-45deg); opacity: 0; }
+        5% { opacity: 1; }
+        20% { transform: translateX(300px) translateY(300px) rotate(-45deg); opacity: 0; }
+        100% { opacity: 0; }
     }
     
-    /* ===== PULSE RINGS ===== */
     .pulse-ring {
         position: absolute;
         border: 2px solid var(--accent-cyan);
@@ -320,98 +545,15 @@ def get_animated_background_css():
         opacity: 0;
     }
     
-    .pulse-ring-1 {
-        width: 100px;
-        height: 100px;
-        top: 20%;
-        left: 15%;
-        animation-delay: 0s;
-    }
-    
-    .pulse-ring-2 {
-        width: 80px;
-        height: 80px;
-        top: 60%;
-        right: 20%;
-        animation-delay: 1.5s;
-        border-color: var(--accent-purple);
-    }
-    
-    .pulse-ring-3 {
-        width: 120px;
-        height: 120px;
-        bottom: 25%;
-        left: 60%;
-        animation-delay: 3s;
-        border-color: var(--accent-pink);
-    }
+    .pulse-ring-1 { width: 100px; height: 100px; top: 20%; left: 15%; }
+    .pulse-ring-2 { width: 80px; height: 80px; top: 60%; right: 20%; animation-delay: 1.5s; border-color: var(--accent-purple); }
+    .pulse-ring-3 { width: 120px; height: 120px; bottom: 25%; left: 60%; animation-delay: 3s; border-color: var(--accent-pink); }
     
     @keyframes pulse-expand {
-        0% {
-            transform: scale(0.5);
-            opacity: 0.8;
-        }
-        100% {
-            transform: scale(3);
-            opacity: 0;
-        }
+        0% { transform: scale(0.5); opacity: 0.8; }
+        100% { transform: scale(3); opacity: 0; }
     }
     
-    /* ===== DATA STREAM LINES ===== */
-    .data-stream {
-        position: absolute;
-        width: 2px;
-        height: 100px;
-        background: linear-gradient(180deg, transparent, var(--accent-cyan), transparent);
-        animation: data-flow 2s linear infinite;
-        opacity: 0.6;
-    }
-    
-    .data-stream:nth-child(1) { left: 5%; animation-duration: 1.5s; height: 80px; }
-    .data-stream:nth-child(2) { left: 12%; animation-duration: 2s; animation-delay: 0.3s; height: 120px; background: linear-gradient(180deg, transparent, var(--accent-purple), transparent); }
-    .data-stream:nth-child(3) { left: 18%; animation-duration: 1.8s; animation-delay: 0.6s; height: 90px; }
-    .data-stream:nth-child(4) { left: 25%; animation-duration: 2.2s; animation-delay: 0.2s; height: 110px; background: linear-gradient(180deg, transparent, var(--accent-pink), transparent); }
-    .data-stream:nth-child(5) { left: 32%; animation-duration: 1.6s; animation-delay: 0.8s; height: 70px; }
-    .data-stream:nth-child(6) { right: 5%; animation-duration: 2s; animation-delay: 0.4s; height: 100px; background: linear-gradient(180deg, transparent, var(--accent-blue), transparent); }
-    .data-stream:nth-child(7) { right: 12%; animation-duration: 1.7s; animation-delay: 0.1s; height: 85px; }
-    .data-stream:nth-child(8) { right: 18%; animation-duration: 2.1s; animation-delay: 0.5s; height: 115px; background: linear-gradient(180deg, transparent, var(--accent-green), transparent); }
-    .data-stream:nth-child(9) { right: 25%; animation-duration: 1.9s; animation-delay: 0.7s; height: 95px; }
-    .data-stream:nth-child(10) { right: 32%; animation-duration: 1.4s; animation-delay: 0.9s; height: 75px; background: linear-gradient(180deg, transparent, var(--accent-teal), transparent); }
-    
-    @keyframes data-flow {
-        0% {
-            transform: translateY(-100%);
-            opacity: 0;
-        }
-        50% {
-            opacity: 0.6;
-        }
-        100% {
-            transform: translateY(100vh);
-            opacity: 0;
-        }
-    }
-    
-    /* ===== HEXAGON PATTERN ===== */
-    .hex-pattern {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        opacity: 0.03;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2306b6d4' fill-opacity='1'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        animation: hex-drift 60s linear infinite;
-    }
-    
-    @keyframes hex-drift {
-        0% {
-            transform: translate(0, 0);
-        }
-        100% {
-            transform: translate(28px, 49px);
-        }
-    }
-    
-    /* ===== FLOATING ICONS (Data-themed) ===== */
     .floating-icon {
         position: absolute;
         font-size: 24px;
@@ -419,840 +561,64 @@ def get_animated_background_css():
         animation: icon-float 20s ease-in-out infinite;
     }
     
-    .floating-icon:nth-child(1) { top: 15%; left: 8%; animation-delay: 0s; }
+    .floating-icon:nth-child(1) { top: 15%; left: 8%; }
     .floating-icon:nth-child(2) { top: 25%; right: 12%; animation-delay: 3s; }
     .floating-icon:nth-child(3) { top: 45%; left: 5%; animation-delay: 6s; }
     .floating-icon:nth-child(4) { top: 65%; right: 8%; animation-delay: 2s; }
     .floating-icon:nth-child(5) { top: 80%; left: 12%; animation-delay: 4s; }
     .floating-icon:nth-child(6) { top: 35%; right: 5%; animation-delay: 5s; }
-    .floating-icon:nth-child(7) { top: 55%; left: 10%; animation-delay: 1s; }
-    .floating-icon:nth-child(8) { top: 75%; right: 15%; animation-delay: 7s; }
     
     @keyframes icon-float {
-        0%, 100% {
-            transform: translateY(0) rotate(0deg);
-        }
-        25% {
-            transform: translateY(-30px) rotate(10deg);
-        }
-        50% {
-            transform: translateY(10px) rotate(-5deg);
-        }
-        75% {
-            transform: translateY(-20px) rotate(5deg);
-        }
-    }
-    
-    /* ===== GLOWING CURSOR TRAIL (optional) ===== */
-    .glow-point {
-        position: absolute;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
-        border-radius: 50%;
-        pointer-events: none;
-        transform: translate(-50%, -50%);
-        animation: glow-pulse 3s ease-in-out infinite;
-    }
-    
-    @keyframes glow-pulse {
-        0%, 100% {
-            opacity: 0.3;
-            transform: translate(-50%, -50%) scale(1);
-        }
-        50% {
-            opacity: 0.6;
-            transform: translate(-50%, -50%) scale(1.2);
-        }
-    }
-    
-    /* ===== CONNECTION LINES ===== */
-    .connection-line {
-        position: absolute;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
-        animation: line-appear 8s ease-in-out infinite;
-        opacity: 0;
-    }
-    
-    .connection-line:nth-child(1) {
-        width: 200px;
-        top: 20%;
-        left: 10%;
-        transform: rotate(30deg);
-        animation-delay: 0s;
-    }
-    
-    .connection-line:nth-child(2) {
-        width: 150px;
-        top: 40%;
-        right: 15%;
-        transform: rotate(-20deg);
-        animation-delay: 2s;
-        background: linear-gradient(90deg, transparent, var(--accent-purple), transparent);
-    }
-    
-    .connection-line:nth-child(3) {
-        width: 180px;
-        bottom: 30%;
-        left: 20%;
-        transform: rotate(15deg);
-        animation-delay: 4s;
-        background: linear-gradient(90deg, transparent, var(--accent-pink), transparent);
-    }
-    
-    @keyframes line-appear {
-        0%, 100% {
-            opacity: 0;
-            width: 0;
-        }
-        50% {
-            opacity: 0.5;
-            width: 200px;
-        }
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        25% { transform: translateY(-30px) rotate(10deg); }
+        50% { transform: translateY(10px) rotate(-5deg); }
+        75% { transform: translateY(-20px) rotate(5deg); }
     }
     </style>
     """
+
 
 def get_animated_background_html():
     """Generate HTML elements for animated background."""
     return """
     <div class="animated-bg-container">
-        <!-- Gradient Orbs -->
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
         <div class="orb orb-4"></div>
         
-        <!-- Hexagon Pattern -->
-        <div class="hex-pattern"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
         
-        <!-- Animated Grid -->
-        <div class="grid-container"></div>
-        
-        <!-- Floating Particles -->
-        <div class="particles-container">
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-            <div class="particle"></div>
-        </div>
-        
-        <!-- Shooting Stars -->
-        <div class="shooting-star"></div>
-        <div class="shooting-star"></div>
         <div class="shooting-star"></div>
         <div class="shooting-star"></div>
         <div class="shooting-star"></div>
         
-        <!-- Pulse Rings -->
         <div class="pulse-ring pulse-ring-1"></div>
         <div class="pulse-ring pulse-ring-2"></div>
         <div class="pulse-ring pulse-ring-3"></div>
         
-        <!-- Data Streams -->
-        <div class="data-stream"></div>
-        <div class="data-stream"></div>
-        <div class="data-stream"></div>
-        <div class="data-stream"></div>
-        <div class="data-stream"></div>
-        <div class="data-stream"></div>
-        <div class="data-stream"></div>
-        <div class="data-stream"></div>
-        <div class="data-stream"></div>
-        <div class="data-stream"></div>
-        
-        <!-- Floating Icons -->
         <div class="floating-icon">📊</div>
         <div class="floating-icon">📈</div>
         <div class="floating-icon">🛒</div>
         <div class="floating-icon">💹</div>
         <div class="floating-icon">🎯</div>
         <div class="floating-icon">⚡</div>
-        <div class="floating-icon">🔮</div>
-        <div class="floating-icon">✨</div>
-        
-        <!-- Connection Lines -->
-        <div class="connection-line"></div>
-        <div class="connection-line"></div>
-        <div class="connection-line"></div>
     </div>
     """
-    """Generate CSS based on current theme state."""
-    
-    is_dark = st.session_state.theme == 'dark'
-    
-    if is_dark:
-        colors = {
-            'bg_primary': '#0a0a0f',
-            'bg_secondary': '#12121a',
-            'bg_tertiary': '#1a1a24',
-            'bg_card': 'rgba(22, 22, 31, 0.95)',
-            'bg_card_hover': 'rgba(30, 30, 45, 0.98)',
-            'bg_glass': 'rgba(255, 255, 255, 0.03)',
-            'bg_glass_border': 'rgba(255, 255, 255, 0.08)',
-            
-            'text_primary': '#f8fafc',
-            'text_secondary': '#cbd5e1',
-            'text_muted': '#64748b',
-            'text_inverse': '#0f172a',
-            
-            'border_default': 'rgba(148, 163, 184, 0.1)',
-            'border_hover': 'rgba(6, 182, 212, 0.4)',
-            
-            'shadow_sm': '0 2px 8px rgba(0, 0, 0, 0.3)',
-            'shadow_md': '0 4px 20px rgba(0, 0, 0, 0.4)',
-            'shadow_lg': '0 8px 40px rgba(0, 0, 0, 0.5)',
-            'shadow_xl': '0 16px 60px rgba(0, 0, 0, 0.6)',
-            'shadow_glow_cyan': '0 0 40px rgba(6, 182, 212, 0.15)',
-            'shadow_glow_purple': '0 0 40px rgba(139, 92, 246, 0.15)',
-            
-            'gradient_hero': 'linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(139, 92, 246, 0.12) 50%, rgba(236, 72, 153, 0.08) 100%)',
-            'gradient_card': 'linear-gradient(145deg, rgba(22, 22, 31, 0.9) 0%, rgba(26, 26, 36, 0.95) 100%)',
-            'gradient_sidebar': 'linear-gradient(180deg, #0d0d14 0%, #0f0f18 50%, #0a0a0f 100%)',
-        }
-    else:
-        colors = {
-            'bg_primary': '#f8fafc',
-            'bg_secondary': '#ffffff',
-            'bg_tertiary': '#f1f5f9',
-            'bg_card': 'rgba(255, 255, 255, 0.95)',
-            'bg_card_hover': 'rgba(248, 250, 252, 0.98)',
-            'bg_glass': 'rgba(255, 255, 255, 0.7)',
-            'bg_glass_border': 'rgba(0, 0, 0, 0.08)',
-            
-            'text_primary': '#0f172a',
-            'text_secondary': '#475569',
-            'text_muted': '#64748b',
-            'text_inverse': '#f8fafc',
-            
-            'border_default': 'rgba(0, 0, 0, 0.08)',
-            'border_hover': 'rgba(6, 182, 212, 0.5)',
-            
-            'shadow_sm': '0 2px 8px rgba(0, 0, 0, 0.06)',
-            'shadow_md': '0 4px 20px rgba(0, 0, 0, 0.08)',
-            'shadow_lg': '0 8px 40px rgba(0, 0, 0, 0.1)',
-            'shadow_xl': '0 16px 60px rgba(0, 0, 0, 0.12)',
-            'shadow_glow_cyan': '0 0 40px rgba(6, 182, 212, 0.1)',
-            'shadow_glow_purple': '0 0 40px rgba(139, 92, 246, 0.1)',
-            
-            'gradient_hero': 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.05) 100%)',
-            'gradient_card': 'linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.95) 100%)',
-            'gradient_sidebar': 'linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%)',
-        }
-    
-    return f"""
-    <style>
-        /* ===== GOOGLE FONTS ===== */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
-        
-        /* ===== CSS CUSTOM PROPERTIES ===== */
-        :root {{
-            --bg-primary: {colors['bg_primary']};
-            --bg-secondary: {colors['bg_secondary']};
-            --bg-tertiary: {colors['bg_tertiary']};
-            --bg-card: {colors['bg_card']};
-            --bg-card-hover: {colors['bg_card_hover']};
-            --bg-glass: {colors['bg_glass']};
-            --bg-glass-border: {colors['bg_glass_border']};
-            
-            --text-primary: {colors['text_primary']};
-            --text-secondary: {colors['text_secondary']};
-            --text-muted: {colors['text_muted']};
-            --text-inverse: {colors['text_inverse']};
-            
-            --border-default: {colors['border_default']};
-            --border-hover: {colors['border_hover']};
-            
-            --shadow-sm: {colors['shadow_sm']};
-            --shadow-md: {colors['shadow_md']};
-            --shadow-lg: {colors['shadow_lg']};
-            --shadow-xl: {colors['shadow_xl']};
-            --shadow-glow-cyan: {colors['shadow_glow_cyan']};
-            --shadow-glow-purple: {colors['shadow_glow_purple']};
-            
-            --accent-cyan: #06b6d4;
-            --accent-cyan-light: #22d3ee;
-            --accent-blue: #3b82f6;
-            --accent-blue-light: #60a5fa;
-            --accent-purple: #8b5cf6;
-            --accent-purple-light: #a78bfa;
-            --accent-pink: #ec4899;
-            --accent-pink-light: #f472b6;
-            --accent-green: #10b981;
-            --accent-green-light: #34d399;
-            --accent-orange: #f59e0b;
-            --accent-orange-light: #fbbf24;
-            --accent-red: #ef4444;
-            --accent-red-light: #f87171;
-            --accent-teal: #14b8a6;
-            --accent-teal-light: #2dd4bf;
-            
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-xl: 24px;
-            --radius-2xl: 32px;
-            
-            --transition-fast: 0.15s ease;
-            --transition-normal: 0.25s ease;
-            --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }}
-        
-        /* ===== KEYFRAME ANIMATIONS ===== */
-        @keyframes fadeInUp {{
-            from {{ opacity: 0; transform: translateY(30px); }}
-            to {{ opacity: 1; transform: translateY(0); }}
-        }}
-        
-        @keyframes pulse3D {{
-            0%, 100% {{ 
-                box-shadow: var(--shadow-md), 0 0 20px rgba(6, 182, 212, 0.2);
-                transform: translateY(0);
-            }}
-            50% {{ 
-                box-shadow: var(--shadow-lg), 0 0 40px rgba(6, 182, 212, 0.35);
-                transform: translateY(-2px);
-            }}
-        }}
-        
-        @keyframes float3D {{
-            0%, 100% {{ transform: translateY(0) rotateX(0deg); }}
-            50% {{ transform: translateY(-8px) rotateX(2deg); }}
-        }}
-        
-        @keyframes gradientFlow {{
-            0% {{ background-position: 0% 50%; }}
-            50% {{ background-position: 100% 50%; }}
-            100% {{ background-position: 0% 50%; }}
-        }}
-        
-        /* ===== HIDE STREAMLIT DEFAULTS ===== */
-        #MainMenu {{visibility: hidden;}}
-        footer {{visibility: hidden;}}
-        header {{visibility: hidden;}}
-        .stDeployButton {{display: none;}}
-        
-        /* ===== MAIN APP CONTAINER ===== */
-        .stApp {{
-            background: var(--bg-primary);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            min-height: 100vh;
-            transition: background var(--transition-normal);
-        }}
-        
-        .stApp::before {{
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(ellipse at 20% 20%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 80%, rgba(236, 72, 153, 0.04) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }}
-        
-        /* ===== SIDEBAR ===== */
-        [data-testid="stSidebar"] {{
-            background: {colors['gradient_sidebar']};
-            border-right: 1px solid var(--border-default);
-            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.15);
-        }}
-        
-        [data-testid="stSidebar"]::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 3px;
-            height: 100%;
-            background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink));
-            opacity: 0.8;
-        }}
-        
-        /* ===== TYPOGRAPHY ===== */
-        h1, h2, h3, h4, h5, h6 {{
-            font-family: 'Inter', sans-serif;
-            color: var(--text-primary);
-            font-weight: 700;
-        }}
-        
-        p, span, div, label {{
-            color: var(--text-secondary);
-        }}
-        
-        /* ===== 3D METRIC CARDS ===== */
-        .metric-card-3d {{
-            background: {colors['gradient_card']};
-            backdrop-filter: blur(20px);
-            border-radius: var(--radius-xl);
-            padding: 28px 24px;
-            border: 1px solid var(--border-default);
-            box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-            transition: all var(--transition-slow);
-            position: relative;
-            overflow: hidden;
-            height: 150px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }}
-        
-        .metric-card-3d::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
-            opacity: 0;
-            transition: opacity var(--transition-normal);
-        }}
-        
-        .metric-card-3d:hover {{
-            transform: translateY(-8px) rotateX(2deg);
-            box-shadow: var(--shadow-xl), 0 20px 40px rgba(6, 182, 212, 0.1);
-            border-color: var(--border-hover);
-        }}
-        
-        .metric-card-3d:hover::before {{
-            opacity: 1;
-        }}
-        
-        .metric-label {{
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-        }}
-        
-        .metric-value {{
-            font-size: 2rem;
-            font-weight: 800;
-            font-family: 'JetBrains Mono', monospace;
-            margin: 8px 0;
-        }}
-        
-        .metric-value-cyan {{ color: var(--accent-cyan); }}
-        .metric-value-blue {{ color: var(--accent-blue); }}
-        .metric-value-purple {{ color: var(--accent-purple); }}
-        .metric-value-pink {{ color: var(--accent-pink); }}
-        .metric-value-green {{ color: var(--accent-green); }}
-        .metric-value-orange {{ color: var(--accent-orange); }}
-        .metric-value-teal {{ color: var(--accent-teal); }}
-        
-        .metric-delta {{
-            font-size: 0.85rem;
-            font-weight: 600;
-            padding: 4px 12px;
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }}
-        
-        .metric-delta-positive {{
-            color: var(--accent-green);
-            background: rgba(16, 185, 129, 0.12);
-        }}
-        
-        .metric-delta-negative {{
-            color: var(--accent-red);
-            background: rgba(239, 68, 68, 0.12);
-        }}
-        
-        /* ===== 3D FEATURE CARDS ===== */
-        .feature-card-3d {{
-            background: {colors['gradient_card']};
-            backdrop-filter: blur(20px);
-            border-radius: var(--radius-xl);
-            padding: 40px 28px;
-            border: 1px solid var(--border-default);
-            box-shadow: var(--shadow-md);
-            transition: all var(--transition-slow);
-            height: 240px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }}
-        
-        .feature-card-3d:hover {{
-            transform: translateY(-12px) scale(1.02);
-            box-shadow: var(--shadow-xl), 0 30px 60px rgba(6, 182, 212, 0.15);
-            border-color: var(--border-hover);
-        }}
-        
-        .feature-icon {{
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-            animation: float3D 4s ease-in-out infinite;
-        }}
-        
-        .feature-title {{
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: var(--text-primary);
-        }}
-        
-        .feature-desc {{
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }}
-        
-        /* ===== HERO SECTION ===== */
-        .hero-container {{
-            background: {colors['gradient_hero']};
-            backdrop-filter: blur(20px);
-            border-radius: var(--radius-2xl);
-            padding: 60px 50px;
-            margin-bottom: 40px;
-            border: 1px solid var(--border-default);
-            box-shadow: var(--shadow-lg);
-            position: relative;
-            overflow: hidden;
-            animation: fadeInUp 0.8s ease-out;
-        }}
-        
-        .hero-title {{
-            font-size: 4rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 40%, var(--accent-purple) 70%, var(--accent-pink) 100%);
-            background-size: 200% 200%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 20px;
-            line-height: 1.1;
-            animation: gradientFlow 5s ease infinite;
-        }}
-        
-        .hero-subtitle {{
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            line-height: 1.7;
-            max-width: 700px;
-        }}
-        
-        .hero-badge {{
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 24px;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-            border-radius: 50px;
-            color: white;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-right: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
-        }}
-        
-        /* ===== PAGE TITLES ===== */
-        .page-title {{
-            font-size: 3rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-            animation: fadeInUp 0.5s ease-out;
-        }}
-        
-        .page-title-cyan {{ color: var(--accent-cyan); }}
-        .page-title-blue {{ color: var(--accent-blue); }}
-        .page-title-purple {{ color: var(--accent-purple); }}
-        .page-title-pink {{ color: var(--accent-pink); }}
-        .page-title-green {{ color: var(--accent-green); }}
-        .page-title-teal {{ color: var(--accent-teal); }}
-        .page-title-orange {{ color: var(--accent-orange); }}
-        
-        .page-description {{
-            color: var(--text-secondary);
-            font-size: 1.15rem;
-            margin-bottom: 24px;
-        }}
-        
-        /* ===== SECTION TITLES ===== */
-        .section-title {{
-            font-size: 1.6rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: var(--text-primary);
-        }}
-        
-        .section-title-cyan {{ color: var(--accent-cyan) !important; }}
-        .section-title-blue {{ color: var(--accent-blue) !important; }}
-        .section-title-purple {{ color: var(--accent-purple) !important; }}
-        .section-title-pink {{ color: var(--accent-pink) !important; }}
-        .section-title-green {{ color: var(--accent-green) !important; }}
-        .section-title-teal {{ color: var(--accent-teal) !important; }}
-        .section-title-orange {{ color: var(--accent-orange) !important; }}
-        
-        /* ===== INFO/ALERT CARDS ===== */
-        .info-card {{
-            background: {colors['gradient_card']};
-            backdrop-filter: blur(15px);
-            border-radius: var(--radius-lg);
-            padding: 22px 28px;
-            border: 1px solid var(--border-default);
-            border-left: 4px solid var(--accent-cyan);
-            box-shadow: var(--shadow-sm);
-            margin: 15px 0;
-            transition: all var(--transition-normal);
-            color: var(--text-secondary);
-        }}
-        
-        .info-card:hover {{
-            transform: translateX(8px);
-            box-shadow: var(--shadow-md);
-        }}
-        
-        .success-card {{
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(20, 184, 166, 0.08) 100%);
-            backdrop-filter: blur(15px);
-            border-radius: var(--radius-lg);
-            padding: 22px 28px;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            border-left: 4px solid var(--accent-green);
-            margin: 15px 0;
-            color: var(--text-primary);
-        }}
-        
-        .warning-card {{
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(251, 146, 60, 0.08) 100%);
-            backdrop-filter: blur(15px);
-            border-radius: var(--radius-lg);
-            padding: 22px 28px;
-            border: 1px solid rgba(245, 158, 11, 0.2);
-            border-left: 4px solid var(--accent-orange);
-            margin: 15px 0;
-            color: var(--text-primary);
-        }}
-        
-        .error-card {{
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
-            backdrop-filter: blur(15px);
-            border-radius: var(--radius-lg);
-            padding: 22px 28px;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            border-left: 4px solid var(--accent-red);
-            margin: 15px 0;
-            color: var(--text-primary);
-        }}
-        
-        /* ===== INSIGHT CARD ===== */
-        .insight-card {{
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.08) 100%);
-            backdrop-filter: blur(15px);
-            border-radius: var(--radius-lg);
-            padding: 22px 28px;
-            border: 1px solid rgba(139, 92, 246, 0.25);
-            margin: 15px 0;
-        }}
-        
-        .insight-card:hover {{
-            transform: translateX(8px);
-            border-color: var(--accent-purple);
-        }}
-        
-        .insight-title {{
-            color: var(--accent-purple-light);
-            font-weight: 700;
-            font-size: 1rem;
-            margin-bottom: 8px;
-        }}
-        
-        .insight-text {{
-            color: var(--text-primary);
-            font-size: 1rem;
-            line-height: 1.6;
-        }}
-        
-        /* ===== RECOMMENDATION CARD ===== */
-        .recommendation-card {{
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(59, 130, 246, 0.08));
-            border-left: 4px solid var(--accent-purple);
-            padding: 16px 20px;
-            border-radius: var(--radius-md);
-            margin-bottom: 12px;
-        }}
-        
-        .recommendation-card p {{
-            color: var(--text-primary);
-            margin: 0;
-            font-size: 1rem;
-        }}
-        
-        /* ===== ALERT CARD ===== */
-        .alert-card {{
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.08));
-            border-left: 4px solid var(--accent-orange);
-            padding: 16px 20px;
-            border-radius: var(--radius-md);
-            margin-bottom: 12px;
-        }}
-        
-        .alert-card p {{
-            color: var(--text-primary);
-            margin: 0;
-            font-size: 1rem;
-        }}
-        
-        /* ===== TABS ===== */
-        .stTabs [data-baseweb="tab-list"] {{
-            gap: 8px;
-            background: transparent;
-        }}
-        
-        .stTabs [data-baseweb="tab"] {{
-            background: {colors['gradient_card']};
-            border-radius: var(--radius-md);
-            color: var(--text-secondary);
-            padding: 14px 28px;
-            border: 1px solid var(--border-default);
-            font-weight: 600;
-            box-shadow: var(--shadow-sm);
-        }}
-        
-        .stTabs [data-baseweb="tab"]:hover {{
-            background: var(--bg-card-hover);
-            border-color: var(--border-hover);
-            transform: translateY(-3px);
-        }}
-        
-        .stTabs [aria-selected="true"] {{
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)) !important;
-            color: white !important;
-            border: none !important;
-            box-shadow: var(--shadow-md), 0 4px 20px rgba(6, 182, 212, 0.3);
-        }}
-        
-        /* ===== BUTTONS ===== */
-        .stButton > button {{
-            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
-            color: white;
-            border: none;
-            border-radius: var(--radius-lg);
-            padding: 16px 36px;
-            font-weight: 700;
-            box-shadow: var(--shadow-md), 0 4px 15px rgba(6, 182, 212, 0.25);
-            transition: all var(--transition-normal);
-        }}
-        
-        .stButton > button:hover {{
-            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg), 0 8px 30px rgba(59, 130, 246, 0.35);
-        }}
-        
-        /* ===== STATUS INDICATOR ===== */
-        .status-dot {{
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 10px;
-            animation: pulse3D 2s ease-in-out infinite;
-        }}
-        
-        .status-dot-green {{ background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }}
-        .status-dot-yellow {{ background: var(--accent-orange); box-shadow: 0 0 10px var(--accent-orange); }}
-        .status-dot-red {{ background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }}
-        
-        /* ===== DIVIDER ===== */
-        hr {{
-            border: none;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
-            margin: 35px 0;
-        }}
-        
-        /* ===== FOOTER ===== */
-        .footer {{
-            background: {colors['gradient_card']};
-            backdrop-filter: blur(20px);
-            padding: 40px;
-            text-align: center;
-            border-top: 1px solid var(--border-default);
-            margin-top: 60px;
-            border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-            position: relative;
-        }}
-        
-        .footer::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple), var(--accent-pink));
-        }}
-        
-        .footer-title {{ color: var(--text-primary); font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; }}
-        .footer-subtitle {{ color: var(--text-muted); font-size: 0.95rem; margin-bottom: 12px; }}
-        .footer-names {{
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 800;
-            font-size: 1.1rem;
-        }}
-        
-        /* ===== SCROLLBAR ===== */
-        ::-webkit-scrollbar {{ width: 10px; height: 10px; }}
-        ::-webkit-scrollbar-track {{ background: var(--bg-secondary); border-radius: 5px; }}
-        ::-webkit-scrollbar-thumb {{ background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple)); border-radius: 5px; }}
-        
-        /* ===== INPUTS ===== */
-        .stSelectbox > div > div, .stMultiSelect > div > div, .stTextInput > div > div, .stNumberInput > div > div {{
-            background: var(--bg-card);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-        }}
-        
-        .stSlider > div > div > div {{ background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)) !important; }}
-        
-        /* ===== FILE UPLOADER ===== */
-        .stFileUploader > div {{
-            background: var(--bg-card);
-            border: 2px dashed var(--border-default);
-            border-radius: var(--radius-lg);
-        }}
-        
-        .stFileUploader > div:hover {{ border-color: var(--accent-cyan); }}
-        
-    </style>
-    """
 
-# Apply theme CSS
-st.markdown(get_theme_css(), unsafe_allow_html=True)
+
+# ============================================================================
+# HELPER FUNCTIONS FOR UI
+# ============================================================================
 
 # ============================================================================
 # HELPER FUNCTIONS FOR UI
