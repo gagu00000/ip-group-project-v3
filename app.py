@@ -844,56 +844,400 @@ with st.sidebar:
 
 def show_home_page():
     """Display home page with animated background."""
-    # Add animated background (single call)
-    st.markdown(get_animated_background(), unsafe_allow_html=True)
     
+    # Embedded Animation CSS + HTML inside hero
     st.markdown("""
-    <div class="hero-container">
-        <div style="margin-bottom: 20px;">
-            <span class="hero-badge">✨ UAE E-Commerce Analytics</span>
-            <span class="hero-badge" style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));">🚀 v3.1</span>
+    <style>
+    /* Hero with embedded animation */
+    .animated-hero {
+        position: relative;
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.1) 50%, rgba(236, 72, 153, 0.05) 100%);
+        border-radius: 24px;
+        padding: 60px 50px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        overflow: hidden;
+        min-height: 350px;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 10;
+    }
+    
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #f8fafc, #06b6d4, #8b5cf6, #ec4899);
+        background-size: 300% 300%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 16px;
+        animation: gradientShift 5s ease infinite;
+    }
+    
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    .hero-subtitle {
+        font-size: 1.2rem;
+        color: #cbd5e1;
+        max-width: 600px;
+        line-height: 1.7;
+    }
+    
+    .hero-badge {
+        display: inline-block;
+        padding: 10px 24px;
+        background: linear-gradient(135deg, #06b6d4, #3b82f6);
+        border-radius: 50px;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-right: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+    }
+    
+    /* Animated Orbs */
+    .anim-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        animation: orbMove 15s ease-in-out infinite;
+        pointer-events: none;
+    }
+    
+    .anim-orb-1 {
+        width: 300px;
+        height: 300px;
+        background: rgba(6, 182, 212, 0.4);
+        top: -100px;
+        left: -100px;
+    }
+    
+    .anim-orb-2 {
+        width: 250px;
+        height: 250px;
+        background: rgba(139, 92, 246, 0.4);
+        top: 50%;
+        right: -80px;
+        animation-delay: -5s;
+    }
+    
+    .anim-orb-3 {
+        width: 200px;
+        height: 200px;
+        background: rgba(236, 72, 153, 0.3);
+        bottom: -80px;
+        left: 40%;
+        animation-delay: -10s;
+    }
+    
+    @keyframes orbMove {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -30px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+    
+    /* Floating Particles */
+    .anim-particles {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        overflow: hidden;
+    }
+    
+    .anim-dot {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        animation: dotFloat 6s ease-in-out infinite;
+    }
+    
+    .anim-dot-1 { left: 10%; top: 20%; background: #06b6d4; box-shadow: 0 0 15px #06b6d4; animation-delay: 0s; }
+    .anim-dot-2 { left: 25%; top: 60%; background: #8b5cf6; box-shadow: 0 0 15px #8b5cf6; animation-delay: 1s; }
+    .anim-dot-3 { left: 50%; top: 30%; background: #ec4899; box-shadow: 0 0 15px #ec4899; animation-delay: 2s; }
+    .anim-dot-4 { left: 70%; top: 70%; background: #10b981; box-shadow: 0 0 15px #10b981; animation-delay: 0.5s; }
+    .anim-dot-5 { left: 85%; top: 40%; background: #f59e0b; box-shadow: 0 0 15px #f59e0b; animation-delay: 1.5s; }
+    .anim-dot-6 { left: 15%; top: 80%; background: #06b6d4; box-shadow: 0 0 15px #06b6d4; animation-delay: 2.5s; }
+    .anim-dot-7 { left: 60%; top: 15%; background: #8b5cf6; box-shadow: 0 0 15px #8b5cf6; animation-delay: 3s; }
+    .anim-dot-8 { left: 90%; top: 85%; background: #ec4899; box-shadow: 0 0 15px #ec4899; animation-delay: 0.8s; }
+    
+    @keyframes dotFloat {
+        0%, 100% { transform: translateY(0) scale(1); opacity: 0.8; }
+        50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+    }
+    
+    /* Shooting Star */
+    .anim-star {
+        position: absolute;
+        width: 100px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #06b6d4, transparent);
+        transform: rotate(-45deg);
+        animation: starShoot 4s ease-in-out infinite;
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .anim-star-1 { top: 20%; left: 20%; animation-delay: 0s; }
+    .anim-star-2 { top: 50%; left: 60%; animation-delay: 2s; background: linear-gradient(90deg, transparent, #8b5cf6, transparent); }
+    .anim-star-3 { top: 70%; left: 40%; animation-delay: 3.5s; background: linear-gradient(90deg, transparent, #ec4899, transparent); }
+    
+    @keyframes starShoot {
+        0% { transform: rotate(-45deg) translateX(0); opacity: 0; }
+        5% { opacity: 1; }
+        15% { transform: rotate(-45deg) translateX(200px); opacity: 0; }
+        100% { opacity: 0; }
+    }
+    
+    /* Pulse Rings */
+    .anim-ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 2px solid;
+        animation: ringPulse 4s ease-out infinite;
+        opacity: 0;
+        pointer-events: none;
+    }
+    
+    .anim-ring-1 { width: 60px; height: 60px; top: 15%; left: 80%; border-color: #06b6d4; }
+    .anim-ring-2 { width: 50px; height: 50px; top: 70%; left: 15%; border-color: #8b5cf6; animation-delay: 1.5s; }
+    .anim-ring-3 { width: 70px; height: 70px; top: 45%; left: 90%; border-color: #ec4899; animation-delay: 3s; }
+    
+    @keyframes ringPulse {
+        0% { transform: scale(0.5); opacity: 0.8; }
+        100% { transform: scale(2); opacity: 0; }
+    }
+    
+    /* Feature Cards */
+    .feature-card-3d {
+        background: rgba(22, 22, 31, 0.95);
+        border-radius: 16px;
+        padding: 32px 24px;
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        height: 220px;
+        text-align: center;
+    }
+    .feature-card-3d:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(6, 182, 212, 0.2);
+        border-color: rgba(6, 182, 212, 0.3);
+    }
+    .feature-icon { font-size: 3rem; margin-bottom: 16px; }
+    .feature-title { font-size: 1.1rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+    .feature-desc { font-size: 0.9rem; color: #64748b; }
+    
+    /* Metric Cards */
+    .metric-card-3d {
+        background: rgba(22, 22, 31, 0.95);
+        border-radius: 16px;
+        padding: 24px;
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        height: 140px;
+    }
+    .metric-card-3d:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+    .metric-label { font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+    .metric-value { font-size: 2rem; font-weight: 800; margin: 8px 0; }
+    .metric-value-cyan { color: #06b6d4; }
+    .metric-value-purple { color: #8b5cf6; }
+    .metric-value-pink { color: #ec4899; }
+    .metric-value-green { color: #10b981; }
+    .metric-value-blue { color: #3b82f6; }
+    .metric-value-orange { color: #f59e0b; }
+    
+    /* Info Cards */
+    .info-card {
+        background: rgba(22, 22, 31, 0.95);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        border-left: 4px solid #06b6d4;
+        margin: 12px 0;
+    }
+    .success-card {
+        background: rgba(16, 185, 129, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-left: 4px solid #10b981;
+        margin: 12px 0;
+        color: #f8fafc;
+    }
+    
+    /* Section Title */
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    .section-title-cyan { color: #06b6d4 !important; }
+    .section-title-purple { color: #8b5cf6 !important; }
+    .section-title-pink { color: #ec4899 !important; }
+    .section-title-blue { color: #3b82f6 !important; }
+    .section-title-green { color: #10b981 !important; }
+    
+    /* Footer */
+    .footer {
+        background: rgba(22, 22, 31, 0.95);
+        padding: 30px;
+        text-align: center;
+        border-top: 1px solid rgba(148, 163, 184, 0.1);
+        margin-top: 40px;
+        border-radius: 20px 20px 0 0;
+    }
+    .footer-title { color: #f8fafc; font-size: 1.1rem; font-weight: 700; }
+    .footer-names {
+        background: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+    }
+    </style>
+    
+    <div class="animated-hero">
+        <!-- Animated Background Elements -->
+        <div class="anim-orb anim-orb-1"></div>
+        <div class="anim-orb anim-orb-2"></div>
+        <div class="anim-orb anim-orb-3"></div>
+        
+        <div class="anim-particles">
+            <div class="anim-dot anim-dot-1"></div>
+            <div class="anim-dot anim-dot-2"></div>
+            <div class="anim-dot anim-dot-3"></div>
+            <div class="anim-dot anim-dot-4"></div>
+            <div class="anim-dot anim-dot-5"></div>
+            <div class="anim-dot anim-dot-6"></div>
+            <div class="anim-dot anim-dot-7"></div>
+            <div class="anim-dot anim-dot-8"></div>
         </div>
-        <div class="hero-title">UAE Pulse Simulator</div>
-        <p class="hero-subtitle">
-            Transform your e-commerce data into actionable insights.<br>
-            Clean dirty data, simulate promotional campaigns, and visualize performance metrics.
-        </p>
+        
+        <div class="anim-star anim-star-1"></div>
+        <div class="anim-star anim-star-2"></div>
+        <div class="anim-star anim-star-3"></div>
+        
+        <div class="anim-ring anim-ring-1"></div>
+        <div class="anim-ring anim-ring-2"></div>
+        <div class="anim-ring anim-ring-3"></div>
+        
+        <!-- Hero Content -->
+        <div class="hero-content">
+            <div style="margin-bottom: 20px;">
+                <span class="hero-badge">✨ UAE E-Commerce Analytics</span>
+                <span class="hero-badge" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">🚀 v3.1</span>
+            </div>
+            <div class="hero-title">UAE Pulse Simulator</div>
+            <p class="hero-subtitle">
+                Transform your e-commerce data into actionable insights.<br>
+                Clean dirty data, simulate promotional campaigns, and visualize performance metrics.
+            </p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
+    # Features Section
     st.markdown('<p class="section-title section-title-purple">✨ Powerful Features</p>', unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown(create_feature_card("📂", "Data Upload", "Upload and preview your e-commerce CSV files", "cyan"), unsafe_allow_html=True)
+        st.markdown("""
+        <div class="feature-card-3d">
+            <div class="feature-icon">📂</div>
+            <div class="feature-title">Data Upload</div>
+            <div class="feature-desc">Upload and preview your e-commerce CSV files</div>
+        </div>
+        """, unsafe_allow_html=True)
     with col2:
-        st.markdown(create_feature_card("🧹", "Data Rescue", "Detect & auto-fix 15+ data quality issues", "blue"), unsafe_allow_html=True)
+        st.markdown("""
+        <div class="feature-card-3d">
+            <div class="feature-icon">🧹</div>
+            <div class="feature-title">Data Rescue</div>
+            <div class="feature-desc">Detect & auto-fix 15+ data quality issues</div>
+        </div>
+        """, unsafe_allow_html=True)
     with col3:
-        st.markdown(create_feature_card("🎯", "Simulator", "Run what-if scenarios and forecast ROI", "purple"), unsafe_allow_html=True)
+        st.markdown("""
+        <div class="feature-card-3d">
+            <div class="feature-icon">🎯</div>
+            <div class="feature-title">Simulator</div>
+            <div class="feature-desc">Run what-if scenarios and forecast ROI</div>
+        </div>
+        """, unsafe_allow_html=True)
     with col4:
-        st.markdown(create_feature_card("📊", "Analytics", "Interactive dashboards with KPI tracking", "pink"), unsafe_allow_html=True)
+        st.markdown("""
+        <div class="feature-card-3d">
+            <div class="feature-icon">📊</div>
+            <div class="feature-title">Analytics</div>
+            <div class="feature-desc">Interactive dashboards with KPI tracking</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Platform Stats
+    # Stats Section
     st.markdown('<p class="section-title section-title-cyan">📊 Platform Capabilities</p>', unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.markdown(create_metric_card("Data Issues Detected", "15+", color="cyan"), unsafe_allow_html=True)
+        st.markdown("""
+        <div class="metric-card-3d">
+            <div class="metric-label">Data Issues Detected</div>
+            <div class="metric-value metric-value-cyan">15+</div>
+        </div>
+        """, unsafe_allow_html=True)
     with col2:
-        st.markdown(create_metric_card("Auto-Fix Rules", "20+", color="purple"), unsafe_allow_html=True)
+        st.markdown("""
+        <div class="metric-card-3d">
+            <div class="metric-label">Auto-Fix Rules</div>
+            <div class="metric-value metric-value-purple">20+</div>
+        </div>
+        """, unsafe_allow_html=True)
     with col3:
-        st.markdown(create_metric_card("KPI Metrics", "25+", color="pink"), unsafe_allow_html=True)
+        st.markdown("""
+        <div class="metric-card-3d">
+            <div class="metric-label">KPI Metrics</div>
+            <div class="metric-value metric-value-pink">25+</div>
+        </div>
+        """, unsafe_allow_html=True)
     with col4:
-        st.markdown(create_metric_card("Chart Types", "12+", color="green"), unsafe_allow_html=True)
+        st.markdown("""
+        <div class="metric-card-3d">
+            <div class="metric-label">Chart Types</div>
+            <div class="metric-value metric-value-green">12+</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     st.markdown("<br>", unsafe_allow_html=True)
     
-    if st.session_state.data_loaded:
-        st.markdown(create_success_card("✅ Data is loaded! Go to 📊 Dashboard to see your KPIs or 🎯 Simulator to run campaigns."), unsafe_allow_html=True)
+    # Status Message
+    if st.session_state.get('data_loaded', False):
+        st.markdown("""
+        <div class="success-card">
+            ✅ <strong>Data is loaded!</strong> Go to 📊 Dashboard to see your KPIs or 🎯 Simulator to run campaigns.
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        st.markdown(create_info_card("💡 <strong>Get started!</strong> Go to 📂 Data page to upload your files or load sample data."), unsafe_allow_html=True)
+        st.markdown("""
+        <div class="info-card">
+            💡 <strong>Get started!</strong> Go to 📂 Data page to upload your files or load sample data.
+        </div>
+        """, unsafe_allow_html=True)
     
     # Quick Start Guide
     st.markdown("---")
@@ -903,32 +1247,39 @@ def show_home_page():
     with col1:
         st.markdown("""
         <div class="info-card">
-            <h4 style="color: var(--accent-cyan); margin-bottom: 12px;">Step 1: Load Data</h4>
-            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+            <h4 style="color: #06b6d4; margin-bottom: 12px;">Step 1: Load Data</h4>
+            <p style="color: #cbd5e1; font-size: 0.95rem;">
                 Upload your CSV files or use sample data to explore.
             </p>
         </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
-        <div class="info-card" style="border-left-color: var(--accent-purple);">
-            <h4 style="color: var(--accent-purple); margin-bottom: 12px;">Step 2: Clean Data</h4>
-            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+        <div class="info-card" style="border-left-color: #8b5cf6;">
+            <h4 style="color: #8b5cf6; margin-bottom: 12px;">Step 2: Clean Data</h4>
+            <p style="color: #cbd5e1; font-size: 0.95rem;">
                 Run Data Rescue to auto-detect and fix issues.
             </p>
         </div>
         """, unsafe_allow_html=True)
     with col3:
         st.markdown("""
-        <div class="info-card" style="border-left-color: var(--accent-pink);">
-            <h4 style="color: var(--accent-pink); margin-bottom: 12px;">Step 3: Analyze</h4>
-            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+        <div class="info-card" style="border-left-color: #ec4899;">
+            <h4 style="color: #ec4899; margin-bottom: 12px;">Step 3: Analyze</h4>
+            <p style="color: #cbd5e1; font-size: 0.95rem;">
                 View dashboards and run simulations.
             </p>
         </div>
         """, unsafe_allow_html=True)
     
-    show_footer()
+    # Footer
+    st.markdown("""
+    <div class="footer">
+        <div class="footer-title">UAE Pulse Simulator</div>
+        <p style="color: #64748b; margin: 8px 0;">Built with ❤️ by</p>
+        <div class="footer-names">Nabeel, Omar, Khalfan, Youssef, Abdul Rahman</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ============================================================================
 # PAGE: DASHBOARD - COMPLETE WITH ALL CHARTS & INSIGHTS
