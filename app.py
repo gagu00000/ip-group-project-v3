@@ -742,19 +742,6 @@ with st.sidebar:
                 <div>
                     <span style="color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase;">Revenue</span><br>
                     <span style="color: var(--accent-green); font-weight: 800; font-size: 1.4rem;">{format_currency(total_revenue)}</span>
-                    def format_currency(value):
-    """Format number as currency (AED)."""
-    try:
-        if value is None:
-            return "AED 0"
-        if abs(value) >= 1_000_000:
-            return f"AED {value/1_000_000:.2f}M"
-        elif abs(value) >= 1_000:
-            return f"AED {value/1_000:.1f}K"
-        else:
-            return f"AED {value:,.2f}"
-    except Exception:
-        return "AED 0"
                 </div>
             </div>
             """, unsafe_allow_html=True)
