@@ -952,6 +952,7 @@ if 'data_loaded' not in st.session_state:
 
 with st.sidebar:
     # Theme Toggle
+    st.markdown("<div style='padding: 10px 0 20px 0;'>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         theme_icon = "🌙" if st.session_state.theme == 'dark' else "☀️"
