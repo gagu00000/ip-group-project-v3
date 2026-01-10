@@ -1834,7 +1834,7 @@ def show_home_page():
             margin-bottom: 10px;
         ">UAE Pulse</h1>
         <p style="
-            color: {t['text_secondary']};
+            color: #FFFFFF;
             font-size: 1.4rem;
             margin-bottom: 40px;
         ">Promo Pulse Simulator + Data Rescue Center</p>
