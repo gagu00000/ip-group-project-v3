@@ -969,7 +969,6 @@ with st.sidebar:
         <div style="
             font-size: 28px;
             font-weight: 900;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         ">UAE Pulse</div>
