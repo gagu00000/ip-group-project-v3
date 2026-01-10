@@ -972,7 +972,7 @@ with st.sidebar:
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         ">UAE Pulse</div>
-        <div style="color: var(--text-muted); font-size: 13px; margin-top: 5px;">SIMULATOR + DATA RESCUE</div>
+        <div style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));"; font-size: 13px; margin-top: 5px;">SIMULATOR + DATA RESCUE</div>
     </div>
     """, unsafe_allow_html=True)
     
