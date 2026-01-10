@@ -1457,7 +1457,7 @@ def show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, 
                         path=['City', 'Channel', 'Category'],
                         values='Revenue',
                         color='Revenue',
-                        color_continuous_scale=['#d6b406', '#f68a5c', '#f20c0c']
+                        color_continuous_scale=['#00E5FF', '#4FB6E2', '#6A5ACD']
                     )
                     
                     fig_sunburst = style_plotly_chart_themed(fig_sunburst, height=400)
