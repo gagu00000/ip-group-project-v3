@@ -3640,20 +3640,19 @@ with st.sidebar:
     
     t = get_theme()
     
-    st.markdown(f"""
-    <div style="text-align: center; margin-top: 10px; padding-bottom: 15px;">
-        <div style="font-size: 48px; margin-bottom: 5px;">🛒</div>
-        <div style="
-            font-size: 26px;
-            font-weight: 800;
-            background: {title_gradient};
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        ">UAE Pulse</div>
-        <div style="color: {t['text_secondary']}; font-size: 13px; font-weight: 500;">Promo Simulator + Data Rescue</div>
-    </div>
-    """, unsafe_allow_html=True)
+    title_color = "#000000" if st.session_state.theme == 'light' else "#1a1a1a"
+
+st.markdown(f"""
+<div style="text-align: center; margin-top: 10px; padding-bottom: 15px;">
+    <div style="font-size: 48px; margin-bottom: 5px;">🛒</div>
+    <div style="
+        font-size: 26px;
+        font-weight: 800;
+        color: {title_color};
+    ">UAE Pulse</div>
+    <div style="color: {t['text_secondary']}; font-size: 13px; font-weight: 500;">Promo Simulator + Data Rescue</div>
+</div>
+""", unsafe_allow_html=True)
     
     st.markdown("---")
     
