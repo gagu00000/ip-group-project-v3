@@ -83,536 +83,680 @@ def get_theme_colors():
 # DYNAMIC THEME CSS GENERATOR
 # ============================================================================
 
-# ============================================================================
-# DYNAMIC THEME CSS GENERATOR
-# ============================================================================
-
-# ============================================================================
-# DYNAMIC THEME CSS GENERATOR
-# ============================================================================
-
 def get_theme_css():
     """Generate CSS based on current theme state."""
+    
     is_dark = st.session_state.theme == 'dark'
     
     if is_dark:
-        bg_primary = '#0a0a0f'
-        bg_secondary = '#12121a'
-        bg_card = 'rgba(22, 22, 31, 0.95)'
-        text_primary = '#f8fafc'
-        text_secondary = '#cbd5e1'
-        text_muted = '#64748b'
-        border_default = 'rgba(148, 163, 184, 0.1)'
-        shadow_md = '0 4px 20px rgba(0, 0, 0, 0.4)'
-        shadow_lg = '0 8px 40px rgba(0, 0, 0, 0.5)'
+        colors = {
+            'bg_primary': '#0a0a0f',
+            'bg_secondary': '#12121a',
+            'bg_tertiary': '#1a1a24',
+            'bg_card': 'rgba(22, 22, 31, 0.95)',
+            'bg_card_hover': 'rgba(30, 30, 45, 0.98)',
+            'bg_glass': 'rgba(255, 255, 255, 0.03)',
+            'bg_glass_border': 'rgba(255, 255, 255, 0.08)',
+            
+            'text_primary': '#f8fafc',
+            'text_secondary': '#cbd5e1',
+            'text_muted': '#64748b',
+            'text_inverse': '#0f172a',
+            
+            'border_default': 'rgba(148, 163, 184, 0.1)',
+            'border_hover': 'rgba(6, 182, 212, 0.4)',
+            
+            'shadow_sm': '0 2px 8px rgba(0, 0, 0, 0.3)',
+            'shadow_md': '0 4px 20px rgba(0, 0, 0, 0.4)',
+            'shadow_lg': '0 8px 40px rgba(0, 0, 0, 0.5)',
+            'shadow_xl': '0 16px 60px rgba(0, 0, 0, 0.6)',
+            'shadow_glow_cyan': '0 0 40px rgba(6, 182, 212, 0.15)',
+            'shadow_glow_purple': '0 0 40px rgba(139, 92, 246, 0.15)',
+            
+            'gradient_hero': 'linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(139, 92, 246, 0.12) 50%, rgba(236, 72, 153, 0.08) 100%)',
+            'gradient_card': 'linear-gradient(145deg, rgba(22, 22, 31, 0.9) 0%, rgba(26, 26, 36, 0.95) 100%)',
+            'gradient_sidebar': 'linear-gradient(180deg, #0d0d14 0%, #0f0f18 50%, #0a0a0f 100%)',
+        }
     else:
-        bg_primary = '#f8fafc'
-        bg_secondary = '#ffffff'
-        bg_card = 'rgba(255, 255, 255, 0.95)'
-        text_primary = '#0f172a'
-        text_secondary = '#475569'
-        text_muted = '#64748b'
-        border_default = 'rgba(0, 0, 0, 0.08)'
-        shadow_md = '0 4px 20px rgba(0, 0, 0, 0.08)'
-        shadow_lg = '0 8px 40px rgba(0, 0, 0, 0.1)'
+        colors = {
+            'bg_primary': '#f8fafc',
+            'bg_secondary': '#ffffff',
+            'bg_tertiary': '#f1f5f9',
+            'bg_card': 'rgba(255, 255, 255, 0.95)',
+            'bg_card_hover': 'rgba(248, 250, 252, 0.98)',
+            'bg_glass': 'rgba(255, 255, 255, 0.7)',
+            'bg_glass_border': 'rgba(0, 0, 0, 0.08)',
+            
+            'text_primary': '#0f172a',
+            'text_secondary': '#475569',
+            'text_muted': '#64748b',
+            'text_inverse': '#f8fafc',
+            
+            'border_default': 'rgba(0, 0, 0, 0.08)',
+            'border_hover': 'rgba(6, 182, 212, 0.5)',
+            
+            'shadow_sm': '0 2px 8px rgba(0, 0, 0, 0.06)',
+            'shadow_md': '0 4px 20px rgba(0, 0, 0, 0.08)',
+            'shadow_lg': '0 8px 40px rgba(0, 0, 0, 0.1)',
+            'shadow_xl': '0 16px 60px rgba(0, 0, 0, 0.12)',
+            'shadow_glow_cyan': '0 0 40px rgba(6, 182, 212, 0.1)',
+            'shadow_glow_purple': '0 0 40px rgba(139, 92, 246, 0.1)',
+            
+            'gradient_hero': 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(236, 72, 153, 0.05) 100%)',
+            'gradient_card': 'linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.95) 100%)',
+            'gradient_sidebar': 'linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%)',
+        }
     
     return f"""
     <style>
+        /* ===== GOOGLE FONTS ===== */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
         
+        /* ===== CSS CUSTOM PROPERTIES ===== */
         :root {{
-            --bg-primary: {bg_primary};
-            --bg-secondary: {bg_secondary};
-            --bg-card: {bg_card};
-            --text-primary: {text_primary};
-            --text-secondary: {text_secondary};
-            --text-muted: {text_muted};
-            --border-default: {border_default};
-            --shadow-md: {shadow_md};
-            --shadow-lg: {shadow_lg};
+            --bg-primary: {colors['bg_primary']};
+            --bg-secondary: {colors['bg_secondary']};
+            --bg-tertiary: {colors['bg_tertiary']};
+            --bg-card: {colors['bg_card']};
+            --bg-card-hover: {colors['bg_card_hover']};
+            --bg-glass: {colors['bg_glass']};
+            --bg-glass-border: {colors['bg_glass_border']};
+            
+            --text-primary: {colors['text_primary']};
+            --text-secondary: {colors['text_secondary']};
+            --text-muted: {colors['text_muted']};
+            --text-inverse: {colors['text_inverse']};
+            
+            --border-default: {colors['border_default']};
+            --border-hover: {colors['border_hover']};
+            
+            --shadow-sm: {colors['shadow_sm']};
+            --shadow-md: {colors['shadow_md']};
+            --shadow-lg: {colors['shadow_lg']};
+            --shadow-xl: {colors['shadow_xl']};
+            --shadow-glow-cyan: {colors['shadow_glow_cyan']};
+            --shadow-glow-purple: {colors['shadow_glow_purple']};
+            
             --accent-cyan: #06b6d4;
+            --accent-cyan-light: #22d3ee;
             --accent-blue: #3b82f6;
+            --accent-blue-light: #60a5fa;
             --accent-purple: #8b5cf6;
+            --accent-purple-light: #a78bfa;
             --accent-pink: #ec4899;
+            --accent-pink-light: #f472b6;
             --accent-green: #10b981;
+            --accent-green-light: #34d399;
             --accent-orange: #f59e0b;
+            --accent-orange-light: #fbbf24;
             --accent-red: #ef4444;
+            --accent-red-light: #f87171;
             --accent-teal: #14b8a6;
+            --accent-teal-light: #2dd4bf;
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --radius-2xl: 32px;
+            
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+            --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }}
         
+        /* ===== KEYFRAME ANIMATIONS ===== */
+        @keyframes fadeInUp {{
+            from {{ opacity: 0; transform: translateY(30px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
+        }}
+        
+        @keyframes pulse3D {{
+            0%, 100% {{ 
+                box-shadow: var(--shadow-md), 0 0 20px rgba(6, 182, 212, 0.2);
+                transform: translateY(0);
+            }}
+            50% {{ 
+                box-shadow: var(--shadow-lg), 0 0 40px rgba(6, 182, 212, 0.35);
+                transform: translateY(-2px);
+            }}
+        }}
+        
+        @keyframes float3D {{
+            0%, 100% {{ transform: translateY(0) rotateX(0deg); }}
+            50% {{ transform: translateY(-8px) rotateX(2deg); }}
+        }}
+        
+        @keyframes gradientFlow {{
+            0% {{ background-position: 0% 50%; }}
+            50% {{ background-position: 100% 50%; }}
+            100% {{ background-position: 0% 50%; }}
+        }}
+        
+        /* ===== HIDE STREAMLIT DEFAULTS ===== */
         #MainMenu {{visibility: hidden;}}
         footer {{visibility: hidden;}}
         header {{visibility: hidden;}}
+        .stDeployButton {{display: none;}}
         
+        /* ===== MAIN APP CONTAINER ===== */
         .stApp {{
             background: var(--bg-primary);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            transition: background var(--transition-normal);
         }}
         
+        .stApp::before {{
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(236, 72, 153, 0.04) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }}
+        
+        /* ===== SIDEBAR ===== */
         [data-testid="stSidebar"] {{
-            background: var(--bg-secondary);
+            background: {colors['gradient_sidebar']};
             border-right: 1px solid var(--border-default);
+            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.15);
         }}
         
-        h1, h2, h3, h4, h5, h6 {{ color: var(--text-primary); }}
-        p, span, div, label {{ color: var(--text-secondary); }}
+        [data-testid="stSidebar"]::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink));
+            opacity: 0.8;
+        }}
         
+        /* ===== TYPOGRAPHY ===== */
+        h1, h2, h3, h4, h5, h6 {{
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            font-weight: 700;
+        }}
+        
+        p, span, div, label {{
+            color: var(--text-secondary);
+        }}
+        
+        /* ===== 3D METRIC CARDS ===== */
         .metric-card-3d {{
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 24px;
+            background: {colors['gradient_card']};
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-xl);
+            padding: 28px 24px;
             border: 1px solid var(--border-default);
-            box-shadow: var(--shadow-md);
-            transition: all 0.3s ease;
-            height: 140px;
+            box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all var(--transition-slow);
+            position: relative;
+            overflow: hidden;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }}
+        
+        .metric-card-3d::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }}
+        
         .metric-card-3d:hover {{
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-lg);
+            transform: translateY(-8px) rotateX(2deg);
+            box-shadow: var(--shadow-xl), 0 20px 40px rgba(6, 182, 212, 0.1);
+            border-color: var(--border-hover);
         }}
-        .metric-label {{ font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }}
-        .metric-value {{ font-size: 1.8rem; font-weight: 800; margin: 8px 0; }}
+        
+        .metric-card-3d:hover::before {{
+            opacity: 1;
+        }}
+        
+        .metric-label {{
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }}
+        
+        .metric-value {{
+            font-size: 2rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            margin: 8px 0;
+        }}
+        
         .metric-value-cyan {{ color: var(--accent-cyan); }}
+        .metric-value-blue {{ color: var(--accent-blue); }}
         .metric-value-purple {{ color: var(--accent-purple); }}
         .metric-value-pink {{ color: var(--accent-pink); }}
         .metric-value-green {{ color: var(--accent-green); }}
-        .metric-value-blue {{ color: var(--accent-blue); }}
         .metric-value-orange {{ color: var(--accent-orange); }}
         .metric-value-teal {{ color: var(--accent-teal); }}
-        .metric-delta {{ font-size: 0.85rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; }}
-        .metric-delta-positive {{ color: var(--accent-green); background: rgba(16, 185, 129, 0.12); }}
-        .metric-delta-negative {{ color: var(--accent-red); background: rgba(239, 68, 68, 0.12); }}
         
+        .metric-delta {{
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }}
+        
+        .metric-delta-positive {{
+            color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.12);
+        }}
+        
+        .metric-delta-negative {{
+            color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.12);
+        }}
+        
+        /* ===== 3D FEATURE CARDS ===== */
         .feature-card-3d {{
-            background: var(--bg-card);
-            border-radius: 16px;
-            padding: 32px 24px;
+            background: {colors['gradient_card']};
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-xl);
+            padding: 40px 28px;
             border: 1px solid var(--border-default);
             box-shadow: var(--shadow-md);
-            transition: all 0.3s ease;
-            height: 220px;
+            transition: all var(--transition-slow);
+            height: 240px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             text-align: center;
         }}
-        .feature-card-3d:hover {{
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-lg);
-        }}
-        .feature-icon {{ font-size: 3rem; margin-bottom: 16px; }}
-        .feature-title {{ font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }}
-        .feature-desc {{ font-size: 0.9rem; color: var(--text-muted); }}
         
-        .hero-container {{
-            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.1) 50%, rgba(236, 72, 153, 0.05) 100%);
-            border-radius: 24px;
-            padding: 50px 40px;
-            margin-bottom: 30px;
-            border: 1px solid var(--border-default);
+        .feature-card-3d:hover {{
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: var(--shadow-xl), 0 30px 60px rgba(6, 182, 212, 0.15);
+            border-color: var(--border-hover);
         }}
-        .hero-title {{
+        
+        .feature-icon {{
             font-size: 3.5rem;
+            margin-bottom: 20px;
+            animation: float3D 4s ease-in-out infinite;
+        }}
+        
+        .feature-title {{
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }}
+        
+        .feature-desc {{
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }}
+        
+        /* ===== HERO SECTION ===== */
+        .hero-container {{
+            background: {colors['gradient_hero']};
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-2xl);
+            padding: 60px 50px;
+            margin-bottom: 40px;
+            border: 1px solid var(--border-default);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out;
+        }}
+        
+        .hero-title {{
+            font-size: 4rem;
             font-weight: 900;
-            background: linear-gradient(135deg, var(--text-primary), var(--accent-cyan), var(--accent-purple));
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 40%, var(--accent-purple) 70%, var(--accent-pink) 100%);
+            background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
+            line-height: 1.1;
+            animation: gradientFlow 5s ease infinite;
         }}
-        .hero-subtitle {{ font-size: 1.2rem; color: var(--text-secondary); max-width: 600px; }}
+        
+        .hero-subtitle {{
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            max-width: 700px;
+        }}
+        
         .hero-badge {{
-            display: inline-block;
-            padding: 8px 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
             border-radius: 50px;
             color: white;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 600;
-            margin-right: 10px;
-            margin-bottom: 16px;
+            margin-right: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
         }}
         
-        .section-title {{ font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; }}
+        /* ===== PAGE TITLES ===== */
+        .page-title {{
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            animation: fadeInUp 0.5s ease-out;
+        }}
+        
+        .page-title-cyan {{ color: var(--accent-cyan); }}
+        .page-title-blue {{ color: var(--accent-blue); }}
+        .page-title-purple {{ color: var(--accent-purple); }}
+        .page-title-pink {{ color: var(--accent-pink); }}
+        .page-title-green {{ color: var(--accent-green); }}
+        .page-title-teal {{ color: var(--accent-teal); }}
+        .page-title-orange {{ color: var(--accent-orange); }}
+        
+        .page-description {{
+            color: var(--text-secondary);
+            font-size: 1.15rem;
+            margin-bottom: 24px;
+        }}
+        
+        /* ===== SECTION TITLES ===== */
+        .section-title {{
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }}
+        
         .section-title-cyan {{ color: var(--accent-cyan) !important; }}
+        .section-title-blue {{ color: var(--accent-blue) !important; }}
         .section-title-purple {{ color: var(--accent-purple) !important; }}
         .section-title-pink {{ color: var(--accent-pink) !important; }}
-        .section-title-blue {{ color: var(--accent-blue) !important; }}
         .section-title-green {{ color: var(--accent-green) !important; }}
-        .section-title-orange {{ color: var(--accent-orange) !important; }}
         .section-title-teal {{ color: var(--accent-teal) !important; }}
+        .section-title-orange {{ color: var(--accent-orange) !important; }}
         
+        /* ===== INFO/ALERT CARDS ===== */
         .info-card {{
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 20px;
+            background: {colors['gradient_card']};
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius-lg);
+            padding: 22px 28px;
             border: 1px solid var(--border-default);
             border-left: 4px solid var(--accent-cyan);
-            margin: 12px 0;
+            box-shadow: var(--shadow-sm);
+            margin: 15px 0;
+            transition: all var(--transition-normal);
+            color: var(--text-secondary);
         }}
+        
+        .info-card:hover {{
+            transform: translateX(8px);
+            box-shadow: var(--shadow-md);
+        }}
+        
         .success-card {{
-            background: rgba(16, 185, 129, 0.08);
-            border-radius: 12px;
-            padding: 20px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(20, 184, 166, 0.08) 100%);
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius-lg);
+            padding: 22px 28px;
             border: 1px solid rgba(16, 185, 129, 0.2);
             border-left: 4px solid var(--accent-green);
-            margin: 12px 0;
+            margin: 15px 0;
             color: var(--text-primary);
         }}
+        
         .warning-card {{
-            background: rgba(245, 158, 11, 0.08);
-            border-radius: 12px;
-            padding: 20px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(251, 146, 60, 0.08) 100%);
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius-lg);
+            padding: 22px 28px;
             border: 1px solid rgba(245, 158, 11, 0.2);
             border-left: 4px solid var(--accent-orange);
-            margin: 12px 0;
+            margin: 15px 0;
             color: var(--text-primary);
         }}
+        
         .error-card {{
-            background: rgba(239, 68, 68, 0.08);
-            border-radius: 12px;
-            padding: 20px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius-lg);
+            padding: 22px 28px;
             border: 1px solid rgba(239, 68, 68, 0.2);
             border-left: 4px solid var(--accent-red);
-            margin: 12px 0;
+            margin: 15px 0;
             color: var(--text-primary);
         }}
         
-        .stButton > button {{
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 12px 28px;
-            font-weight: 600;
-        }}
-        .stButton > button:hover {{
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-            transform: translateY(-2px);
+        /* ===== INSIGHT CARD ===== */
+        .insight-card {{
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.08) 100%);
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius-lg);
+            padding: 22px 28px;
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            margin: 15px 0;
         }}
         
-        .stTabs [data-baseweb="tab-list"] {{ gap: 8px; background: transparent; }}
-        .stTabs [data-baseweb="tab"] {{
-            background: var(--bg-card);
-            border-radius: 10px;
-            color: var(--text-secondary);
-            padding: 12px 24px;
-            border: 1px solid var(--border-default);
+        .insight-card:hover {{
+            transform: translateX(8px);
+            border-color: var(--accent-purple);
         }}
+        
+        .insight-title {{
+            color: var(--accent-purple-light);
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }}
+        
+        .insight-text {{
+            color: var(--text-primary);
+            font-size: 1rem;
+            line-height: 1.6;
+        }}
+        
+        /* ===== RECOMMENDATION CARD ===== */
+        .recommendation-card {{
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(59, 130, 246, 0.08));
+            border-left: 4px solid var(--accent-purple);
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+        }}
+        
+        .recommendation-card p {{
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 1rem;
+        }}
+        
+        /* ===== ALERT CARD ===== */
+        .alert-card {{
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.08));
+            border-left: 4px solid var(--accent-orange);
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+        }}
+        
+        .alert-card p {{
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 1rem;
+        }}
+        
+        /* ===== TABS ===== */
+        .stTabs [data-baseweb="tab-list"] {{
+            gap: 8px;
+            background: transparent;
+        }}
+        
+        .stTabs [data-baseweb="tab"] {{
+            background: {colors['gradient_card']};
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            padding: 14px 28px;
+            border: 1px solid var(--border-default);
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+        }}
+        
+        .stTabs [data-baseweb="tab"]:hover {{
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-3px);
+        }}
+        
         .stTabs [aria-selected="true"] {{
             background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)) !important;
             color: white !important;
+            border: none !important;
+            box-shadow: var(--shadow-md), 0 4px 20px rgba(6, 182, 212, 0.3);
         }}
         
+        /* ===== BUTTONS ===== */
+        .stButton > button {{
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            padding: 16px 36px;
+            font-weight: 700;
+            box-shadow: var(--shadow-md), 0 4px 15px rgba(6, 182, 212, 0.25);
+            transition: all var(--transition-normal);
+        }}
+        
+        .stButton > button:hover {{
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg), 0 8px 30px rgba(59, 130, 246, 0.35);
+        }}
+        
+        /* ===== STATUS INDICATOR ===== */
+        .status-dot {{
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+            animation: pulse3D 2s ease-in-out infinite;
+        }}
+        
+        .status-dot-green {{ background: var(--accent-green); box-shadow: 0 0 10px var(--accent-green); }}
+        .status-dot-yellow {{ background: var(--accent-orange); box-shadow: 0 0 10px var(--accent-orange); }}
+        .status-dot-red {{ background: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }}
+        
+        /* ===== DIVIDER ===== */
+        hr {{
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
+            margin: 35px 0;
+        }}
+        
+        /* ===== FOOTER ===== */
         .footer {{
-            background: var(--bg-card);
-            padding: 30px;
+            background: {colors['gradient_card']};
+            backdrop-filter: blur(20px);
+            padding: 40px;
             text-align: center;
             border-top: 1px solid var(--border-default);
-            margin-top: 40px;
-            border-radius: 20px 20px 0 0;
+            margin-top: 60px;
+            border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+            position: relative;
         }}
-        .footer-title {{ color: var(--text-primary); font-size: 1.1rem; font-weight: 700; }}
+        
+        .footer::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple), var(--accent-pink));
+        }}
+        
+        .footer-title {{ color: var(--text-primary); font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; }}
+        .footer-subtitle {{ color: var(--text-muted); font-size: 0.95rem; margin-bottom: 12px; }}
         .footer-names {{
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 700;
+            font-weight: 800;
+            font-size: 1.1rem;
         }}
+        
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {{ width: 10px; height: 10px; }}
+        ::-webkit-scrollbar-track {{ background: var(--bg-secondary); border-radius: 5px; }}
+        ::-webkit-scrollbar-thumb {{ background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple)); border-radius: 5px; }}
+        
+        /* ===== INPUTS ===== */
+        .stSelectbox > div > div, .stMultiSelect > div > div, .stTextInput > div > div, .stNumberInput > div > div {{
+            background: var(--bg-card);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+        }}
+        
+        .stSlider > div > div > div {{ background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)) !important; }}
+        
+        /* ===== FILE UPLOADER ===== */
+        .stFileUploader > div {{
+            background: var(--bg-card);
+            border: 2px dashed var(--border-default);
+            border-radius: var(--radius-lg);
+        }}
+        
+        .stFileUploader > div:hover {{ border-color: var(--accent-cyan); }}
+        
     </style>
     """
 
-
-# Apply theme CSS at module level
+# Apply theme CSS
 st.markdown(get_theme_css(), unsafe_allow_html=True)
 
-
 # ============================================================================
-# ANIMATED BACKGROUND FOR HOME PAGE (FIXED)
+# HELPER FUNCTIONS FOR UI
 # ============================================================================
-
-def get_animated_background():
-    """Generate complete animated background CSS and HTML."""
-    return """
-<style>
-.animated-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    z-index: -1;
-    pointer-events: none;
-}
-
-.animated-bg .orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0.5;
-    animation: floatOrb 20s ease-in-out infinite;
-}
-
-.animated-bg .orb1 {
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, transparent 70%);
-    top: -150px;
-    left: -150px;
-    animation-duration: 25s;
-}
-
-.animated-bg .orb2 {
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%);
-    top: 40%;
-    right: -100px;
-    animation-delay: -5s;
-    animation-duration: 30s;
-}
-
-.animated-bg .orb3 {
-    width: 350px;
-    height: 350px;
-    background: radial-gradient(circle, rgba(236, 72, 153, 0.35) 0%, transparent 70%);
-    bottom: -100px;
-    left: 25%;
-    animation-delay: -10s;
-    animation-duration: 22s;
-}
-
-.animated-bg .orb4 {
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.35) 0%, transparent 70%);
-    top: 20%;
-    left: 50%;
-    animation-delay: -7s;
-    animation-duration: 28s;
-}
-
-@keyframes floatOrb {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    25% { transform: translate(50px, -80px) scale(1.1); }
-    50% { transform: translate(-30px, 50px) scale(0.9); }
-    75% { transform: translate(80px, 30px) scale(1.05); }
-}
-
-.animated-bg .particles {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-}
-
-.animated-bg .particle {
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    opacity: 0;
-    animation: riseParticle 10s ease-in-out infinite;
-}
-
-.animated-bg .p1 { left: 10%; background: #06b6d4; box-shadow: 0 0 10px #06b6d4; animation-delay: 0s; }
-.animated-bg .p2 { left: 20%; background: #8b5cf6; box-shadow: 0 0 10px #8b5cf6; animation-delay: 1.5s; }
-.animated-bg .p3 { left: 30%; background: #ec4899; box-shadow: 0 0 10px #ec4899; animation-delay: 3s; }
-.animated-bg .p4 { left: 40%; background: #10b981; box-shadow: 0 0 10px #10b981; animation-delay: 0.8s; }
-.animated-bg .p5 { left: 50%; background: #06b6d4; box-shadow: 0 0 10px #06b6d4; animation-delay: 2s; }
-.animated-bg .p6 { left: 60%; background: #8b5cf6; box-shadow: 0 0 10px #8b5cf6; animation-delay: 3.5s; }
-.animated-bg .p7 { left: 70%; background: #ec4899; box-shadow: 0 0 10px #ec4899; animation-delay: 1s; }
-.animated-bg .p8 { left: 80%; background: #10b981; box-shadow: 0 0 10px #10b981; animation-delay: 2.5s; }
-.animated-bg .p9 { left: 90%; background: #06b6d4; box-shadow: 0 0 10px #06b6d4; animation-delay: 4s; }
-.animated-bg .p10 { left: 15%; background: #f59e0b; box-shadow: 0 0 10px #f59e0b; animation-delay: 1.2s; }
-
-@keyframes riseParticle {
-    0% { bottom: -5px; opacity: 0; transform: scale(0.5); }
-    10% { opacity: 1; transform: scale(1); }
-    90% { opacity: 0.8; }
-    100% { bottom: 105vh; opacity: 0; transform: scale(0.3); }
-}
-
-.animated-bg .shooting {
-    position: absolute;
-    width: 120px;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #06b6d4, transparent);
-    transform: rotate(-45deg);
-    animation: shootStar 5s ease-in-out infinite;
-    opacity: 0;
-}
-
-.animated-bg .s1 { top: 15%; left: 15%; animation-delay: 0s; }
-.animated-bg .s2 { top: 35%; left: 55%; animation-delay: 2.5s; background: linear-gradient(90deg, transparent, #8b5cf6, transparent); }
-.animated-bg .s3 { top: 55%; left: 35%; animation-delay: 5s; background: linear-gradient(90deg, transparent, #ec4899, transparent); }
-
-@keyframes shootStar {
-    0% { transform: rotate(-45deg) translateX(0); opacity: 0; }
-    2% { opacity: 1; }
-    10% { transform: rotate(-45deg) translateX(350px); opacity: 0; }
-    100% { opacity: 0; }
-}
-
-.animated-bg .ring {
-    position: absolute;
-    border: 2px solid;
-    border-radius: 50%;
-    animation: expandRing 4s ease-out infinite;
-    opacity: 0;
-}
-
-.animated-bg .r1 { width: 60px; height: 60px; top: 25%; left: 12%; border-color: #06b6d4; }
-.animated-bg .r2 { width: 50px; height: 50px; top: 65%; right: 18%; border-color: #8b5cf6; animation-delay: 1.5s; }
-.animated-bg .r3 { width: 70px; height: 70px; bottom: 25%; left: 55%; border-color: #ec4899; animation-delay: 3s; }
-
-@keyframes expandRing {
-    0% { transform: scale(0.5); opacity: 0.7; }
-    100% { transform: scale(2.5); opacity: 0; }
-}
-</style>
-<div class="animated-bg"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div><div class="orb orb4"></div><div class="particles"><div class="particle p1"></div><div class="particle p2"></div><div class="particle p3"></div><div class="particle p4"></div><div class="particle p5"></div><div class="particle p6"></div><div class="particle p7"></div><div class="particle p8"></div><div class="particle p9"></div><div class="particle p10"></div></div><div class="shooting s1"></div><div class="shooting s2"></div><div class="shooting s3"></div><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div></div>
-"""
-
-
-def get_animated_background_html():
-    """Generate HTML elements for animated background."""
-    return """
-<div class="animated-bg-container">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-    <div class="orb orb-4"></div>
-    
-    <div class="particle particle-cyan"></div>
-    <div class="particle particle-purple"></div>
-    <div class="particle particle-pink"></div>
-    <div class="particle particle-green"></div>
-    <div class="particle particle-cyan"></div>
-    <div class="particle particle-purple"></div>
-    <div class="particle particle-pink"></div>
-    <div class="particle particle-green"></div>
-    <div class="particle particle-cyan"></div>
-    <div class="particle particle-purple"></div>
-    
-    <div class="shooting-star"></div>
-    <div class="shooting-star"></div>
-    <div class="shooting-star"></div>
-    
-    <div class="pulse-ring pulse-ring-1"></div>
-    <div class="pulse-ring pulse-ring-2"></div>
-    <div class="pulse-ring pulse-ring-3"></div>
-    
-    <div class="float-icon">📊</div>
-    <div class="float-icon">📈</div>
-    <div class="float-icon">🛒</div>
-    <div class="float-icon">💹</div>
-    <div class="float-icon">🎯</div>
-    <div class="float-icon">⚡</div>
-</div>
-"""
-
-
-# ============================================================================
-# HELPER FUNCTIONS
-# ============================================================================
-
-# ============================================================================
-# FORMATTING HELPER FUNCTIONS
-# ============================================================================
-
-def format_currency(value):
-    """Format number as currency (AED)."""
-    try:
-        if value is None:
-            return "AED 0"
-        if abs(value) >= 1_000_000:
-            return f"AED {value/1_000_000:.2f}M"
-        elif abs(value) >= 1_000:
-            return f"AED {value/1_000:.1f}K"
-        else:
-            return f"AED {value:,.2f}"
-    except Exception:
-        return "AED 0"
-
-
-def format_number(value):
-    """Format number with appropriate suffix."""
-    try:
-        if value is None:
-            return "0"
-        if abs(value) >= 1_000_000:
-            return f"{value/1_000_000:.2f}M"
-        elif abs(value) >= 1_000:
-            return f"{value/1_000:.1f}K"
-        else:
-            return f"{value:,.0f}"
-    except Exception:
-        return "0"
-
-
-def format_percent(value):
-    """Format number as percentage."""
-    try:
-        if value is None:
-            return "0%"
-        return f"{value:.1f}%"
-    except Exception:
-        return "0%"
-
-
-def safe_divide(numerator, denominator, default=0):
-    """Safely divide two numbers, returning default if division fails."""
-    try:
-        if denominator is None or denominator == 0:
-            return default
-        return numerator / denominator
-    except Exception:
-        return default
-
-
-def get_theme_colors():
-    """Get chart colors based on current theme."""
-    is_dark = st.session_state.theme == 'dark'
-    
-    if is_dark:
-        return {
-            'chart_bg': 'rgba(10, 10, 15, 0)',
-            'chart_text': '#f8fafc',
-            'chart_grid': 'rgba(148, 163, 184, 0.1)',
-            'chart_line': '#06b6d4',
-            'positive': '#10b981',
-            'negative': '#ef4444',
-            'neutral': '#64748b',
-        }
-    else:
-        return {
-            'chart_bg': 'rgba(255, 255, 255, 0)',
-            'chart_text': '#0f172a',
-            'chart_grid': 'rgba(0, 0, 0, 0.08)',
-            'chart_line': '#0891b2',
-            'positive': '#059669',
-            'negative': '#dc2626',
-            'neutral': '#475569',
-        }
-
-
-def calculate_delta(current, previous):
-    """Calculate percentage change between two values."""
-    try:
-        if previous is None or previous == 0:
-            return 0, "neutral"
-        delta = ((current - previous) / abs(previous)) * 100
-        delta_type = "positive" if delta >= 0 else "negative"
-        return delta, delta_type
-    except Exception:
-        return 0, "neutral"
 
 def create_metric_card(label, value, delta=None, delta_type="positive", color="cyan"):
-    """Create a styled metric card."""
+    """Create a 3D styled metric card."""
     delta_html = ""
     if delta:
-        delta_class = "metric-delta-positive" if delta_type == "positive" else "metric-delta-negative"
+        delta_class = "metric-delta metric-delta-positive" if delta_type == "positive" else "metric-delta metric-delta-negative"
         delta_icon = "↑" if delta_type == "positive" else "↓"
-        delta_html = f'<div class="metric-delta {delta_class}">{delta_icon} {delta}</div>'
+        delta_html = f'<div class="{delta_class}">{delta_icon} {delta}</div>'
+    else:
+        delta_html = '<div style="height: 28px;"></div>'
     
     return f"""
     <div class="metric-card-3d">
@@ -622,45 +766,123 @@ def create_metric_card(label, value, delta=None, delta_type="positive", color="c
     </div>
     """
 
+def format_currency(value):
+    """Format large currency values for display."""
+    if value is None:
+        return "AED 0"
+    
+    abs_value = abs(value)
+    sign = "-" if value < 0 else ""
+    
+    if abs_value >= 1_000_000_000:
+        return f"{sign}AED {abs_value / 1_000_000_000:.1f}B"
+    elif abs_value >= 1_000_000:
+        return f"{sign}AED {abs_value / 1_000_000:.1f}M"
+    elif abs_value >= 1_000:
+        return f"{sign}AED {abs_value / 1_000:.1f}K"
+    else:
+        return f"{sign}AED {abs_value:,.0f}"
 
 def create_feature_card(icon, title, description, color="cyan"):
-    """Create a styled feature card."""
+    """Create a 3D feature card."""
+    color_map = {
+        "cyan": "var(--accent-cyan)",
+        "blue": "var(--accent-blue)",
+        "purple": "var(--accent-purple)",
+        "pink": "var(--accent-pink)",
+        "green": "var(--accent-green)",
+        "orange": "var(--accent-orange)",
+        "teal": "var(--accent-teal)",
+    }
+    accent = color_map.get(color, color_map["cyan"])
+    
     return f"""
     <div class="feature-card-3d">
         <div class="feature-icon">{icon}</div>
-        <div class="feature-title">{title}</div>
+        <div class="feature-title" style="color: {accent};">{title}</div>
         <div class="feature-desc">{description}</div>
     </div>
     """
 
+def create_info_card(content):
+    return f'<div class="info-card">{content}</div>'
 
-def create_info_card(message):
-    """Create an info card."""
-    return f'<div class="info-card">{message}</div>'
+def create_success_card(content):
+    return f'<div class="success-card">✅ {content}</div>'
 
+def create_warning_card(content):
+    return f'<div class="warning-card">⚠️ {content}</div>'
 
-def create_success_card(message):
-    """Create a success card."""
-    return f'<div class="success-card">{message}</div>'
+def create_error_card(content):
+    return f'<div class="error-card">❌ {content}</div>'
 
+def create_insight_card(title, insight_text):
+    return f"""
+    <div class="insight-card">
+        <div class="insight-title">💡 {title}</div>
+        <div class="insight-text">{insight_text}</div>
+    </div>
+    """
 
-def create_warning_card(message):
-    """Create a warning card."""
-    return f'<div class="warning-card">{message}</div>'
-
-
-def create_error_card(message):
-    """Create an error card."""
-    return f'<div class="error-card">{message}</div>'
-
+def style_plotly_chart_themed(fig, height=None):
+    """Apply theme-aware styling to Plotly charts with visible axis text."""
+    colors = get_theme_colors()
+    
+    fig.update_layout(
+        paper_bgcolor=colors['chart_bg'],
+        plot_bgcolor=colors['chart_bg'],
+        font=dict(
+            color=colors['chart_text'],
+            family='Inter, sans-serif',
+            size=12
+        ),
+        title_font=dict(
+            size=18,
+            color=colors['chart_title'],
+            family='Inter, sans-serif'
+        ),
+        legend=dict(
+            bgcolor='rgba(0,0,0,0)',
+            font=dict(color=colors['chart_text'], size=11),
+            bordercolor='rgba(0,0,0,0)'
+        ),
+        margin=dict(l=20, r=20, t=60, b=40),
+        hoverlabel=dict(
+            bgcolor=colors['bg_card'],
+            font_size=12,
+            font_family='Inter'
+        )
+    )
+    
+    # Update axes with visible text colors
+    fig.update_xaxes(
+        gridcolor=colors['chart_grid'],
+        zerolinecolor=colors['chart_grid'],
+        tickfont=dict(color=colors['chart_text'], size=11),
+        title_font=dict(color=colors['chart_text'], size=12),
+        linecolor=colors['chart_grid']
+    )
+    
+    fig.update_yaxes(
+        gridcolor=colors['chart_grid'],
+        zerolinecolor=colors['chart_grid'],
+        tickfont=dict(color=colors['chart_text'], size=11),
+        title_font=dict(color=colors['chart_text'], size=12),
+        linecolor=colors['chart_grid']
+    )
+    
+    if height:
+        fig.update_layout(height=height)
+    
+    return fig
 
 def show_footer():
-    """Display footer."""
+    """Display the footer."""
     st.markdown("""
     <div class="footer">
-        <div class="footer-title">UAE Pulse Simulator</div>
-        <p style="color: var(--text-muted); margin: 8px 0;">Built with ❤️ by</p>
-        <div class="footer-names">Nabeel, Omar, Khalfan, Youssef, Abdul Rahman</div>
+        <div class="footer-title">🚀 UAE Pulse Simulator + Data Rescue Dashboard</div>
+        <div class="footer-subtitle">Built with ❤️ by</div>
+        <div class="footer-names">Kartik Joshi • Gagandeep Singh • Samuel Alex • Prem Kukreja</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -842,355 +1064,42 @@ with st.sidebar:
 # PAGE: HOME
 # ============================================================================
 
-import streamlit.components.v1 as components
-
 def show_home_page():
-    """Display home page with animated background."""
-    
-    # Animated Hero using components.html (renders HTML directly)
-    hero_html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    
-    body {
-        font-family: 'Segoe UI', sans-serif;
-        background: transparent;
-    }
-    
-    .animated-hero {
-        position: relative;
-        background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(236, 72, 153, 0.08) 100%);
-        border-radius: 24px;
-        padding: 50px 40px;
-        border: 1px solid rgba(148, 163, 184, 0.15);
-        overflow: hidden;
-        min-height: 320px;
-    }
-    
-    .hero-content {
-        position: relative;
-        z-index: 10;
-    }
-    
-    .hero-badge {
-        display: inline-block;
-        padding: 10px 22px;
-        background: linear-gradient(135deg, #06b6d4, #3b82f6);
-        border-radius: 50px;
-        color: white;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-right: 10px;
-        margin-bottom: 16px;
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
-    }
-    
-    .hero-title {
-        font-size: 3.2rem;
-        font-weight: 900;
-        background: linear-gradient(135deg, #f8fafc, #06b6d4, #8b5cf6, #ec4899);
-        background-size: 300% 300%;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 16px;
-        animation: gradientMove 5s ease infinite;
-    }
-    
-    @keyframes gradientMove {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    
-    .hero-subtitle {
-        font-size: 1.1rem;
-        color: #cbd5e1;
-        max-width: 600px;
-        line-height: 1.7;
-    }
-    
-    /* Animated Orbs */
-    .orb {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(60px);
-        animation: orbFloat 20s ease-in-out infinite;
-        pointer-events: none;
-    }
-    
-    .orb-1 {
-        width: 280px;
-        height: 280px;
-        background: rgba(6, 182, 212, 0.5);
-        top: -80px;
-        left: -80px;
-    }
-    
-    .orb-2 {
-        width: 220px;
-        height: 220px;
-        background: rgba(139, 92, 246, 0.5);
-        top: 40%;
-        right: -60px;
-        animation-delay: -7s;
-    }
-    
-    .orb-3 {
-        width: 180px;
-        height: 180px;
-        background: rgba(236, 72, 153, 0.4);
-        bottom: -60px;
-        left: 35%;
-        animation-delay: -12s;
-    }
-    
-    @keyframes orbFloat {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(40px, -40px) scale(1.1); }
-        66% { transform: translate(-30px, 30px) scale(0.9); }
-    }
-    
-    /* Glowing Dots */
-    .dot {
-        position: absolute;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        animation: dotPulse 4s ease-in-out infinite;
-        pointer-events: none;
-    }
-    
-    .dot-1 { left: 10%; top: 25%; background: #06b6d4; box-shadow: 0 0 20px #06b6d4; }
-    .dot-2 { left: 25%; top: 70%; background: #8b5cf6; box-shadow: 0 0 20px #8b5cf6; animation-delay: 0.5s; }
-    .dot-3 { left: 55%; top: 20%; background: #ec4899; box-shadow: 0 0 20px #ec4899; animation-delay: 1s; }
-    .dot-4 { left: 75%; top: 60%; background: #10b981; box-shadow: 0 0 20px #10b981; animation-delay: 1.5s; }
-    .dot-5 { left: 90%; top: 35%; background: #f59e0b; box-shadow: 0 0 20px #f59e0b; animation-delay: 2s; }
-    .dot-6 { left: 40%; top: 85%; background: #06b6d4; box-shadow: 0 0 20px #06b6d4; animation-delay: 2.5s; }
-    
-    @keyframes dotPulse {
-        0%, 100% { transform: scale(1); opacity: 0.6; }
-        50% { transform: scale(1.5); opacity: 1; }
-    }
-    
-    /* Shooting Stars */
-    .star {
-        position: absolute;
-        width: 100px;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #06b6d4, transparent);
-        transform: rotate(-45deg);
-        animation: starShoot 5s ease-in-out infinite;
-        opacity: 0;
-        pointer-events: none;
-    }
-    
-    .star-1 { top: 20%; left: 15%; }
-    .star-2 { top: 50%; left: 55%; animation-delay: 2s; background: linear-gradient(90deg, transparent, #8b5cf6, transparent); }
-    .star-3 { top: 75%; left: 35%; animation-delay: 4s; background: linear-gradient(90deg, transparent, #ec4899, transparent); }
-    
-    @keyframes starShoot {
-        0% { transform: rotate(-45deg) translateX(0); opacity: 0; }
-        5% { opacity: 1; }
-        15% { transform: rotate(-45deg) translateX(250px); opacity: 0; }
-        100% { opacity: 0; }
-    }
-    
-    /* Pulse Rings */
-    .ring {
-        position: absolute;
-        border-radius: 50%;
-        border: 2px solid;
-        animation: ringExpand 4s ease-out infinite;
-        opacity: 0;
-        pointer-events: none;
-    }
-    
-    .ring-1 { width: 50px; height: 50px; top: 20%; right: 15%; border-color: #06b6d4; }
-    .ring-2 { width: 40px; height: 40px; bottom: 25%; left: 12%; border-color: #8b5cf6; animation-delay: 1.5s; }
-    .ring-3 { width: 60px; height: 60px; top: 60%; right: 30%; border-color: #ec4899; animation-delay: 3s; }
-    
-    @keyframes ringExpand {
-        0% { transform: scale(0.5); opacity: 0.8; }
-        100% { transform: scale(2.5); opacity: 0; }
-    }
-    </style>
-    </head>
-    <body>
-    <div class="animated-hero">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
-        
-        <div class="dot dot-1"></div>
-        <div class="dot dot-2"></div>
-        <div class="dot dot-3"></div>
-        <div class="dot dot-4"></div>
-        <div class="dot dot-5"></div>
-        <div class="dot dot-6"></div>
-        
-        <div class="star star-1"></div>
-        <div class="star star-2"></div>
-        <div class="star star-3"></div>
-        
-        <div class="ring ring-1"></div>
-        <div class="ring ring-2"></div>
-        <div class="ring ring-3"></div>
-        
-        <div class="hero-content">
-            <div>
-                <span class="hero-badge">✨ UAE E-Commerce Analytics</span>
-                <span class="hero-badge" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">🚀 v3.1</span>
-            </div>
-            <div class="hero-title">UAE Pulse Simulator</div>
-            <p class="hero-subtitle">
-                Transform your e-commerce data into actionable insights.<br>
-                Clean dirty data, simulate promotional campaigns, and visualize performance metrics.
-            </p>
-        </div>
-    </div>
-    </body>
-    </html>
-    """
-    
-    # Render the animated hero
-    components.html(hero_html, height=380)
-    
-    # Rest of the page using regular Streamlit
-    st.markdown("### ✨ Powerful Features", unsafe_allow_html=True)
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.markdown("""
-        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 30px 20px; text-align: center; border: 1px solid rgba(148,163,184,0.1); height: 200px;">
-            <div style="font-size: 2.5rem; margin-bottom: 12px;">📂</div>
-            <div style="font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">Data Upload</div>
-            <div style="font-size: 0.85rem; color: #64748b;">Upload and preview your e-commerce CSV files</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 30px 20px; text-align: center; border: 1px solid rgba(148,163,184,0.1); height: 200px;">
-            <div style="font-size: 2.5rem; margin-bottom: 12px;">🧹</div>
-            <div style="font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">Data Rescue</div>
-            <div style="font-size: 0.85rem; color: #64748b;">Detect & auto-fix 15+ data quality issues</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown("""
-        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 30px 20px; text-align: center; border: 1px solid rgba(148,163,184,0.1); height: 200px;">
-            <div style="font-size: 2.5rem; margin-bottom: 12px;">🎯</div>
-            <div style="font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">Simulator</div>
-            <div style="font-size: 0.85rem; color: #64748b;">Run what-if scenarios and forecast ROI</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        st.markdown("""
-        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 30px 20px; text-align: center; border: 1px solid rgba(148,163,184,0.1); height: 200px;">
-            <div style="font-size: 2.5rem; margin-bottom: 12px;">📊</div>
-            <div style="font-size: 1rem; font-weight: 700; color: #f8fafc; margin-bottom: 8px;">Analytics</div>
-            <div style="font-size: 0.85rem; color: #64748b;">Interactive dashboards with KPI tracking</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Stats Section
-    st.markdown("### 📊 Platform Capabilities", unsafe_allow_html=True)
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.markdown("""
-        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 24px; border: 1px solid rgba(148,163,184,0.1);">
-            <div style="font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Data Issues Detected</div>
-            <div style="font-size: 2rem; font-weight: 800; color: #06b6d4; margin: 8px 0;">15+</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 24px; border: 1px solid rgba(148,163,184,0.1);">
-            <div style="font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Auto-Fix Rules</div>
-            <div style="font-size: 2rem; font-weight: 800; color: #8b5cf6; margin: 8px 0;">20+</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown("""
-        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 24px; border: 1px solid rgba(148,163,184,0.1);">
-            <div style="font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">KPI Metrics</div>
-            <div style="font-size: 2rem; font-weight: 800; color: #ec4899; margin: 8px 0;">25+</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        st.markdown("""
-        <div style="background: rgba(22,22,31,0.9); border-radius: 16px; padding: 24px; border: 1px solid rgba(148,163,184,0.1);">
-            <div style="font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Chart Types</div>
-            <div style="font-size: 2rem; font-weight: 800; color: #10b981; margin: 8px 0;">12+</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    # Status Message
-    if st.session_state.get('data_loaded', False):
-        st.success("✅ Data is loaded! Go to 📊 Dashboard to see your KPIs or 🎯 Simulator to run campaigns.")
-    else:
-        st.info("💡 **Get started!** Go to 📂 Data page to upload your files or load sample data.")
-    
-    # Quick Start
-    st.markdown("---")
-    st.markdown("### 🚀 Quick Start Guide", unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.markdown("""
-        <div style="background: rgba(22,22,31,0.9); border-radius: 12px; padding: 20px; border-left: 4px solid #06b6d4;">
-            <h4 style="color: #06b6d4; margin-bottom: 10px;">Step 1: Load Data</h4>
-            <p style="color: #cbd5e1; font-size: 0.9rem;">Upload your CSV files or use sample data.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div style="background: rgba(22,22,31,0.9); border-radius: 12px; padding: 20px; border-left: 4px solid #8b5cf6;">
-            <h4 style="color: #8b5cf6; margin-bottom: 10px;">Step 2: Clean Data</h4>
-            <p style="color: #cbd5e1; font-size: 0.9rem;">Run Data Rescue to fix issues.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        st.markdown("""
-        <div style="background: rgba(22,22,31,0.9); border-radius: 12px; padding: 20px; border-left: 4px solid #ec4899;">
-            <h4 style="color: #ec4899; margin-bottom: 10px;">Step 3: Analyze</h4>
-            <p style="color: #cbd5e1; font-size: 0.9rem;">View dashboards and run simulations.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    # Footer
-    st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("""
-    <div style="background: rgba(22,22,31,0.9); padding: 30px; text-align: center; border-radius: 20px 20px 0 0; border-top: 1px solid rgba(148,163,184,0.1);">
-        <div style="color: #f8fafc; font-size: 1.1rem; font-weight: 700;">UAE Pulse Simulator</div>
-        <p style="color: #64748b; margin: 8px 0;">Built with ❤️ by</p>
-        <div style="background: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700;">Nabeel, Omar, Khalfan, Youssef, Abdul Rahman</div>
+    <div class="hero-container">
+        <div style="margin-bottom: 24px;">
+            <span class="hero-badge">✨ UAE E-Commerce Analytics</span>
+            <span class="hero-badge" style="background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));">🚀 v3.1</span>
+        </div>
+        <div class="hero-title">UAE Pulse Simulator</div>
+        <p class="hero-subtitle">
+            Transform your e-commerce data into actionable insights.<br>
+            Clean dirty data, simulate promotional campaigns, and visualize performance metrics.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
+    st.markdown('<p class="section-title section-title-purple">✨ Powerful Features</p>', unsafe_allow_html=True)
+    
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown(create_feature_card("📂", "Data Upload", "Upload and preview your e-commerce CSV files", "cyan"), unsafe_allow_html=True)
+    with col2:
+        st.markdown(create_feature_card("🧹", "Data Rescue", "Detect & auto-fix 15+ data quality issues", "blue"), unsafe_allow_html=True)
+    with col3:
+        st.markdown(create_feature_card("🎯", "Simulator", "Run what-if scenarios and forecast ROI", "purple"), unsafe_allow_html=True)
+    with col4:
+        st.markdown(create_feature_card("📊", "Analytics", "Interactive dashboards with KPI tracking", "pink"), unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    if st.session_state.data_loaded:
+        st.markdown(create_success_card("Data is loaded! Go to 📊 Dashboard to see your KPIs."), unsafe_allow_html=True)
+    else:
+        st.markdown(create_info_card("💡 <strong>Start by loading data.</strong> Go to 📂 Data page."), unsafe_allow_html=True)
+    
+    show_footer()
+
 # ============================================================================
 # PAGE: DASHBOARD - COMPLETE WITH ALL CHARTS & INSIGHTS
 # ============================================================================
