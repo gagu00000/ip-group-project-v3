@@ -1,3 +1,4 @@
+
 """
 File Validator Module - UAE Pulse Simulator
 Validates uploaded files match expected schema for each file type.
