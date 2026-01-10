@@ -3640,14 +3640,16 @@ with st.sidebar:
     
     t = get_theme()
     
-    # Title - Solid Black (No Gradient)
+    # Title color: White for dark theme, Black for light theme
+    title_color = "#FFFFFF" if st.session_state.theme == 'dark' else "#000000"
+    
     st.markdown(f"""
     <div style="text-align: center; margin-top: 10px; padding-bottom: 15px;">
         <div style="font-size: 48px; margin-bottom: 5px;">🛒</div>
         <div style="
             font-size: 26px;
             font-weight: 800;
-            color: #000000;
+            color: {title_color};
         ">UAE Pulse</div>
         <div style="color: {t['text_secondary']}; font-size: 13px; font-weight: 500;">Promo Simulator + Data Rescue</div>
     </div>
