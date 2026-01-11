@@ -78,12 +78,14 @@ Answer:
 
 ###Assumptions Made:
 
-| Assumption | Value Used | Reasoning |
+### Assumptions Made:
+| Assumption | Value Used |
 |------------|-------------|
-| Baseline conversion rate | 2% of visitors	| Industry average for retail |
-| Promo uplift multiplier | 1.5x - 2.5x based on discount depth |	<20% discount = 1.5x, >40% = 2.5x |
-| Cannibalization rate	| 20% of promo sales | Assumed would have bought anyway |
-| Margin preservation threshold | 15% minimum margin | Below this, promo is unprofitable |
+| Baseline conversion rate | 2% of visitors |
+| Promo uplift multiplier | 1.5x - 2.5x based on discount depth |
+| Cannibalization rate | 20% of promo sales |
+| Margin preservation threshold | 15% minimum margin |
+
 
 How These Could Be Wrong:
 
