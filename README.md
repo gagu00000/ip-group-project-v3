@@ -78,11 +78,13 @@ Answer:
 
 Assumptions Made:
 
-Assumption               | 	Value Used	                  Reasoning
-Baseline conversion rate	2% of visitors	Industry average for retail
-Promo uplift multiplier	1.5x - 2.5x based on discount depth	<20% discount = 1.5x, >40% = 2.5x
-Cannibalization rate	20% of promo sales	Assumed would have bought anyway
-Margin preservation threshold	15% minimum margin	Below this, promo is unprofitable
+| Assumption  | 	Value Used	| Reasoning |
+|------------|-------------|
+|Baseline conversion rate	|2% of visitors	|Industry average for retail|
+|Promo uplift multiplier|	1.5x - 2.5x based on discount depth|	<20% discount = 1.5x, >40% = 2.5x|
+|Cannibalization rate	|20% of promo sales|	Assumed would have bought anyway|
+|Margin preservation threshold|	15% minimum margin	|Below this, promo is unprofitable|
+
 How These Could Be Wrong:
 
    1.Uplift multiplier is category-dependent:
