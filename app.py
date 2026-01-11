@@ -1275,16 +1275,24 @@ def show_executive_view(kpis, city_kpis, channel_kpis, category_kpis, sales_df, 
     gross_margin = kpis.get('total_profit', 0)
     gross_margin_pct = kpis.get('profit_margin_pct', 0)
     avg_discount = kpis.get('avg_discount_pct', 0)
-    avg_order_value = kpis.get('avg_order_value', 0)
+    
+    # Calculate Budget Utilization (NEW)
+    total_discount_amount = kpis.get('total_discount', gross_revenue * avg_discount / 100)
+    assumed_budget = gross_revenue * 0.15  # Assume 15% of revenue as promo budget
+    budget_utilization = (total_discount_amount / assumed_budget * 100) if assumed_budget > 0 else 0
     
     with col1:
-        st.markdown(create_metric_card("Gross Margin (AED)", format_currency(gross_margin), color="teal"), unsafe_allow_html=True)
+        # RENAMED: Profit Proxy (Sim) instead of Gross Margin (AED)
+        st.markdown(create_metric_card("Profit Proxy (Sim)", format_currency(gross_margin), color="teal"), unsafe_allow_html=True)
     with col2:
         st.markdown(create_metric_card("Gross Margin %", f"{gross_margin_pct:.1f}%", color="purple"), unsafe_allow_html=True)
     with col3:
         st.markdown(create_metric_card("Avg Discount %", f"{avg_discount:.1f}%", color="blue"), unsafe_allow_html=True)
     with col4:
-        st.markdown(create_metric_card("Avg Order Value", format_currency(avg_order_value), color="cyan"), unsafe_allow_html=True)
+        # NEW: Budget Utilization
+        st.markdown(create_metric_card("Budget Utilization", f"{budget_utilization:.1f}%", color="orange"), unsafe_allow_html=True)
+    
+    # ... rest of your existing code ...
     
     st.markdown("---")
     
