@@ -81,10 +81,10 @@ Answer:
 ### Assumptions Made:
 | Assumption | Value Used |
 |------------|-------------|
-| Baseline conversion rate | 2% of visitors |
-| Promo uplift multiplier | 1.5x - 2.5x based on discount depth |
-| Cannibalization rate | 20% of promo sales |
-| Margin preservation threshold | 15% minimum margin |
+| Baseline conversion rate | 2% of visitors | Value Used |
+| Promo uplift multiplier | 1.5x - 2.5x based on discount depth | Value Used |
+| Cannibalization rate | 20% of promo sales | Value Used |
+| Margin preservation threshold | 15% minimum margin | Value Used |
 
 
 How These Could Be Wrong:
