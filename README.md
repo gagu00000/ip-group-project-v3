@@ -76,7 +76,7 @@ My approach: I chose conservative cleaning (filter Paid only, cap negatives at 0
 2. What uplift assumptions did you choose, and how could they be wrong?
 Answer:
 
-Assumptions Made:
+###Assumptions Made:
 
 | Assumption | Value Used | Reasoning |
 |------------|-------------|
