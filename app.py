@@ -3469,7 +3469,7 @@ def show_simulator_page():
                 category=category,
                 data_days=data_days,
                 objective=objective,
-                require_positive_roi=True
+                require_positive_roi=False
             )
             st.session_state.sim_opt_results = opt
 
