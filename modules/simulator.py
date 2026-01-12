@@ -261,25 +261,20 @@ class Simulator:
             return {'outputs': None, 'comparison': None, 'warnings': [f'Error: {str(e)}']}
 
     # ---------------- NEW: Optimizer (reverse simulator) ----------------
-    def recommend_campaign(
-        self, sales_df, stores_df, products_df,
-        promo_budget,
-        city='All',
-        channel='All',
-        category='All',
-        # search space (you can adjust later)
-        discount_grid=(5, 10, 15, 20, 25, 30, 35, 40, 45, 50),
-        margin_floor_grid=(10, 15, 20, 25, 30),
-        days_grid=(3, 5, 7, 10, 14, 21),
-        data_days=30,
-        objective="roi",  # "roi" or "net_profit"
-        require_positive_roi=True,
-    ):
-        """
-        Reverse simulator:
-        Given budget + targeting, find best (discount, margin_floor, days).
-        """
-
+   def recommend_campaign(
+    self, sales_df, stores_df, products_df,
+    promo_budget,
+    city='All',
+    channel='All',
+    category='All',
+    discount_grid=(5, 10, 15, 20, 25, 30, 35, 40, 45, 50),
+    margin_floor_grid=(5, 10, 15, 20, 25, 30),
+    days_grid=(3, 5, 7, 10, 14, 21),
+    data_days=30,
+    objective="roi",
+    require_positive_roi=True,
+):
+    def run(require_positive):
         candidates = []
         best = None
 
@@ -303,10 +298,10 @@ class Simulator:
                     if not out or not comp:
                         continue
 
-                    roi = out.get("roi_pct", -999)
-                    net_profit = out.get("expected_net_profit", -1e18)
+                    roi = float(out.get("roi_pct", -999))
+                    net_profit = float(out.get("expected_net_profit", -1e18))
 
-                    if require_positive_roi and roi <= 0:
+                    if require_positive and roi <= 0:
                         continue
 
                     score = roi if objective == "roi" else net_profit
@@ -330,15 +325,28 @@ class Simulator:
                     if best is None or row["score"] > best["score"]:
                         best = row
 
-        if best is None:
-            return {
-                "best": None,
-                "candidates": pd.DataFrame(candidates),
-                "warnings": ["No combination achieved positive ROI in the search space. Try lower margin floor, longer days, or different city/category."]
-            }
+        df = pd.DataFrame(candidates)
+        if len(df) > 0:
+            df = df.sort_values("score", ascending=False)
 
+        return best, df
+
+    # Pass 1: require positive ROI (your ideal)
+    best, df = run(require_positive=require_positive_roi)
+
+    if best is not None:
+        return {"best": best, "candidates": df, "warnings": best.get("warnings", [])}
+
+    # Pass 2: fallback - show best available anyway
+    best2, df2 = run(require_positive=False)
+    if best2 is None:
         return {
-            "best": best,
-            "candidates": pd.DataFrame(candidates).sort_values("score", ascending=False),
-            "warnings": best.get("warnings", [])
+            "best": None,
+            "candidates": df2,
+            "warnings": ["No valid simulation results. Likely filters remove all rows or missing columns."]
         }
+
+    fallback_warnings = best2.get("warnings", [])
+    fallback_warnings = ["No positive ROI found. Showing best available (may still be negative)."] + fallback_warnings
+
+    return {"best": best2, "candidates": df2, "warnings": fallback_warnings}
