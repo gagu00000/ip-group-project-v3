@@ -1,650 +1,477 @@
-"""
-Simulator Module for UAE Pulse Dashboard
-Campaign simulation and KPI calculations
-FIXED VERSION - Positive ROI Achievable
-"""
+# ============================================================================
+# PAGE: SIMULATOR - ENHANCED VERSION WITH DETAILED BREAKDOWN
+# ============================================================================
 
-import pandas as pd
-import numpy as np
-
-
-class Simulator:
-    """Campaign simulator with KPI calculations."""
+def show_simulator_page():
+    st.markdown('<h1 class="page-title page-title-purple">🎯 Campaign Simulator</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="page-description">Run what-if scenarios and forecast campaign outcomes</p>', unsafe_allow_html=True)
     
-    def __init__(self):
-        """Initialize simulator with default elasticity values."""
-        # INCREASED elasticity for more realistic demand response
-        self.category_elasticity = {
-            'Electronics': 2.2,  # Was 1.8
-            'Fashion': 2.5,      # Was 2.0
-            'Grocery': 1.5,      # Was 1.2
-            'Beauty': 2.0,       # Was 1.6
-            'Home': 1.8,         # Was 1.4
-            'Sports': 2.1        # Was 1.7
-        }
-        self.default_elasticity = 2.0  # Was 1.5
+    if not st.session_state.data_loaded:
+        st.warning("⚠️ Please load data first.")
+        show_footer()
+        return
     
-    def _find_column(self, df, possible_names):
-        """Find a column from a list of possible names."""
-        if df is None:
-            return None
-        for name in possible_names:
-            if name in df.columns:
-                return name
-        return None
+    sales_df = st.session_state.clean_sales if st.session_state.is_cleaned else st.session_state.raw_sales
+    stores_df = st.session_state.clean_stores if st.session_state.is_cleaned else st.session_state.raw_stores
+    products_df = st.session_state.clean_products if st.session_state.is_cleaned else st.session_state.raw_products
     
-    def _get_sku_column(self, df):
-        """Find SKU column."""
-        return self._find_column(df, ['sku', 'SKU', 'product_id', 'ProductID', 'product_sku', 'item_id'])
+    st.markdown("---")
+    st.markdown('<p class="section-title section-title-cyan">⚙️ Campaign Parameters</p>', unsafe_allow_html=True)
     
-    def _get_cost_column(self, df):
-        """Find cost column."""
-        return self._find_column(df, ['unit_cost_aed', 'cost_aed', 'cost', 'unit_cost', 'cost_price', 'purchase_price', 'buying_price'])
+    col1, col2, col3 = st.columns(3)
     
-    def _get_price_column(self, df):
-        """Find selling price column."""
-        return self._find_column(df, ['selling_price_aed', 'selling_price', 'price', 'unit_price', 'sale_price'])
+    with col1:
+        st.markdown('<p style="color: var(--accent-cyan); font-weight: 700;">💰 Pricing</p>', unsafe_allow_html=True)
+        discount_pct = st.slider("Discount %", 0, 50, 15, help="Discount to offer customers")
+        promo_budget = st.number_input("Promo Budget (AED)", 1000, 500000, 25000, step=5000, help="Total campaign budget")
     
-    def _get_qty_column(self, df):
-        """Find quantity column."""
-        return self._find_column(df, ['qty', 'quantity', 'units', 'qty_sold', 'units_sold'])
+    with col2:
+        st.markdown('<p style="color: var(--accent-purple); font-weight: 700;">📊 Constraints</p>', unsafe_allow_html=True)
+        margin_floor = st.slider("Margin Floor %", 0, 50, 15, help="Minimum acceptable profit margin")
+        campaign_days = st.slider("Campaign Days", 1, 30, 7, help="Duration of promotional campaign")
     
-    def _get_date_column(self, df):
-        """Find date column."""
-        return self._find_column(df, ['order_ts', 'order_time', 'order_date', 'date', 'timestamp', 'created_at', 'sale_date', 'transaction_date'])
+    with col3:
+        st.markdown('<p style="color: var(--accent-pink); font-weight: 700;">🎯 Targeting</p>', unsafe_allow_html=True)
+        
+        cities = ['All'] + (sorted(stores_df['city'].dropna().unique().tolist()) if stores_df is not None and 'city' in stores_df.columns else [])
+        channels = ['All'] + (sorted(stores_df['channel'].dropna().unique().tolist()) if stores_df is not None and 'channel' in stores_df.columns else [])
+        categories = ['All'] + (sorted(products_df['category'].dropna().unique().tolist()) if products_df is not None and 'category' in products_df.columns else [])
+        
+        city = st.selectbox("Target City", cities)
+        channel = st.selectbox("Target Channel", channels)
+        category = st.selectbox("Target Category", categories)
     
-    def _get_order_column(self, df):
-        """Find order ID column."""
-        return self._find_column(df, ['order_id', 'OrderID', 'transaction_id', 'invoice_id'])
+    st.markdown("---")
     
-    def _get_store_column(self, df):
-        """Find store ID column."""
-        return self._find_column(df, ['store_id', 'StoreID', 'store', 'location_id'])
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        run_simulation = st.button("🚀 Run Simulation", use_container_width=True, type="primary")
     
-    def _get_category_column(self, df):
-        """Find category column."""
-        return self._find_column(df, ['category', 'Category', 'product_category', 'cat'])
-    
-    def _get_city_column(self, df):
-        """Find city column."""
-        return self._find_column(df, ['city', 'City', 'location', 'store_city'])
-    
-    def _get_channel_column(self, df):
-        """Find channel column."""
-        return self._find_column(df, ['channel', 'Channel', 'sales_channel', 'store_channel'])
-    
-    def _get_data_days(self, sales_df):
-        """Calculate actual number of days in data."""
-        date_col = self._get_date_column(sales_df)
-        if date_col and date_col in sales_df.columns:
+    if run_simulation:
+        with st.spinner("🔄 Running simulation..."):
             try:
-                dates = pd.to_datetime(sales_df[date_col], errors='coerce').dropna()
-                if len(dates) > 0:
-                    days = (dates.max() - dates.min()).days + 1
-                    return max(1, days)
-            except:
-                pass
-        return 30  # Default fallback
+                sim = Simulator()
+                results = sim.simulate_campaign(
+                    sales_df, stores_df, products_df,
+                    discount_pct=discount_pct,
+                    promo_budget=promo_budget,
+                    margin_floor=margin_floor,
+                    city=city,
+                    channel=channel,
+                    category=category,
+                    campaign_days=campaign_days
+                )
+                st.session_state.sim_results = results
+                st.session_state.sim_params = {
+                    'discount_pct': discount_pct,
+                    'promo_budget': promo_budget,
+                    'margin_floor': margin_floor,
+                    'campaign_days': campaign_days,
+                    'city': city,
+                    'channel': channel,
+                    'category': category
+                }
+            except Exception as e:
+                st.error(f"❌ Error: {str(e)}")
     
-    def calculate_overall_kpis(self, sales_df, products_df):
-        """Calculate overall KPIs from sales data."""
-        kpis = {}
+    # ===== DISPLAY RESULTS =====
+    if 'sim_results' in st.session_state and st.session_state.sim_results:
+        results = st.session_state.sim_results
+        outputs = results.get('outputs')
+        comparison = results.get('comparison')
+        warnings = results.get('warnings', [])
+        params = st.session_state.get('sim_params', {})
         
-        try:
-            # Find column names
-            sku_col_sales = self._get_sku_column(sales_df)
-            sku_col_products = self._get_sku_column(products_df) if products_df is not None else None
-            cost_col = self._get_cost_column(products_df) if products_df is not None else None
-            price_col = self._get_price_column(sales_df)
-            qty_col = self._get_qty_column(sales_df)
-            order_col = self._get_order_column(sales_df)
+        if outputs:
+            st.markdown("---")
             
-            # Create working copy
-            merged = sales_df.copy()
+            # ===== MAIN KPI CARDS =====
+            st.markdown('<p class="section-title section-title-teal">📊 Campaign Results</p>', unsafe_allow_html=True)
             
-            # Merge with products if possible
-            if sku_col_sales and sku_col_products and cost_col and products_df is not None:
-                products_subset = products_df[[sku_col_products, cost_col]].copy()
-                products_subset.columns = ['_sku', '_cost']
-                merged['_sku'] = merged[sku_col_sales]
-                merged = merged.merge(products_subset, on='_sku', how='left')
-                merged['_cost'] = merged['_cost'].fillna(0)
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                rev_delta = f"{comparison['revenue_change_pct']:+.1f}%"
+                st.markdown(create_metric_card(
+                    "Expected Revenue", 
+                    format_currency(outputs['expected_revenue']), 
+                    rev_delta, 
+                    "positive" if comparison['revenue_change_pct'] > 0 else "negative", 
+                    "cyan"
+                ), unsafe_allow_html=True)
+            
+            with col2:
+                order_delta = f"{comparison['order_change_pct']:+.1f}%"
+                st.markdown(create_metric_card(
+                    "Expected Orders", 
+                    f"{outputs['expected_orders']:,}", 
+                    order_delta, 
+                    "positive" if comparison['order_change_pct'] > 0 else "negative", 
+                    "blue"
+                ), unsafe_allow_html=True)
+            
+            with col3:
+                profit_delta = f"{comparison['profit_change_pct']:+.1f}%"
+                st.markdown(create_metric_card(
+                    "Gross Profit", 
+                    format_currency(outputs.get('expected_gross_profit', outputs['expected_net_profit'])), 
+                    profit_delta, 
+                    "positive" if comparison['profit_change_pct'] > 0 else "negative", 
+                    "green"
+                ), unsafe_allow_html=True)
+            
+            with col4:
+                roi_color = "green" if outputs['roi_pct'] > 0 else "pink"
+                st.markdown(create_metric_card(
+                    "ROI", 
+                    f"{outputs['roi_pct']:.1f}%", 
+                    color=roi_color
+                ), unsafe_allow_html=True)
+            
+            # ===== WARNINGS =====
+            if warnings:
+                st.markdown("<br>", unsafe_allow_html=True)
+                for w in warnings:
+                    st.warning(w)
             else:
-                merged['_cost'] = 0
+                st.success("✅ Campaign looks healthy!")
             
-            # Get qty and price
-            if qty_col:
-                merged['_qty'] = pd.to_numeric(merged[qty_col], errors='coerce').fillna(0)
-            else:
-                merged['_qty'] = 1
+            st.markdown("---")
             
-            if price_col:
-                merged['_price'] = pd.to_numeric(merged[price_col], errors='coerce').fillna(0)
-            else:
-                merged['_price'] = 0
+            # ===== DETAILED BREAKDOWN - NEW SECTION =====
+            st.markdown('<p class="section-title section-title-purple">📋 Detailed Calculation Breakdown</p>', unsafe_allow_html=True)
             
-            merged['_cost'] = pd.to_numeric(merged['_cost'], errors='coerce').fillna(0)
+            # Two column layout for breakdown
+            col1, col2 = st.columns(2)
             
-            # If no cost data, estimate at 55% of price (45% margin)
-            if merged['_cost'].sum() == 0:
-                merged['_cost'] = merged['_price'] * 0.55
-            
-            # Calculate
-            merged['revenue'] = merged['_qty'] * merged['_price']
-            merged['profit'] = merged['_qty'] * (merged['_price'] - merged['_cost'])
-            
-            kpis['total_revenue'] = float(merged['revenue'].sum())
-            kpis['total_profit'] = float(merged['profit'].sum())
-            
-            if order_col:
-                kpis['total_orders'] = int(merged[order_col].nunique())
-            else:
-                kpis['total_orders'] = len(merged)
-            
-            kpis['total_units'] = float(merged['_qty'].sum())
-            kpis['avg_order_value'] = kpis['total_revenue'] / kpis['total_orders'] if kpis['total_orders'] > 0 else 0
-            kpis['profit_margin_pct'] = (kpis['total_profit'] / kpis['total_revenue'] * 100) if kpis['total_revenue'] > 0 else 0
-            
-            # Return rate
-            return_col = self._find_column(sales_df, ['return_flag', 'is_returned', 'returned', 'is_return'])
-            if return_col:
-                returned = pd.to_numeric(sales_df[return_col], errors='coerce').fillna(0)
-                kpis['return_rate_pct'] = float(returned.mean() * 100)
-            else:
-                kpis['return_rate_pct'] = 0
-            
-            # Refund Amount
-            if 'payment_status' in merged.columns:
-                refund_mask = merged['payment_status'].str.lower().str.contains('refund', na=False)
-                kpis['refund_amount'] = float(merged.loc[refund_mask, 'revenue'].sum())
-            else:
-                kpis['refund_amount'] = 0
-            
-            # COGS (Total Cost)
-            merged['cogs'] = merged['_qty'] * merged['_cost']
-            kpis['total_cogs'] = float(merged['cogs'].sum())
-            
-            # Net Revenue
-            kpis['net_revenue'] = kpis['total_revenue'] - kpis['refund_amount']
-            
-            # Discount calculations
-            discount_col = self._find_column(merged, ['discount_pct', 'discount', 'discount_percent'])
-            if discount_col and discount_col in merged.columns:
-                merged['_discount_pct'] = pd.to_numeric(merged[discount_col], errors='coerce').fillna(0)
-                kpis['avg_discount_pct'] = float(merged['_discount_pct'].mean())
-                kpis['total_discount'] = float((merged['revenue'] * merged['_discount_pct'] / 100).sum())
-            else:
-                kpis['avg_discount_pct'] = 0
-                kpis['total_discount'] = 0
+            with col1:
+                st.markdown("#### 📊 Baseline Performance (Without Campaign)")
+                st.markdown(f"""
+                <div class="info-card">
+                    <table style="width: 100%; color: var(--text-primary);">
+                        <tr>
+                            <td style="padding: 8px 0;">📈 Baseline Revenue ({params.get('campaign_days', 7)} days)</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-cyan);">{format_currency(comparison['baseline_revenue'])}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">📦 Baseline Orders</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-blue);">{comparison['baseline_orders']:,}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">💰 Baseline Profit</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-green);">{format_currency(comparison['baseline_profit'])}</td>
+                        </tr>
+                    </table>
+                </div>
+                """, unsafe_allow_html=True)
                 
-        except Exception as e:
-            print(f"Error in calculate_overall_kpis: {e}")
-            kpis = {
-                'total_revenue': 0,
-                'total_profit': 0,
-                'total_orders': 0,
-                'total_units': 0,
-                'avg_order_value': 0,
-                'profit_margin_pct': 0,
-                'return_rate_pct': 0,
-                'avg_discount_pct': 0,
-                'refund_amount': 0,
-                'total_cogs': 0,
-                'net_revenue': 0,
-                'total_discount': 0
-            }
-        
-        return kpis
+                st.markdown("#### 🎯 Campaign Parameters Used")
+                st.markdown(f"""
+                <div class="info-card" style="border-left-color: var(--accent-purple);">
+                    <table style="width: 100%; color: var(--text-primary);">
+                        <tr>
+                            <td style="padding: 8px 0;">🏷️ Discount</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-pink);">{params.get('discount_pct', 0)}%</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">💵 Budget</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-orange);">{format_currency(params.get('promo_budget', 0))}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">📅 Duration</td>
+                            <td style="text-align: right; font-weight: bold;">{params.get('campaign_days', 7)} days</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">🎯 Target</td>
+                            <td style="text-align: right; font-weight: bold;">{params.get('city', 'All')} / {params.get('channel', 'All')}</td>
+                        </tr>
+                    </table>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown("#### 🚀 Campaign Effect (With Promotion)")
+                
+                # Calculate incremental values
+                incremental_revenue = outputs['expected_revenue'] - comparison['baseline_revenue']
+                incremental_profit = outputs.get('expected_gross_profit', outputs['expected_net_profit']) - comparison['baseline_profit']
+                incremental_orders = outputs['expected_orders'] - comparison['baseline_orders']
+                
+                st.markdown(f"""
+                <div class="success-card">
+                    <table style="width: 100%; color: var(--text-primary);">
+                        <tr>
+                            <td style="padding: 8px 0;">📈 Expected Revenue</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-cyan);">{format_currency(outputs['expected_revenue'])}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">📦 Expected Orders</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-blue);">{outputs['expected_orders']:,}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">💰 Gross Profit</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-green);">{format_currency(outputs.get('expected_gross_profit', outputs['expected_net_profit']))}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">📊 Profit Margin</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-purple);">{outputs.get('expected_margin_pct', 0):.1f}%</td>
+                        </tr>
+                    </table>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown("#### 📈 Incremental Gain")
+                st.markdown(f"""
+                <div class="info-card" style="border-left-color: var(--accent-green);">
+                    <table style="width: 100%; color: var(--text-primary);">
+                        <tr>
+                            <td style="padding: 8px 0;">➕ Extra Revenue</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-cyan);">{format_currency(incremental_revenue)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">➕ Extra Orders</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-blue);">+{incremental_orders:,}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">➕ Extra Profit</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-green);">{format_currency(incremental_profit)}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0;">📊 Volume Uplift</td>
+                            <td style="text-align: right; font-weight: bold; color: var(--accent-purple);">+{outputs.get('demand_lift_pct', 0):.1f}%</td>
+                        </tr>
+                    </table>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            
+            # ===== ROI CALCULATION EXPLAINED =====
+            st.markdown('<p class="section-title section-title-orange">🧮 ROI Calculation Explained</p>', unsafe_allow_html=True)
+            
+            promo_spend = outputs.get('promo_cost', params.get('promo_budget', 0) * 0.3)
+            gross_profit = outputs.get('expected_gross_profit', outputs['expected_net_profit'])
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown(f"""
+                <div class="info-card" style="border-left-color: var(--accent-orange);">
+                    <h4 style="color: var(--accent-orange); margin-bottom: 15px;">📐 ROI Formula</h4>
+                    <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; color: var(--text-primary);">
+                        <p style="margin: 5px 0;">ROI = (Gross Profit - Promo Spend) / Promo Spend × 100</p>
+                        <hr style="border-color: var(--border-default); margin: 10px 0;">
+                        <p style="margin: 5px 0;">ROI = ({format_currency(gross_profit)} - {format_currency(promo_spend)}) / {format_currency(promo_spend)} × 100</p>
+                        <hr style="border-color: var(--border-default); margin: 10px 0;">
+                        <p style="margin: 5px 0; color: var(--accent-green); font-weight: bold;">ROI = {outputs['roi_pct']:.1f}%</p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown(f"""
+                <div class="info-card" style="border-left-color: var(--accent-teal);">
+                    <h4 style="color: var(--accent-teal); margin-bottom: 15px;">💡 What This Means</h4>
+                    <div style="color: var(--text-primary); line-height: 1.8;">
+                        <p>• For every <strong>AED 1</strong> spent on this campaign</p>
+                        <p>• You generate <strong>AED {(gross_profit / promo_spend):.2f}</strong> in gross profit</p>
+                        <p>• Net return: <strong>AED {((gross_profit - promo_spend) / promo_spend):.2f}</strong> per AED spent</p>
+                        <hr style="border-color: var(--border-default); margin: 10px 0;">
+                        <p style="color: var(--accent-green);">✅ ROI > 100% = Campaign is highly profitable</p>
+                        <p style="color: var(--accent-orange);">⚠️ ROI 0-100% = Campaign breaks even or small gain</p>
+                        <p style="color: var(--accent-red);">❌ ROI < 0% = Campaign loses money</p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            
+            # ===== COMPARISON CHARTS =====
+            st.markdown('<p class="section-title section-title-blue">📈 Visual Comparison</p>', unsafe_allow_html=True)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Bar chart: Baseline vs Campaign
+                fig = go.Figure()
+                
+                fig.add_trace(go.Bar(
+                    name='Baseline (No Promo)',
+                    x=['Revenue', 'Profit', 'Orders'],
+                    y=[comparison['baseline_revenue'], comparison['baseline_profit'], comparison['baseline_orders'] * 1000],
+                    marker_color='#3b82f6',
+                    text=[format_currency(comparison['baseline_revenue']), 
+                          format_currency(comparison['baseline_profit']), 
+                          f"{comparison['baseline_orders']:,}"],
+                    textposition='outside'
+                ))
+                
+                fig.add_trace(go.Bar(
+                    name='With Campaign',
+                    x=['Revenue', 'Profit', 'Orders'],
+                    y=[outputs['expected_revenue'], 
+                       outputs.get('expected_gross_profit', outputs['expected_net_profit']), 
+                       outputs['expected_orders'] * 1000],
+                    marker_color='#06b6d4',
+                    text=[format_currency(outputs['expected_revenue']), 
+                          format_currency(outputs.get('expected_gross_profit', outputs['expected_net_profit'])), 
+                          f"{outputs['expected_orders']:,}"],
+                    textposition='outside'
+                ))
+                
+                fig = style_plotly_chart_themed(fig, height=400)
+                fig.update_layout(
+                    barmode='group', 
+                    title='Baseline vs Campaign Performance',
+                    yaxis_title='Value (AED / Orders×1000)',
+                    showlegend=True,
+                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            
+            with col2:
+                # Waterfall chart: Profit breakdown
+                fig_waterfall = go.Figure(go.Waterfall(
+                    name="Profit Breakdown",
+                    orientation="v",
+                    measure=["absolute", "relative", "relative", "relative", "total"],
+                    x=["Baseline Profit", "Volume Uplift", "Price Discount", "Promo Cost", "Final Profit"],
+                    y=[
+                        comparison['baseline_profit'],
+                        incremental_profit + (comparison['baseline_profit'] * params.get('discount_pct', 0) / 100),
+                        -(comparison['baseline_profit'] * params.get('discount_pct', 0) / 100),
+                        -promo_spend,
+                        outputs.get('expected_gross_profit', outputs['expected_net_profit']) - promo_spend
+                    ],
+                    connector={"line": {"color": "#475569"}},
+                    decreasing={"marker": {"color": "#ef4444"}},
+                    increasing={"marker": {"color": "#10b981"}},
+                    totals={"marker": {"color": "#8b5cf6"}}
+                ))
+                
+                fig_waterfall = style_plotly_chart_themed(fig_waterfall, height=400)
+                fig_waterfall.update_layout(title="Profit Bridge: How Campaign Affects Profit", showlegend=False)
+                st.plotly_chart(fig_waterfall, use_container_width=True)
+            
+            st.markdown("---")
+            
+            # ===== SENSITIVITY ANALYSIS =====
+            st.markdown('<p class="section-title section-title-pink">🎚️ Sensitivity Analysis: What If?</p>', unsafe_allow_html=True)
+            
+            # Calculate ROI at different discount levels
+            discount_levels = [5, 10, 15, 20, 25, 30]
+            sim = Simulator()
+            
+            sensitivity_data = []
+            for disc in discount_levels:
+                test_results = sim.simulate_campaign(
+                    sales_df, stores_df, products_df,
+                    discount_pct=disc,
+                    promo_budget=params.get('promo_budget', 25000),
+                    margin_floor=params.get('margin_floor', 15),
+                    city=params.get('city', 'All'),
+                    channel=params.get('channel', 'All'),
+                    category=params.get('category', 'All'),
+                    campaign_days=params.get('campaign_days', 7)
+                )
+                if test_results['outputs']:
+                    sensitivity_data.append({
+                        'Discount %': disc,
+                        'Revenue': test_results['outputs']['expected_revenue'],
+                        'Profit': test_results['outputs'].get('expected_gross_profit', test_results['outputs']['expected_net_profit']),
+                        'ROI %': test_results['outputs']['roi_pct'],
+                        'Margin %': test_results['outputs'].get('expected_margin_pct', 0)
+                    })
+            
+            if sensitivity_data:
+                sens_df = pd.DataFrame(sensitivity_data)
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # Line chart: ROI vs Discount
+                    fig_sens = go.Figure()
+                    fig_sens.add_trace(go.Scatter(
+                        x=sens_df['Discount %'],
+                        y=sens_df['ROI %'],
+                        mode='lines+markers',
+                        name='ROI %',
+                        line=dict(color='#8b5cf6', width=3),
+                        marker=dict(size=10)
+                    ))
+                    
+                    # Highlight current selection
+                    current_disc = params.get('discount_pct', 15)
+                    current_row = sens_df[sens_df['Discount %'] == current_disc]
+                    if len(current_row) > 0:
+                        fig_sens.add_trace(go.Scatter(
+                            x=[current_disc],
+                            y=[current_row['ROI %'].values[0]],
+                            mode='markers',
+                            name='Your Selection',
+                            marker=dict(size=20, color='#ec4899', symbol='star')
+                        ))
+                    
+                    fig_sens = style_plotly_chart_themed(fig_sens, height=350)
+                    fig_sens.update_layout(title='ROI at Different Discount Levels', xaxis_title='Discount %', yaxis_title='ROI %')
+                    st.plotly_chart(fig_sens, use_container_width=True)
+                
+                with col2:
+                    # Table
+                    st.markdown("#### 📊 Discount Comparison Table")
+                    
+                    # Format the dataframe
+                    display_df = sens_df.copy()
+                    display_df['Revenue'] = display_df['Revenue'].apply(lambda x: format_currency(x))
+                    display_df['Profit'] = display_df['Profit'].apply(lambda x: format_currency(x))
+                    display_df['ROI %'] = display_df['ROI %'].apply(lambda x: f"{x:.1f}%")
+                    display_df['Margin %'] = display_df['Margin %'].apply(lambda x: f"{x:.1f}%")
+                    
+                    st.dataframe(display_df, use_container_width=True, hide_index=True)
+                    
+                    # Find optimal discount
+                    optimal_idx = sens_df['ROI %'].idxmax()
+                    optimal_disc = sens_df.loc[optimal_idx, 'Discount %']
+                    optimal_roi = sens_df.loc[optimal_idx, 'ROI %']
+                    
+                    st.markdown(f"""
+                    <div class="insight-card">
+                        <div class="insight-title">💡 Optimal Discount</div>
+                        <div class="insight-text">Based on this analysis, <strong>{optimal_disc}% discount</strong> gives the best ROI of <strong>{optimal_roi:.1f}%</strong></div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            
+            # ===== RECOMMENDATIONS =====
+            st.markdown('<p class="section-title section-title-green">💡 Recommendations</p>', unsafe_allow_html=True)
+            
+            recommendations = []
+            
+            # ROI-based recommendations
+            if outputs['roi_pct'] > 200:
+                recommendations.append("🎯 **Excellent ROI!** This campaign is highly profitable. Consider scaling up the budget.")
+            elif outputs['roi_pct'] > 100:
+                recommendations.append("✅ **Good ROI.** Campaign is profitable. Monitor execution closely.")
+            elif outputs['roi_pct'] > 0:
+                recommendations.append("⚠️ **Marginal ROI.** Campaign is barely profitable. Consider reducing discount or budget.")
+            else:
+                recommendations.append("❌ **Negative ROI.** Campaign will lose money. Reduce discount or reconsider strategy.")
+            
+            # Margin-based recommendations
+            margin = outputs.get('expected_margin_pct', 0)
+            if margin < params.get('margin_floor', 15):
+                recommendations.append(f"⚠️ **Margin Alert:** Expected margin ({margin:.1f}%) is below your floor ({params.get('margin_floor', 15)}%). Reduce discount.")
+            elif margin > 30:
+                recommendations.append(f"💰 **Healthy Margin:** At {margin:.1f}%, there's room for deeper discounts if needed.")
+            
+            # Volume recommendations
+            if outputs.get('demand_lift_pct', 0) < 10:
+                recommendations.append("📦 **Low Volume Lift:** Consider increasing discount to drive more traffic.")
+            elif outputs.get('demand_lift_pct', 0) > 50:
+                recommendations.append("📦 **High Volume Lift:** Ensure inventory can handle the demand surge.")
+            
+            for rec in recommendations:
+                st.markdown(f'<div class="recommendation-card"><p>{rec}</p></div>', unsafe_allow_html=True)
     
-    def calculate_kpis_by_dimension(self, sales_df, stores_df, products_df, dimension):
-        """Calculate KPIs grouped by a dimension (city, channel, category)."""
-        try:
-            merged = sales_df.copy()
-            
-            # Find columns
-            sku_col_sales = self._get_sku_column(sales_df)
-            sku_col_products = self._get_sku_column(products_df) if products_df is not None else None
-            store_col_sales = self._get_store_column(sales_df)
-            store_col_stores = self._get_store_column(stores_df) if stores_df is not None else None
-            cost_col = self._get_cost_column(products_df) if products_df is not None else None
-            price_col = self._get_price_column(sales_df)
-            qty_col = self._get_qty_column(sales_df)
-            order_col = self._get_order_column(sales_df)
-            category_col = self._get_category_column(products_df) if products_df is not None else None
-            city_col = self._get_city_column(stores_df) if stores_df is not None else None
-            channel_col = self._get_channel_column(stores_df) if stores_df is not None else None
-            
-            # Merge with stores
-            if store_col_sales and store_col_stores and stores_df is not None:
-                stores_cols = [store_col_stores]
-                if city_col:
-                    stores_cols.append(city_col)
-                if channel_col:
-                    stores_cols.append(channel_col)
-                
-                stores_subset = stores_df[stores_cols].copy()
-                stores_subset.columns = ['_store'] + [f'_{c}' for c in stores_cols[1:]]
-                merged['_store'] = merged[store_col_sales]
-                merged = merged.merge(stores_subset, on='_store', how='left')
-                
-                if city_col:
-                    merged['city'] = merged[f'_{city_col}']
-                if channel_col:
-                    merged['channel'] = merged[f'_{channel_col}']
-            
-            # Merge with products
-            if sku_col_sales and sku_col_products and products_df is not None:
-                products_cols = [sku_col_products]
-                if cost_col:
-                    products_cols.append(cost_col)
-                if category_col:
-                    products_cols.append(category_col)
-                
-                products_subset = products_df[products_cols].copy()
-                new_cols = ['_sku']
-                if cost_col:
-                    new_cols.append('_cost')
-                if category_col:
-                    new_cols.append('category')
-                products_subset.columns = new_cols
-                
-                merged['_sku'] = merged[sku_col_sales]
-                merged = merged.merge(products_subset, on='_sku', how='left')
-            
-            # Set defaults
-            if '_cost' not in merged.columns:
-                merged['_cost'] = 0
-            if 'category' not in merged.columns:
-                merged['category'] = 'Unknown'
-            if 'city' not in merged.columns:
-                merged['city'] = 'Unknown'
-            if 'channel' not in merged.columns:
-                merged['channel'] = 'Unknown'
-            
-            # Get qty and price
-            if qty_col:
-                merged['_qty'] = pd.to_numeric(merged[qty_col], errors='coerce').fillna(0)
-            else:
-                merged['_qty'] = 1
-            
-            if price_col:
-                merged['_price'] = pd.to_numeric(merged[price_col], errors='coerce').fillna(0)
-            else:
-                merged['_price'] = 0
-            
-            merged['_cost'] = pd.to_numeric(merged['_cost'], errors='coerce').fillna(0)
-            
-            # If no cost, estimate
-            if merged['_cost'].sum() == 0:
-                merged['_cost'] = merged['_price'] * 0.55
-            
-            merged['revenue'] = merged['_qty'] * merged['_price']
-            merged['profit'] = merged['_qty'] * (merged['_price'] - merged['_cost'])
-            
-            # Set order_id for counting
-            if order_col:
-                merged['_order_id'] = merged[order_col]
-            else:
-                merged['_order_id'] = range(len(merged))
-            
-            # Group by dimension
-            if dimension not in merged.columns:
-                return pd.DataFrame()
-            
-            grouped = merged.groupby(dimension).agg({
-                'revenue': 'sum',
-                'profit': 'sum',
-                '_order_id': 'nunique',
-                '_qty': 'sum'
-            }).reset_index()
-            
-            grouped.columns = [dimension, 'revenue', 'profit', 'orders', 'units']
-            grouped['avg_order_value'] = grouped['revenue'] / grouped['orders']
-            grouped['margin_pct'] = (grouped['profit'] / grouped['revenue'] * 100).fillna(0)
-            grouped = grouped.sort_values('revenue', ascending=False)
-            
-            return grouped
-            
-        except Exception as e:
-            print(f"Error in calculate_kpis_by_dimension: {e}")
-            return pd.DataFrame()
-    
-    def calculate_daily_trends(self, sales_df, products_df):
-        """Calculate daily performance trends."""
-        try:
-            merged = sales_df.copy()
-            
-            # Find columns
-            sku_col_sales = self._get_sku_column(sales_df)
-            sku_col_products = self._get_sku_column(products_df) if products_df is not None else None
-            cost_col = self._get_cost_column(products_df) if products_df is not None else None
-            price_col = self._get_price_column(sales_df)
-            qty_col = self._get_qty_column(sales_df)
-            date_col = self._get_date_column(sales_df)
-            order_col = self._get_order_column(sales_df)
-            
-            # Merge with products for cost
-            if sku_col_sales and sku_col_products and cost_col and products_df is not None:
-                products_subset = products_df[[sku_col_products, cost_col]].copy()
-                products_subset.columns = ['_sku', '_cost']
-                merged['_sku'] = merged[sku_col_sales]
-                merged = merged.merge(products_subset, on='_sku', how='left')
-                merged['_cost'] = merged['_cost'].fillna(0)
-            else:
-                merged['_cost'] = 0
-            
-            # Get qty and price
-            if qty_col:
-                merged['_qty'] = pd.to_numeric(merged[qty_col], errors='coerce').fillna(0)
-            else:
-                merged['_qty'] = 1
-            
-            if price_col:
-                merged['_price'] = pd.to_numeric(merged[price_col], errors='coerce').fillna(0)
-            else:
-                merged['_price'] = 0
-            
-            merged['_cost'] = pd.to_numeric(merged['_cost'], errors='coerce').fillna(0)
-            
-            merged['revenue'] = merged['_qty'] * merged['_price']
-            merged['profit'] = merged['_qty'] * (merged['_price'] - merged['_cost'])
-            
-            # Parse date
-            if date_col:
-                merged['date'] = pd.to_datetime(merged[date_col], errors='coerce').dt.date
-            else:
-                merged['date'] = pd.date_range(end=pd.Timestamp.today(), periods=len(merged), freq='h').date
-            
-            merged = merged.dropna(subset=['date'])
-            
-            if len(merged) == 0:
-                return pd.DataFrame(columns=['date', 'revenue', 'profit', 'orders', 'units'])
-            
-            # Group by date
-            daily = merged.groupby('date').agg({
-                'revenue': 'sum',
-                'profit': 'sum',
-                '_qty': 'sum'
-            }).reset_index()
-            
-            # Count orders
-            if order_col:
-                orders_per_day = merged.groupby('date')[order_col].nunique().reset_index()
-                orders_per_day.columns = ['date', 'orders']
-                daily = daily.merge(orders_per_day, on='date', how='left')
-                daily.columns = ['date', 'revenue', 'profit', 'units', 'orders']
-            else:
-                daily['orders'] = daily['_qty']
-                daily.columns = ['date', 'revenue', 'profit', 'units', 'orders']
-            
-            daily = daily.sort_values('date')
-            
-            return daily
-            
-        except Exception as e:
-            print(f"Error in calculate_daily_trends: {e}")
-            return pd.DataFrame(columns=['date', 'revenue', 'profit', 'orders', 'units'])
-    
-    def calculate_stockout_risk(self, inventory_df):
-        """Calculate stockout risk metrics."""
-        try:
-            stock_col = self._find_column(inventory_df, ['stock_on_hand', 'stock', 'quantity', 'qty', 'inventory'])
-            reorder_col = self._find_column(inventory_df, ['reorder_point', 'reorder_level', 'min_stock'])
-            
-            if stock_col:
-                inventory_df['_stock'] = pd.to_numeric(inventory_df[stock_col], errors='coerce').fillna(0)
-            else:
-                inventory_df['_stock'] = 0
-            
-            if reorder_col:
-                inventory_df['_reorder'] = pd.to_numeric(inventory_df[reorder_col], errors='coerce').fillna(10)
-            else:
-                inventory_df['_reorder'] = 10
-            
-            total_items = len(inventory_df)
-            zero_stock = len(inventory_df[inventory_df['_stock'] == 0])
-            low_stock = len(inventory_df[inventory_df['_stock'] <= inventory_df['_reorder']])
-            
-            return {
-                'total_items': total_items,
-                'zero_stock': zero_stock,
-                'low_stock': low_stock,
-                'stockout_risk_pct': (low_stock / total_items * 100) if total_items > 0 else 0
-            }
-        except Exception as e:
-            print(f"Error in calculate_stockout_risk: {e}")
-            return {
-                'total_items': 0,
-                'zero_stock': 0,
-                'low_stock': 0,
-                'stockout_risk_pct': 0
-            }
-    
-    def simulate_campaign(self, sales_df, stores_df, products_df,
-                          discount_pct=10, promo_budget=10000, margin_floor=15,
-                          city='All', channel='All', category='All', campaign_days=7):
-        """
-        Simulate a promotional campaign.
-        
-        FIXED VERSION:
-        - Better ROI calculation
-        - More realistic demand elasticity
-        - Proper cost handling
-        """
-        try:
-            merged = sales_df.copy()
-            
-            # Find columns
-            sku_col_sales = self._get_sku_column(sales_df)
-            sku_col_products = self._get_sku_column(products_df) if products_df is not None else None
-            store_col_sales = self._get_store_column(sales_df)
-            store_col_stores = self._get_store_column(stores_df) if stores_df is not None else None
-            cost_col = self._get_cost_column(products_df) if products_df is not None else None
-            price_col = self._get_price_column(sales_df)
-            qty_col = self._get_qty_column(sales_df)
-            order_col = self._get_order_column(sales_df)
-            category_col = self._get_category_column(products_df) if products_df is not None else None
-            city_col = self._get_city_column(stores_df) if stores_df is not None else None
-            channel_col = self._get_channel_column(stores_df) if stores_df is not None else None
-            
-            # Merge with stores
-            if store_col_sales and store_col_stores and stores_df is not None:
-                stores_cols = [store_col_stores]
-                if city_col:
-                    stores_cols.append(city_col)
-                if channel_col:
-                    stores_cols.append(channel_col)
-                
-                stores_subset = stores_df[stores_cols].copy()
-                stores_subset.columns = ['_store'] + stores_cols[1:]
-                merged['_store'] = merged[store_col_sales]
-                merged = merged.merge(stores_subset, on='_store', how='left')
-            
-            # Merge with products
-            if sku_col_sales and sku_col_products and products_df is not None:
-                products_cols = [sku_col_products]
-                if cost_col:
-                    products_cols.append(cost_col)
-                if category_col:
-                    products_cols.append(category_col)
-                
-                products_subset = products_df[products_cols].copy()
-                new_names = ['_sku']
-                if cost_col:
-                    new_names.append('_cost')
-                if category_col:
-                    new_names.append('category')
-                products_subset.columns = new_names
-                
-                merged['_sku'] = merged[sku_col_sales]
-                merged = merged.merge(products_subset, on='_sku', how='left')
-            
-            # Set defaults
-            if '_cost' not in merged.columns:
-                merged['_cost'] = 0
-            if 'category' not in merged.columns:
-                merged['category'] = 'Unknown'
-            if city_col and city_col not in merged.columns:
-                merged[city_col] = 'Unknown'
-            if channel_col and channel_col not in merged.columns:
-                merged[channel_col] = 'Unknown'
-            
-            # Get qty and price
-            if qty_col:
-                merged['_qty'] = pd.to_numeric(merged[qty_col], errors='coerce').fillna(0)
-            else:
-                merged['_qty'] = 1
-            
-            if price_col:
-                merged['_price'] = pd.to_numeric(merged[price_col], errors='coerce').fillna(0)
-            else:
-                merged['_price'] = 0
-            
-            merged['_cost'] = pd.to_numeric(merged['_cost'], errors='coerce').fillna(0)
-            
-            # FIX: If no cost data, estimate at 50% of price (50% margin)
-            if merged['_cost'].sum() == 0:
-                merged['_cost'] = merged['_price'] * 0.50
-            
-            # Filter by targeting
-            if city != 'All' and city_col and city_col in merged.columns:
-                merged = merged[merged[city_col] == city]
-            if channel != 'All' and channel_col and channel_col in merged.columns:
-                merged = merged[merged[channel_col] == channel]
-            if category != 'All' and 'category' in merged.columns:
-                merged = merged[merged['category'] == category]
-            
-            if len(merged) == 0:
-                return {'outputs': None, 'comparison': None, 'warnings': ['No data matches filters']}
-            
-            # Calculate revenue and profit
-            merged['revenue'] = merged['_qty'] * merged['_price']
-            merged['cogs'] = merged['_qty'] * merged['_cost']
-            merged['profit'] = merged['revenue'] - merged['cogs']
-            
-            # FIX: Calculate actual data days instead of hardcoded 30
-            data_days = self._get_data_days(sales_df)
-            
-            # Baseline calculations (normalized to campaign period)
-            total_revenue = merged['revenue'].sum()
-            total_cogs = merged['cogs'].sum()
-            total_profit = merged['profit'].sum()
-            total_units = merged['_qty'].sum()
-            
-            if order_col and order_col in merged.columns:
-                total_orders = merged[order_col].nunique()
-            else:
-                total_orders = len(merged)
-            
-            # Daily averages
-            daily_revenue = total_revenue / data_days
-            daily_profit = total_profit / data_days
-            daily_orders = total_orders / data_days
-            daily_units = total_units / data_days
-            daily_cogs = total_cogs / data_days
-            
-            # Baseline for campaign period
-            baseline_revenue = daily_revenue * campaign_days
-            baseline_profit = daily_profit * campaign_days
-            baseline_orders = daily_orders * campaign_days
-            baseline_units = daily_units * campaign_days
-            baseline_cogs = daily_cogs * campaign_days
-            
-            # Get elasticity
-            elasticity = self.category_elasticity.get(category, self.default_elasticity) if category != 'All' else self.default_elasticity
-            
-            # FIX: More aggressive demand lift formula
-            # For every 1% discount, volume increases by elasticity %
-            demand_lift_pct = discount_pct * elasticity
-            volume_multiplier = 1 + (demand_lift_pct / 100)
-            
-            # Expected metrics
-            expected_units = baseline_units * volume_multiplier
-            expected_orders = int(baseline_orders * volume_multiplier)
-            
-            # Revenue: more units but lower price
-            avg_price = merged['_price'].mean()
-            avg_cost = merged['_cost'].mean()
-            discounted_price = avg_price * (1 - discount_pct / 100)
-            
-            expected_revenue = expected_units * discounted_price
-            expected_cogs = expected_units * avg_cost
-            
-            # FIX: Gross profit calculation
-            expected_gross_profit = expected_revenue - expected_cogs
-            
-            # FIX: Only use a small portion of budget as actual promo cost
-            # Assume 30% of budget is actually spent on discounts/marketing
-            actual_promo_spend = promo_budget * 0.30
-            
-            # FIX: Remove or reduce fulfillment cost from profit calculation
-            # Fulfillment is already in COGS for most businesses
-            fulfillment_cost = 0  # Was: expected_units * 2
-            
-            # Net profit
-            expected_net_profit = expected_gross_profit - actual_promo_spend - fulfillment_cost
-            
-            # Margin calculation
-            expected_margin_pct = (expected_gross_profit / expected_revenue * 100) if expected_revenue > 0 else 0
-            
-            # FIX: Better ROI calculation
-            # ROI = (Campaign Gross Profit - Budget Spent) / Budget Spent
-            # This measures: for every AED spent, how much profit did we generate?
-            if actual_promo_spend > 0:
-                # Simple ROI: profit generated vs money spent
-                roi_pct = ((expected_gross_profit - actual_promo_spend) / actual_promo_spend) * 100
-            else:
-                roi_pct = 0
-            
-            # Alternative: Incremental ROI (how much MORE profit vs baseline)
-            incremental_profit = expected_gross_profit - baseline_profit
-            if actual_promo_spend > 0:
-                incremental_roi_pct = (incremental_profit / actual_promo_spend) * 100
-            else:
-                incremental_roi_pct = 0
-            
-            # Use the better of the two ROI measures for display
-            display_roi = max(roi_pct, incremental_roi_pct)
-            
-            # Warnings
-            warnings = []
-            if expected_margin_pct < margin_floor:
-                warnings.append(f"⚠️ Margin ({expected_margin_pct:.1f}%) below floor ({margin_floor}%)")
-            if display_roi < 0:
-                warnings.append(f"⚠️ Negative ROI ({display_roi:.1f}%)")
-            if discount_pct > 30:
-                warnings.append("⚠️ High discount may erode brand value")
-            if expected_gross_profit < actual_promo_spend:
-                warnings.append(f"⚠️ Gross profit (AED {expected_gross_profit:,.0f}) is less than spend (AED {actual_promo_spend:,.0f})")
-            
-            outputs = {
-                'expected_revenue': expected_revenue,
-                'expected_orders': expected_orders,
-                'expected_units': expected_units,
-                'expected_gross_profit': expected_gross_profit,
-                'expected_net_profit': expected_net_profit,
-                'expected_margin_pct': expected_margin_pct,
-                'demand_lift_pct': demand_lift_pct,
-                'roi_pct': display_roi,
-                'promo_cost': actual_promo_spend,
-                'fulfillment_cost': fulfillment_cost,
-                'volume_multiplier': volume_multiplier
-            }
-            
-            comparison = {
-                'baseline_revenue': baseline_revenue,
-                'baseline_profit': baseline_profit,
-                'baseline_orders': int(baseline_orders),
-                'baseline_cogs': baseline_cogs,
-                'revenue_change_pct': ((expected_revenue - baseline_revenue) / baseline_revenue * 100) if baseline_revenue > 0 else 0,
-                'profit_change_pct': ((expected_gross_profit - baseline_profit) / baseline_profit * 100) if baseline_profit > 0 else 0,
-                'order_change_pct': demand_lift_pct
-            }
-            
-            return {'outputs': outputs, 'comparison': comparison, 'warnings': warnings}
-            
-        except Exception as e:
-            print(f"Error in simulate_campaign: {e}")
-            import traceback
-            traceback.print_exc()
-            return {'outputs': None, 'comparison': None, 'warnings': [f'Error: {str(e)}']}
+    show_footer()
