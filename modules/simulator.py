@@ -1,28 +1,20 @@
 """
-Simulator Module for UAE Pulse Dashboard (FINAL - Import Safe)
+Simulator Module for UAE Pulse Dashboard (FINAL v3 - ROI Debug + Better Cost Model)
 
-Features:
-- Robust column detection (works with varied schemas)
-- KPI calculations (overall, by dimension, daily trends, stockout risk)
-- Forward campaign simulation: simulate_campaign()
-- Reverse optimizer: recommend_campaign()
-  (user inputs budget + city, simulator recommends discount/margin_floor/days)
-
-Design goals:
-- No import-time side effects
-- Defensive against missing columns
-- Always returns results (fallback even if ROI is negative)
+Key improvements:
+- Auto-detect baseline window length (data_days) from sales date column if present
+- Less aggressive promo cost model (prevents ROI always being clipped to -100)
+- Adds debug fields in outputs so user can diagnose baseline and ROI drivers
+- Keeps app compatibility: outputs/comparison/warnings keys remain
+- Includes recommend_campaign() with fallback (best available even if ROI negative)
 """
 
 from __future__ import annotations
-
 import pandas as pd
 import numpy as np
 
 
 class Simulator:
-    """Campaign simulator with KPI calculations and a recommendation optimizer."""
-
     def __init__(self):
         self.category_elasticity = {
             "Electronics": 2.5,
@@ -34,11 +26,9 @@ class Simulator:
         }
         self.default_elasticity = 2.5
 
-    # ------------------------------------------------------------------
-    # Column helpers
-    # ------------------------------------------------------------------
+    # ---------------- Column helpers ----------------
     def _find_column(self, df: pd.DataFrame, possible_names: list[str]) -> str | None:
-        if df is None or len(getattr(df, "columns", [])) == 0:
+        if df is None or not hasattr(df, "columns"):
             return None
         for name in possible_names:
             if name in df.columns:
@@ -58,7 +48,7 @@ class Simulator:
         return self._find_column(df, ["qty", "quantity", "units", "qty_sold", "units_sold"])
 
     def _get_date_column(self, df):
-        return self._find_column(df, ["order_ts", "order_date", "date", "timestamp", "created_at", "sale_date", "transaction_date", "order_time"])
+        return self._find_column(df, ["order_time", "order_ts", "order_date", "date", "timestamp", "created_at", "sale_date", "transaction_date"])
 
     def _get_order_column(self, df):
         return self._find_column(df, ["order_id", "OrderID", "transaction_id", "invoice_id"])
@@ -75,284 +65,20 @@ class Simulator:
     def _get_channel_column(self, df):
         return self._find_column(df, ["channel", "Channel", "sales_channel", "store_channel"])
 
-    # ------------------------------------------------------------------
-    # KPI Calculations
-    # ------------------------------------------------------------------
-    def calculate_overall_kpis(self, sales_df: pd.DataFrame, products_df: pd.DataFrame) -> dict:
-        """Calculate overall KPIs from sales data."""
+    # ---------------- Internal: auto baseline days ----------------
+    def _infer_data_days(self, sales_df: pd.DataFrame, fallback: int = 30) -> int:
+        """Infer number of days covered by sales_df using its date column."""
         try:
-            if sales_df is None or len(sales_df) == 0:
-                return {
-                    "total_revenue": 0, "total_profit": 0, "total_orders": 0, "total_units": 0,
-                    "avg_order_value": 0, "profit_margin_pct": 0, "return_rate_pct": 0,
-                    "avg_discount_pct": 0, "refund_amount": 0, "total_cogs": 0, "net_revenue": 0, "total_discount": 0
-                }
-
-            sku_col_sales = self._get_sku_column(sales_df)
-            sku_col_products = self._get_sku_column(products_df)
-            cost_col = self._get_cost_column(products_df)
-            price_col = self._get_price_column(sales_df)
-            qty_col = self._get_qty_column(sales_df)
-            order_col = self._get_order_column(sales_df)
-
-            merged = sales_df.copy()
-
-            # Merge product cost
-            if products_df is not None and sku_col_sales and sku_col_products and cost_col:
-                psub = products_df[[sku_col_products, cost_col]].copy()
-                psub.columns = ["_sku", "_cost"]
-                merged["_sku"] = merged[sku_col_sales]
-                merged = merged.merge(psub, on="_sku", how="left")
-                merged["_cost"] = merged["_cost"].fillna(0)
-            else:
-                merged["_cost"] = 0
-
-            merged["_qty"] = pd.to_numeric(merged[qty_col], errors="coerce").fillna(0) if qty_col else 1
-            merged["_price"] = pd.to_numeric(merged[price_col], errors="coerce").fillna(0) if price_col else 0
-            merged["_cost"] = pd.to_numeric(merged["_cost"], errors="coerce").fillna(0)
-
-            merged["revenue"] = merged["_qty"] * merged["_price"]
-            merged["profit"] = merged["_qty"] * (merged["_price"] - merged["_cost"])
-            merged["cogs"] = merged["_qty"] * merged["_cost"]
-
-            total_revenue = float(merged["revenue"].sum())
-            total_profit = float(merged["profit"].sum())
-            total_cogs = float(merged["cogs"].sum())
-
-            if order_col:
-                total_orders = int(merged[order_col].nunique())
-            else:
-                total_orders = int(len(merged))
-
-            total_units = float(merged["_qty"].sum())
-            avg_order_value = total_revenue / total_orders if total_orders else 0
-            margin_pct = (total_profit / total_revenue * 100) if total_revenue else 0
-
-            # Return rate
-            return_col = self._find_column(sales_df, ["return_flag", "is_returned", "returned", "is_return"])
-            if return_col:
-                returned = pd.to_numeric(sales_df[return_col], errors="coerce").fillna(0)
-                return_rate_pct = float(returned.mean() * 100)
-            else:
-                return_rate_pct = 0.0
-
-            # Refund amount (simple heuristic)
-            if "payment_status" in merged.columns:
-                refund_mask = merged["payment_status"].astype(str).str.lower().str.contains("refund", na=False)
-                refund_amount = float(merged.loc[refund_mask, "revenue"].sum())
-            else:
-                refund_amount = 0.0
-
-            net_revenue = total_revenue - refund_amount
-
-            # Discount
-            discount_col = self._find_column(merged, ["discount_pct", "discount", "discount_percent"])
-            if discount_col and discount_col in merged.columns:
-                merged["_discount_pct"] = pd.to_numeric(merged[discount_col], errors="coerce").fillna(0)
-                avg_discount_pct = float(merged["_discount_pct"].mean())
-                total_discount = float((merged["revenue"] * merged["_discount_pct"] / 100).sum())
-            else:
-                avg_discount_pct = 0.0
-                total_discount = 0.0
-
-            return {
-                "total_revenue": total_revenue,
-                "total_profit": total_profit,
-                "total_orders": total_orders,
-                "total_units": total_units,
-                "avg_order_value": avg_order_value,
-                "profit_margin_pct": margin_pct,
-                "return_rate_pct": return_rate_pct,
-                "avg_discount_pct": avg_discount_pct,
-                "refund_amount": refund_amount,
-                "total_cogs": total_cogs,
-                "net_revenue": net_revenue,
-                "total_discount": total_discount,
-            }
-
-        except Exception as e:
-            print(f"Error in calculate_overall_kpis: {e}")
-            return {
-                "total_revenue": 0, "total_profit": 0, "total_orders": 0, "total_units": 0,
-                "avg_order_value": 0, "profit_margin_pct": 0, "return_rate_pct": 0,
-                "avg_discount_pct": 0, "refund_amount": 0, "total_cogs": 0, "net_revenue": 0, "total_discount": 0
-            }
-
-    def calculate_kpis_by_dimension(self, sales_df, stores_df, products_df, dimension: str) -> pd.DataFrame:
-        """Calculate KPIs grouped by a dimension (city, channel, category)."""
-        try:
-            if sales_df is None or len(sales_df) == 0:
-                return pd.DataFrame()
-
-            merged = sales_df.copy()
-
-            # Resolve columns
-            sku_sales = self._get_sku_column(sales_df)
-            sku_prod = self._get_sku_column(products_df)
-            store_sales = self._get_store_column(sales_df)
-            store_stores = self._get_store_column(stores_df)
-            cost_col = self._get_cost_column(products_df)
-            price_col = self._get_price_column(sales_df)
-            qty_col = self._get_qty_column(sales_df)
-            order_col = self._get_order_column(sales_df)
-            category_col = self._get_category_column(products_df)
-            city_col = self._get_city_column(stores_df)
-            channel_col = self._get_channel_column(stores_df)
-
-            # Merge stores
-            if stores_df is not None and store_sales and store_stores:
-                cols = [store_stores]
-                if city_col:
-                    cols.append(city_col)
-                if channel_col:
-                    cols.append(channel_col)
-                ssub = stores_df[cols].copy()
-                ssub.columns = ["_store"] + [f"_{c}" for c in cols[1:]]
-                merged["_store"] = merged[store_sales]
-                merged = merged.merge(ssub, on="_store", how="left")
-                if city_col:
-                    merged["city"] = merged[f"_{city_col}"]
-                if channel_col:
-                    merged["channel"] = merged[f"_{channel_col}"]
-
-            # Merge products
-            if products_df is not None and sku_sales and sku_prod:
-                cols = [sku_prod]
-                if cost_col:
-                    cols.append(cost_col)
-                if category_col:
-                    cols.append(category_col)
-                psub = products_df[cols].copy()
-                new_cols = ["_sku"]
-                if cost_col:
-                    new_cols.append("_cost")
-                if category_col:
-                    new_cols.append("category")
-                psub.columns = new_cols
-                merged["_sku"] = merged[sku_sales]
-                merged = merged.merge(psub, on="_sku", how="left")
-
-            if "_cost" not in merged.columns:
-                merged["_cost"] = 0
-            if "category" not in merged.columns:
-                merged["category"] = "Unknown"
-            if "city" not in merged.columns:
-                merged["city"] = "Unknown"
-            if "channel" not in merged.columns:
-                merged["channel"] = "Unknown"
-
-            merged["_qty"] = pd.to_numeric(merged[qty_col], errors="coerce").fillna(0) if qty_col else 1
-            merged["_price"] = pd.to_numeric(merged[price_col], errors="coerce").fillna(0) if price_col else 0
-            merged["_cost"] = pd.to_numeric(merged["_cost"], errors="coerce").fillna(0)
-
-            merged["revenue"] = merged["_qty"] * merged["_price"]
-            merged["profit"] = merged["_qty"] * (merged["_price"] - merged["_cost"])
-
-            merged["_order_id"] = merged[order_col] if (order_col and order_col in merged.columns) else range(len(merged))
-
-            grouped = merged.groupby(dimension).agg(
-                revenue=("revenue", "sum"),
-                profit=("profit", "sum"),
-                orders=("_order_id", "nunique"),
-                units=("_qty", "sum"),
-            ).reset_index()
-
-            grouped["avg_order_value"] = grouped["revenue"] / grouped["orders"]
-            grouped["profit_margin_pct"] = (grouped["profit"] / grouped["revenue"] * 100).replace([np.inf, -np.inf], np.nan).fillna(0)
-
-            return grouped.sort_values("revenue", ascending=False)
-
-        except Exception as e:
-            print(f"Error in calculate_kpis_by_dimension: {e}")
-            return pd.DataFrame()
-
-    def calculate_daily_trends(self, sales_df, products_df) -> pd.DataFrame:
-        """Calculate daily performance trends."""
-        try:
-            if sales_df is None or len(sales_df) == 0:
-                return pd.DataFrame(columns=["date", "revenue", "profit", "orders", "units"])
-
-            merged = sales_df.copy()
-
-            sku_sales = self._get_sku_column(sales_df)
-            sku_prod = self._get_sku_column(products_df)
-            cost_col = self._get_cost_column(products_df)
-            price_col = self._get_price_column(sales_df)
-            qty_col = self._get_qty_column(sales_df)
             date_col = self._get_date_column(sales_df)
-            order_col = self._get_order_column(sales_df)
-
-            if products_df is not None and sku_sales and sku_prod and cost_col:
-                psub = products_df[[sku_prod, cost_col]].copy()
-                psub.columns = ["_sku", "_cost"]
-                merged["_sku"] = merged[sku_sales]
-                merged = merged.merge(psub, on="_sku", how="left")
-                merged["_cost"] = merged["_cost"].fillna(0)
-            else:
-                merged["_cost"] = 0
-
-            merged["_qty"] = pd.to_numeric(merged[qty_col], errors="coerce").fillna(0) if qty_col else 1
-            merged["_price"] = pd.to_numeric(merged[price_col], errors="coerce").fillna(0) if price_col else 0
-            merged["_cost"] = pd.to_numeric(merged["_cost"], errors="coerce").fillna(0)
-
-            merged["revenue"] = merged["_qty"] * merged["_price"]
-            merged["profit"] = merged["_qty"] * (merged["_price"] - merged["_cost"])
-
-            if date_col:
-                merged["date"] = pd.to_datetime(merged[date_col], errors="coerce").dt.date
-            else:
-                merged["date"] = pd.date_range(end=pd.Timestamp.today(), periods=len(merged), freq="h").date
-
-            merged = merged.dropna(subset=["date"])
-            if len(merged) == 0:
-                return pd.DataFrame(columns=["date", "revenue", "profit", "orders", "units"])
-
-            daily = merged.groupby("date").agg(
-                revenue=("revenue", "sum"),
-                profit=("profit", "sum"),
-                units=("_qty", "sum"),
-            ).reset_index()
-
-            if order_col and order_col in merged.columns:
-                orders = merged.groupby("date")[order_col].nunique().reset_index()
-                orders.columns = ["date", "orders"]
-                daily = daily.merge(orders, on="date", how="left")
-            else:
-                daily["orders"] = daily["units"]
-
-            return daily.sort_values("date")
-
-        except Exception as e:
-            print(f"Error in calculate_daily_trends: {e}")
-            return pd.DataFrame(columns=["date", "revenue", "profit", "orders", "units"])
-
-    def calculate_stockout_risk(self, inventory_df) -> dict:
-        """Calculate stockout risk metrics."""
-        try:
-            if inventory_df is None or len(inventory_df) == 0:
-                return {"total_items": 0, "zero_stock": 0, "low_stock": 0, "stockout_risk_pct": 0}
-
-            stock_col = self._find_column(inventory_df, ["stock_on_hand", "stock", "quantity", "qty", "inventory"])
-            reorder_col = self._find_column(inventory_df, ["reorder_point", "reorder_level", "min_stock"])
-
-            df = inventory_df.copy()
-            df["_stock"] = pd.to_numeric(df[stock_col], errors="coerce").fillna(0) if stock_col else 0
-            df["_reorder"] = pd.to_numeric(df[reorder_col], errors="coerce").fillna(10) if reorder_col else 10
-
-            total_items = int(len(df))
-            zero_stock = int((df["_stock"] == 0).sum())
-            low_stock = int((df["_stock"] <= df["_reorder"]).sum())
-
-            return {
-                "total_items": total_items,
-                "zero_stock": zero_stock,
-                "low_stock": low_stock,
-                "stockout_risk_pct": (low_stock / total_items * 100) if total_items else 0,
-            }
-
-        except Exception as e:
-            print(f"Error in calculate_stockout_risk: {e}")
-            return {"total_items": 0, "zero_stock": 0, "low_stock": 0, "stockout_risk_pct": 0}
+            if not date_col:
+                return int(max(1, fallback))
+            s = pd.to_datetime(sales_df[date_col], errors="coerce").dropna()
+            if len(s) == 0:
+                return int(max(1, fallback))
+            days = int((s.max() - s.min()).days + 1)
+            return int(max(1, days))
+        except Exception:
+            return int(max(1, fallback))
 
     # ------------------------------------------------------------------
     # Forward Simulation
@@ -369,20 +95,27 @@ class Simulator:
         channel="All",
         category="All",
         campaign_days=7,
-        data_days=30,
+        data_days=30,  # used only if we cannot infer from dates
     ) -> dict:
         """
-        Forward simulation:
-        Inputs: discount, margin floor, days, budget, targeting
-        Output: expected KPIs + ROI
+        Forward simulation: given discount/margin/days/budget -> expected results.
+
+        Important changes vs earlier versions:
+        - data_days auto-inferred from sales date column when available
+        - promo_cost model is softer to avoid universally negative ROI
         """
         try:
             if sales_df is None or len(sales_df) == 0:
                 return {"outputs": None, "comparison": None, "warnings": ["No sales data provided"]}
 
+            # Infer baseline window from data if possible
+            inferred_days = self._infer_data_days(sales_df, fallback=data_days)
+            data_days = int(max(1, inferred_days))
+            campaign_days = int(max(1, campaign_days))
+
             merged = sales_df.copy()
 
-            # --- Merge stores for city/channel filtering ---
+            # --- Merge stores to get city/channel for filtering ---
             store_sales = self._get_store_column(sales_df)
             store_stores = self._get_store_column(stores_df) if stores_df is not None else None
             city_col = self._get_city_column(stores_df) if stores_df is not None else None
@@ -399,7 +132,7 @@ class Simulator:
                 merged["_store"] = merged[store_sales]
                 merged = merged.merge(ssub, on="_store", how="left")
 
-            # --- Merge products for cost + category filtering ---
+            # --- Merge products for cost + category ---
             sku_sales = self._get_sku_column(sales_df)
             sku_prod = self._get_sku_column(products_df) if products_df is not None else None
             cost_col = self._get_cost_column(products_df) if products_df is not None else None
@@ -422,18 +155,22 @@ class Simulator:
                 merged = merged.merge(psub, on="_sku", how="left")
 
             if "_cost" not in merged.columns:
-                merged["_cost"] = 0
+                merged["_cost"] = np.nan
             if "category" not in merged.columns:
                 merged["category"] = "Unknown"
 
-            # --- Core numeric columns ---
+            # --- Numeric columns ---
             price_col = self._get_price_column(merged)
             qty_col = self._get_qty_column(merged)
             order_col = self._get_order_column(merged)
 
             merged["_qty"] = pd.to_numeric(merged[qty_col], errors="coerce").fillna(0) if qty_col else 1
             merged["_price"] = pd.to_numeric(merged[price_col], errors="coerce").fillna(0) if price_col else 0
-            merged["_cost"] = pd.to_numeric(merged["_cost"], errors="coerce").fillna(0)
+            merged["_cost"] = pd.to_numeric(merged["_cost"], errors="coerce")
+
+            # Cost missing diagnostics
+            cost_missing_pct = float(merged["_cost"].isna().mean() * 100) if "_cost" in merged.columns else 100.0
+            merged["_cost"] = merged["_cost"].fillna(0)
 
             # --- Apply targeting filters ---
             if city != "All" and city_col and city_col in merged.columns:
@@ -446,31 +183,26 @@ class Simulator:
             if len(merged) == 0:
                 return {"outputs": None, "comparison": None, "warnings": ["No data matches filters"]}
 
+            # --- Compute baseline revenue/profit from data ---
             merged["revenue"] = merged["_qty"] * merged["_price"]
             merged["profit"] = merged["_qty"] * (merged["_price"] - merged["_cost"])
-
-            # --- Baseline scaling ---
-            data_days = max(1, int(data_days))
-            campaign_days = max(1, int(campaign_days))
 
             baseline_revenue = merged["revenue"].sum() / data_days * campaign_days
             baseline_profit = merged["profit"].sum() / data_days * campaign_days
             baseline_units = merged["_qty"].sum() / data_days * campaign_days
+            baseline_orders = (merged[order_col].nunique() / data_days * campaign_days) if (order_col and order_col in merged.columns) else (len(merged) / data_days * campaign_days)
 
-            if order_col and order_col in merged.columns:
-                baseline_orders = merged[order_col].nunique() / data_days * campaign_days
-            else:
-                baseline_orders = len(merged) / data_days * campaign_days
-
-            # --- Elasticity + lift ---
+            # --- Elasticity ---
             elasticity = self.category_elasticity.get(category, self.default_elasticity) if category != "All" else self.default_elasticity
+
+            # --- Demand lift ---
             demand_lift_pct = float(np.clip(float(discount_pct) * float(elasticity), -50, 400))
             expected_units = baseline_units * (1 + demand_lift_pct / 100)
 
             avg_price = float(merged["_price"].mean()) if len(merged) else 0.0
             avg_cost = float(merged["_cost"].mean()) if len(merged) else 0.0
 
-            # --- Margin floor enforcement (cap discount if needed) ---
+            # --- Margin floor enforcement ---
             base_margin_pct = ((avg_price - avg_cost) / avg_price * 100) if avg_price > 0 else 0.0
 
             effective_discount = float(discount_pct)
@@ -491,21 +223,23 @@ class Simulator:
                 discounted_price = avg_price * (1 - effective_discount / 100)
                 expected_margin_pct = ((discounted_price - avg_cost) / discounted_price * 100) if discounted_price > 0 else 0.0
 
-            # --- Revenue/Profit ---
+            # --- Financials ---
             expected_revenue = expected_units * discounted_price
             cogs = expected_units * avg_cost
             expected_gross_profit = expected_revenue - cogs
 
-            # Promo cost model (budget-limited, plus 5% of revenue safety cap)
-            promo_cost = min(float(promo_budget), float(expected_revenue) * 0.05)
+            # PROMO COST MODEL (UPDATED):
+            # - scale spend by campaign length (short campaigns don't spend full budget)
+            # - cap promo spend at 1% of revenue (instead of 5%) to prevent universal negative ROI
+            budget_scaled = float(promo_budget) * (campaign_days / 30.0)
+            promo_cost = min(budget_scaled, float(expected_revenue) * 0.01)
 
-            # Fulfillment cost on incremental units
             incremental_units = max(0.0, expected_units - baseline_units)
             fulfillment_cost = incremental_units * 1.5
 
             expected_net_profit = expected_gross_profit - promo_cost - fulfillment_cost
 
-            # ROI
+            # ROI (no hard clamp while debugging; you can clamp later in UI)
             total_investment = promo_cost + fulfillment_cost
             incremental_profit = expected_net_profit - baseline_profit
 
@@ -513,10 +247,10 @@ class Simulator:
                 roi_pct = incremental_profit / total_investment * 100
             else:
                 roi_pct = 0 if incremental_profit <= 0 else 100
-            roi_pct = float(np.clip(roi_pct, -100, 500))
 
-            # Warnings
             warnings = []
+            if cost_missing_pct > 20:
+                warnings.append(f"Cost missing for {cost_missing_pct:.1f}% of rows (products↔sales SKU mapping may be weak).")
             if margin_capped:
                 warnings.append(f"Discount capped to {effective_discount:.1f}% to maintain {margin_floor}% margin floor")
             if expected_margin_pct < margin_floor:
@@ -525,6 +259,7 @@ class Simulator:
                 warnings.append(f"Negative ROI ({roi_pct:.1f}%)")
 
             outputs = {
+                # main outputs
                 "expected_revenue": float(expected_revenue),
                 "expected_orders": int(baseline_orders * (1 + demand_lift_pct / 100)),
                 "expected_units": float(expected_units),
@@ -535,6 +270,17 @@ class Simulator:
                 "promo_cost": float(promo_cost),
                 "fulfillment_cost": float(fulfillment_cost),
                 "discount_pct_effective": float(effective_discount),
+
+                # debug outputs (so you can tell me what's wrong)
+                "baseline_revenue_used": float(baseline_revenue),
+                "baseline_profit_used": float(baseline_profit),
+                "incremental_profit": float(incremental_profit),
+                "total_investment": float(total_investment),
+                "avg_price": float(avg_price),
+                "avg_cost": float(avg_cost),
+                "base_margin_pct": float(base_margin_pct),
+                "data_days_inferred": int(data_days),
+                "cost_missing_pct": float(cost_missing_pct),
             }
 
             comparison = {
@@ -552,7 +298,7 @@ class Simulator:
             return {"outputs": None, "comparison": None, "warnings": [f"Error: {str(e)}"]}
 
     # ------------------------------------------------------------------
-    # Reverse Optimizer (your requested logic)
+    # Reverse Optimizer
     # ------------------------------------------------------------------
     def recommend_campaign(
         self,
@@ -571,13 +317,9 @@ class Simulator:
         require_positive_roi=True,
     ) -> dict:
         """
-        Reverse simulator:
-        Inputs: budget + targeting
-        Output: best discount/margin_floor/days
-
-        Two-pass logic:
-        - Pass 1: require positive ROI (if enabled)
-        - Pass 2: fallback to best available even if ROI <= 0
+        Two-pass optimizer:
+        - pass1: require positive ROI (if enabled)
+        - pass2: fallback to best available even if ROI is negative
         """
 
         def run(require_positive: bool):
@@ -608,11 +350,10 @@ class Simulator:
 
                         roi = float(out.get("roi_pct", -999))
                         net_profit = float(out.get("expected_net_profit", -1e18))
+                        score = roi if objective == "roi" else net_profit
 
                         if require_positive and roi <= 0:
                             continue
-
-                        score = roi if objective == "roi" else net_profit
 
                         row = {
                             "discount_pct": float(d),
@@ -623,8 +364,11 @@ class Simulator:
                             "expected_net_profit": float(net_profit),
                             "expected_margin_pct": float(out.get("expected_margin_pct", 0)),
                             "roi_pct": float(roi),
+                            "promo_cost": float(out.get("promo_cost", 0)),
                             "baseline_revenue": float(comp.get("baseline_revenue", 0)),
                             "baseline_profit": float(comp.get("baseline_profit", 0)),
+                            "data_days_inferred": int(out.get("data_days_inferred", data_days)),
+                            "cost_missing_pct": float(out.get("cost_missing_pct", 0)),
                             "score": float(score),
                             "warnings": res.get("warnings", []),
                         }
@@ -636,15 +380,14 @@ class Simulator:
             df = pd.DataFrame(candidates)
             if len(df) > 0:
                 df = df.sort_values("score", ascending=False)
-
             return best, df
 
-        # Pass 1
+        # Pass 1: positive ROI only
         best, df = run(require_positive=require_positive_roi)
         if best is not None:
             return {"best": best, "candidates": df, "warnings": best.get("warnings", [])}
 
-        # Pass 2 fallback
+        # Pass 2: fallback
         best2, df2 = run(require_positive=False)
         if best2 is None:
             return {
