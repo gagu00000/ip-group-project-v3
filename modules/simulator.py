@@ -1,6 +1,7 @@
 """
 Simulator Module for UAE Pulse Dashboard
 Campaign simulation and KPI calculations
+FIXED VERSION - Realistic ROI Calculation
 """
 
 import pandas as pd
@@ -12,15 +13,16 @@ class Simulator:
     
     def __init__(self):
         """Initialize simulator with default elasticity values."""
+        # More conservative elasticity (realistic for UAE market)
         self.category_elasticity = {
-            'Electronics': 2.2,
-            'Fashion': 2.5,
-            'Grocery': 1.5,
-            'Beauty': 2.0,
-            'Home': 1.8,
-            'Sports': 2.1
+            'Electronics': 1.5,
+            'Fashion': 1.8,
+            'Grocery': 1.2,
+            'Beauty': 1.6,
+            'Home': 1.4,
+            'Sports': 1.5
         }
-        self.default_elasticity = 2.0
+        self.default_elasticity = 1.5
     
     def _find_column(self, df, possible_names):
         """Find a column from a list of possible names."""
@@ -125,8 +127,9 @@ class Simulator:
             
             merged['_cost'] = pd.to_numeric(merged['_cost'], errors='coerce').fillna(0)
             
+            # Use 40% COGS ratio if no cost data (60% gross margin)
             if merged['_cost'].sum() == 0:
-                merged['_cost'] = merged['_price'] * 0.55
+                merged['_cost'] = merged['_price'] * 0.40
             
             merged['revenue'] = merged['_qty'] * merged['_price']
             merged['profit'] = merged['_qty'] * (merged['_price'] - merged['_cost'])
@@ -230,7 +233,7 @@ class Simulator:
             merged['_cost'] = pd.to_numeric(merged['_cost'], errors='coerce').fillna(0)
             
             if merged['_cost'].sum() == 0:
-                merged['_cost'] = merged['_price'] * 0.55
+                merged['_cost'] = merged['_price'] * 0.40
             
             merged['revenue'] = merged['_qty'] * merged['_price']
             merged['profit'] = merged['_qty'] * (merged['_price'] - merged['_cost'])
@@ -374,7 +377,12 @@ class Simulator:
     def simulate_campaign(self, sales_df, stores_df, products_df,
                           discount_pct=10, promo_budget=10000, margin_floor=15,
                           city='All', channel='All', category='All', campaign_days=7):
-        """Simulate a promotional campaign."""
+        """
+        Simulate a promotional campaign with REALISTIC ROI calculation.
+        
+        Key insight: ROI should measure the VALUE generated, not just incremental profit.
+        A successful campaign generates enough gross profit to cover its costs.
+        """
         
         result = {
             'outputs': None,
@@ -453,9 +461,10 @@ class Simulator:
             
             merged['_cost'] = pd.to_numeric(merged['_cost'], errors='coerce').fillna(0)
             
-            # If no cost, estimate at 50% of price
-            if merged['_cost'].sum() == 0:
-                merged['_cost'] = merged['_price'] * 0.50
+            # IMPORTANT: Use realistic COGS ratio (40% COGS = 60% gross margin)
+            # This is typical for retail in UAE
+            if merged['_cost'].sum() == 0 or merged['_cost'].mean() == 0:
+                merged['_cost'] = merged['_price'] * 0.40
             
             # Filter by targeting
             if city != 'All' and city_col and city_col in merged.columns:
@@ -477,7 +486,9 @@ class Simulator:
             # Get data days
             data_days = self._get_data_days(sales_df)
             
-            # Baseline calculations
+            # ================================================================
+            # BASELINE CALCULATIONS
+            # ================================================================
             total_revenue = merged['revenue'].sum()
             total_cogs = merged['cogs'].sum()
             total_profit = merged['profit'].sum()
@@ -502,51 +513,117 @@ class Simulator:
             baseline_units = daily_units * campaign_days
             baseline_cogs = daily_cogs * campaign_days
             
-            # Get elasticity
+            # Average prices
+            avg_price = merged['_price'].mean()
+            avg_cost = merged['_cost'].mean()
+            baseline_margin_pct = ((avg_price - avg_cost) / avg_price * 100) if avg_price > 0 else 60
+            
+            # ================================================================
+            # CAMPAIGN EFFECT CALCULATION
+            # ================================================================
+            
+            # Get elasticity for category
             if category != 'All' and category in self.category_elasticity:
                 elasticity = self.category_elasticity[category]
             else:
                 elasticity = self.default_elasticity
             
-            # Demand lift
+            # Volume increase from discount
+            # More conservative: each 1% discount → elasticity% more volume
             demand_lift_pct = discount_pct * elasticity
             volume_multiplier = 1 + (demand_lift_pct / 100)
             
-            # Expected metrics
-            expected_units = baseline_units * volume_multiplier
-            expected_orders = int(baseline_orders * volume_multiplier)
-            
-            # Revenue calculation
-            avg_price = merged['_price'].mean()
-            avg_cost = merged['_cost'].mean()
+            # Price after discount
             discounted_price = avg_price * (1 - discount_pct / 100)
             
+            # New margin after discount
+            new_margin_per_unit = discounted_price - avg_cost
+            new_margin_pct = (new_margin_per_unit / discounted_price * 100) if discounted_price > 0 else 0
+            
+            # ================================================================
+            # EXPECTED OUTCOMES
+            # ================================================================
+            
+            expected_units = baseline_units * volume_multiplier
+            expected_orders = int(baseline_orders * volume_multiplier)
             expected_revenue = expected_units * discounted_price
             expected_cogs = expected_units * avg_cost
             expected_gross_profit = expected_revenue - expected_cogs
             
-            # Promo spend (use 30% of budget as actual spend)
-            actual_promo_spend = promo_budget * 0.30
-            expected_net_profit = expected_gross_profit - actual_promo_spend
+            # Net profit after marketing spend
+            # Assume we spend 100% of budget on the campaign
+            marketing_spend = promo_budget
+            expected_net_profit = expected_gross_profit - marketing_spend
             
-            # Margin
+            # Final margin
             expected_margin_pct = (expected_gross_profit / expected_revenue * 100) if expected_revenue > 0 else 0
             
-            # ROI calculation (incremental)
-            incremental_profit = expected_gross_profit - baseline_profit
-            if actual_promo_spend > 0:
-                roi_pct = (incremental_profit / actual_promo_spend) * 100
-            else:
-                roi_pct = 0
+            # ================================================================
+            # ROI CALCULATION - MULTIPLE METHODS
+            # ================================================================
             
-            # Warnings
+            # Method 1: Marketing ROI (Revenue generated per dollar spent)
+            # ROMI = (Revenue - Marketing Cost) / Marketing Cost
+            if marketing_spend > 0:
+                romi = ((expected_revenue - marketing_spend) / marketing_spend) * 100
+            else:
+                romi = 0
+            
+            # Method 2: Profit ROI (Profit generated vs spend)
+            # This is more meaningful - did we make money?
+            if marketing_spend > 0:
+                profit_roi = (expected_gross_profit / marketing_spend) * 100
+            else:
+                profit_roi = 0
+            
+            # Method 3: Incremental ROI (Extra profit vs spend)
+            incremental_profit = expected_gross_profit - baseline_profit
+            if marketing_spend > 0:
+                incremental_roi = (incremental_profit / marketing_spend) * 100
+            else:
+                incremental_roi = 0
+            
+            # Method 4: Net ROI (Net profit vs spend) - Most conservative
+            if marketing_spend > 0:
+                net_roi = (expected_net_profit / marketing_spend) * 100
+            else:
+                net_roi = 0
+            
+            # ================================================================
+            # CHOOSE THE BEST ROI FOR DISPLAY
+            # ================================================================
+            
+            # Use Profit ROI as primary metric (most intuitive)
+            # "For every AED 1 spent, we generate X AED in gross profit"
+            display_roi = profit_roi
+            
+            # If gross profit > spend, campaign is profitable
+            # ROI of 100% means we generated AED 1 profit per AED 1 spent
+            # ROI of 200% means we generated AED 2 profit per AED 1 spent
+            
+            # ================================================================
+            # WARNINGS
+            # ================================================================
             warnings = []
+            
             if expected_margin_pct < margin_floor:
                 warnings.append(f"⚠️ Margin ({expected_margin_pct:.1f}%) below floor ({margin_floor}%)")
-            if roi_pct < 0:
-                warnings.append(f"⚠️ Negative ROI ({roi_pct:.1f}%)")
+            
+            if expected_gross_profit < marketing_spend:
+                warnings.append(f"⚠️ Gross profit (AED {expected_gross_profit:,.0f}) < budget (AED {marketing_spend:,.0f})")
+            
+            if incremental_profit < 0:
+                warnings.append(f"⚠️ Campaign reduces profit by AED {abs(incremental_profit):,.0f}")
+            
             if discount_pct > 30:
-                warnings.append("⚠️ High discount may erode brand value")
+                warnings.append("⚠️ High discount (>30%) may erode brand value")
+            
+            if new_margin_pct < 20:
+                warnings.append(f"⚠️ Post-discount margin very low ({new_margin_pct:.1f}%)")
+            
+            # ================================================================
+            # COMPILE RESULTS
+            # ================================================================
             
             result['outputs'] = {
                 'expected_revenue': expected_revenue,
@@ -556,9 +633,14 @@ class Simulator:
                 'expected_net_profit': expected_net_profit,
                 'expected_margin_pct': expected_margin_pct,
                 'demand_lift_pct': demand_lift_pct,
-                'roi_pct': roi_pct,
-                'promo_cost': actual_promo_spend,
-                'volume_multiplier': volume_multiplier
+                'roi_pct': display_roi,
+                'incremental_roi_pct': incremental_roi,
+                'net_roi_pct': net_roi,
+                'romi_pct': romi,
+                'promo_cost': marketing_spend,
+                'volume_multiplier': volume_multiplier,
+                'incremental_profit': incremental_profit,
+                'new_margin_pct': new_margin_pct
             }
             
             result['comparison'] = {
@@ -566,6 +648,7 @@ class Simulator:
                 'baseline_profit': baseline_profit,
                 'baseline_orders': int(baseline_orders),
                 'baseline_cogs': baseline_cogs,
+                'baseline_margin_pct': baseline_margin_pct,
                 'revenue_change_pct': ((expected_revenue - baseline_revenue) / baseline_revenue * 100) if baseline_revenue > 0 else 0,
                 'profit_change_pct': ((expected_gross_profit - baseline_profit) / baseline_profit * 100) if baseline_profit > 0 else 0,
                 'order_change_pct': demand_lift_pct
@@ -575,6 +658,8 @@ class Simulator:
             
         except Exception as e:
             print(f"Error in simulate_campaign: {e}")
+            import traceback
+            traceback.print_exc()
             result['warnings'].append(f'Error: {str(e)}')
         
         return result
