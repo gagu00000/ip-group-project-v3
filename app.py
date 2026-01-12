@@ -3402,65 +3402,118 @@ def show_cleaner_page():
 # ============================================================================
 
 def show_simulator_page():
-    """Display the campaign simulator page."""
-    
+    """Display the campaign simulator page (UPDATED to support new simulator logic)."""
+
     st.markdown('<h1 class="page-title page-title-purple">🎯 Campaign Simulator</h1>', unsafe_allow_html=True)
     st.markdown('<p class="page-description">Run what-if scenarios and forecast campaign outcomes</p>', unsafe_allow_html=True)
-    
+
     st.markdown("---")
-    
+
     if not st.session_state.data_loaded:
         st.warning("⚠️ Please load data first. Go to 📂 Data page.")
         show_footer()
         return
-    
+
     sales_df = st.session_state.clean_sales if st.session_state.is_cleaned else st.session_state.raw_sales
     stores_df = st.session_state.clean_stores if st.session_state.is_cleaned else st.session_state.raw_stores
     products_df = st.session_state.clean_products if st.session_state.is_cleaned else st.session_state.raw_products
-    
+
     st.markdown('<p class="section-title section-title-cyan">⚙️ Campaign Parameters</p>', unsafe_allow_html=True)
-    
+
+    # -----------------------------
+    # Prepare option lists safely
+    # -----------------------------
+    cities = ['All']
+    channels = ['All']
+    categories = ['All']
+
+    if stores_df is not None and 'city' in stores_df.columns:
+        cities += sorted(stores_df['city'].dropna().unique().tolist())
+    if stores_df is not None and 'channel' in stores_df.columns:
+        channels += sorted(stores_df['channel'].dropna().unique().tolist())
+    if products_df is not None and 'category' in products_df.columns:
+        categories += sorted(products_df['category'].dropna().unique().tolist())
+
+    # Brand + SKU support (new)
+    brand_col = 'brand' if (products_df is not None and 'brand' in products_df.columns) else None
+    sku_col = None
+    if products_df is not None:
+        if 'sku' in products_df.columns:
+            sku_col = 'sku'
+        elif 'product_id' in products_df.columns:
+            sku_col = 'product_id'
+
+    promo_types = ["Percentage Off", "BOGO", "Bundle Deal", "Flash Sale", "Clearance", "Member Exclusive"]
+
+    # -----------------------------
+    # UI layout
+    # -----------------------------
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
         st.markdown('<p style="color: #06b6d4; font-weight: 600; margin-bottom: 10px;">💰 Pricing</p>', unsafe_allow_html=True)
-        discount_pct = st.slider("Discount %", 0, 50, 15)
+        discount_pct = st.slider("Discount %", 0, 70, 15, step=1)
         promo_budget = st.number_input("Promo Budget (AED)", 1000, 500000, 25000, step=5000)
-    
+
+        promo_type = st.selectbox("Promo Type", promo_types, index=0)
+
     with col2:
         st.markdown('<p style="color: #8b5cf6; font-weight: 600; margin-bottom: 10px;">📊 Constraints</p>', unsafe_allow_html=True)
-        margin_floor = st.slider("Margin Floor %", 0, 50, 15)
+        margin_floor = st.slider("Margin Floor %", 0, 50, 15, step=1)
         campaign_days = st.slider("Campaign Days", 1, 30, 7)
-    
+
+        # optional: allow changing baseline window (kept hidden in your old UI)
+        data_days = st.slider("Baseline Window (days)", 7, 90, 30, step=1)
+
     with col3:
         st.markdown('<p style="color: #ec4899; font-weight: 600; margin-bottom: 10px;">🎯 Targeting</p>', unsafe_allow_html=True)
-        
-        cities = ['All']
-        channels = ['All']
-        categories = ['All']
-        
-        if stores_df is not None and 'city' in stores_df.columns:
-            cities += stores_df['city'].dropna().unique().tolist()
-        if stores_df is not None and 'channel' in stores_df.columns:
-            channels += stores_df['channel'].dropna().unique().tolist()
-        if products_df is not None and 'category' in products_df.columns:
-            categories += products_df['category'].dropna().unique().tolist()
-        
+
         city = st.selectbox("Target City", cities)
         channel = st.selectbox("Target Channel", channels)
         category = st.selectbox("Target Category", categories)
-    
+
+        # -----------------------------
+        # NEW: Category -> Brand -> SKU chain
+        # -----------------------------
+        # Brands filtered by category (if possible)
+        brands = ["All"]
+        if products_df is not None and brand_col:
+            if category != "All" and 'category' in products_df.columns:
+                brands += sorted(products_df.loc[products_df['category'] == category, brand_col].dropna().unique().tolist())
+            else:
+                brands += sorted(products_df[brand_col].dropna().unique().tolist())
+
+        brand = st.selectbox("Target Brand", brands)
+
+        # SKUs filtered by category + brand (if possible)
+        skus = ["All"]
+        if products_df is not None and sku_col:
+            sku_source = products_df.copy()
+
+            if category != "All" and 'category' in sku_source.columns:
+                sku_source = sku_source[sku_source['category'] == category]
+            if brand != "All" and brand_col and brand_col in sku_source.columns:
+                sku_source = sku_source[sku_source[brand_col] == brand]
+
+            skus += sorted(sku_source[sku_col].dropna().astype(str).unique().tolist())
+
+        sku = st.selectbox("Target SKU", skus)
+
     st.markdown("---")
-    
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        run_simulation = st.button("🚀 Run Simulation", width='stretch', type="primary")
-    
+
+    colA, colB, colC = st.columns([1, 2, 1])
+    with colB:
+        run_simulation = st.button("🚀 Run Simulation", use_container_width=True, type="primary")
+
+    if st.button("🔄 Reset Simulation", use_container_width=True):
+        st.session_state.pop("sim_results", None)
+        st.rerun()
+
     if run_simulation:
         with st.spinner("🔄 Running simulation..."):
             try:
                 sim = Simulator()
-                
+
                 results = sim.simulate_campaign(
                     sales_df, stores_df, products_df,
                     discount_pct=discount_pct,
@@ -3469,62 +3522,88 @@ def show_simulator_page():
                     city=city,
                     channel=channel,
                     category=category,
-                    campaign_days=campaign_days
+                    campaign_days=campaign_days,
+                    brand=brand,
+                    sku=sku,
+                    promo_type=promo_type,
+                    data_days=data_days
                 )
-                
+
                 st.session_state.sim_results = results
-                
+
             except Exception as e:
                 st.error(f"❌ Simulation error: {str(e)}")
-    
+
+    # -----------------------------
+    # Results rendering (same as before + scenario block)
+    # -----------------------------
     if 'sim_results' in st.session_state and st.session_state.sim_results:
         results = st.session_state.sim_results
         outputs = results.get('outputs')
         comparison = results.get('comparison')
         warnings = results.get('warnings', [])
-        
+
+        if results.get("scenario"):
+            st.markdown("---")
+            st.markdown('<p class="section-title section-title-purple">🧾 Scenario Used</p>', unsafe_allow_html=True)
+            st.json(results["scenario"])
+
         if outputs:
             st.markdown("---")
             st.markdown('<p class="section-title section-title-teal">📊 Simulation Results</p>', unsafe_allow_html=True)
-            
+
             col1, col2, col3, col4 = st.columns(4)
-            
+
             with col1:
                 delta = f"{comparison['revenue_change_pct']:+.1f}%"
                 delta_type = "positive" if comparison['revenue_change_pct'] > 0 else "negative"
-                st.markdown(create_metric_card("Expected Revenue", format_currency(outputs['expected_revenue']), delta, delta_type, "cyan"), unsafe_allow_html=True)
-            
+                st.markdown(create_metric_card(
+                    "Expected Revenue",
+                    format_currency(outputs['expected_revenue']),
+                    delta,
+                    delta_type,
+                    "cyan"
+                ), unsafe_allow_html=True)
+
             with col2:
                 delta = f"{comparison['order_change_pct']:+.1f}%"
                 delta_type = "positive" if comparison['order_change_pct'] > 0 else "negative"
-                st.markdown(create_metric_card("Expected Orders", f"{outputs['expected_orders']:,}", delta, delta_type, "blue"), unsafe_allow_html=True)
-            
+                st.markdown(create_metric_card(
+                    "Expected Orders",
+                    f"{outputs['expected_orders']:,}",
+                    delta,
+                    delta_type,
+                    "blue"
+                ), unsafe_allow_html=True)
+
             with col3:
                 delta = f"{comparison['profit_change_pct']:+.1f}%"
                 delta_type = "positive" if comparison['profit_change_pct'] > 0 else "negative"
-                st.markdown(create_metric_card("Net Profit", format_currency(outputs['expected_net_profit']), delta, delta_type, "green"), unsafe_allow_html=True)
-            
+                st.markdown(create_metric_card(
+                    "Net Profit",
+                    format_currency(outputs['expected_net_profit']),
+                    delta,
+                    delta_type,
+                    "green"
+                ), unsafe_allow_html=True)
+
             with col4:
                 color = "green" if outputs['roi_pct'] > 0 else "pink"
                 st.markdown(create_metric_card("ROI", f"{outputs['roi_pct']:.1f}%", color=color), unsafe_allow_html=True)
-            
+
             st.markdown("<br>", unsafe_allow_html=True)
-            
+
             col1, col2, col3, col4 = st.columns(4)
-            
             with col1:
                 st.markdown(create_metric_card("Demand Lift", f"+{outputs['demand_lift_pct']:.1f}%", color="purple"), unsafe_allow_html=True)
-            
             with col2:
                 color = "green" if outputs['expected_margin_pct'] >= margin_floor else "orange"
                 st.markdown(create_metric_card("Margin", f"{outputs['expected_margin_pct']:.1f}%", color=color), unsafe_allow_html=True)
-            
             with col3:
                 st.markdown(create_metric_card("Promo Cost", format_currency(outputs['promo_cost']), color="orange"), unsafe_allow_html=True)
-            
             with col4:
                 st.markdown(create_metric_card("Fulfillment", format_currency(outputs['fulfillment_cost']), color="blue"), unsafe_allow_html=True)
-            
+
             if warnings:
                 st.markdown("---")
                 st.markdown('<p class="section-title section-title-orange">⚠️ Risk Alerts</p>', unsafe_allow_html=True)
@@ -3533,48 +3612,11 @@ def show_simulator_page():
             else:
                 st.markdown("---")
                 st.success("✅ All metrics within acceptable range. Campaign looks healthy!")
-            
-            st.markdown("---")
-            st.markdown('<p class="section-title section-title-blue">📈 Baseline vs Campaign</p>', unsafe_allow_html=True)
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                comp_data = pd.DataFrame({
-                    'Metric': ['Revenue', 'Profit'],
-                    'Baseline': [comparison['baseline_revenue'], comparison['baseline_profit']],
-                    'Campaign': [outputs['expected_revenue'], outputs['expected_net_profit']]
-                })
-                
-                fig = go.Figure()
-                fig.add_trace(go.Bar(name='Baseline', x=comp_data['Metric'], y=comp_data['Baseline'], marker_color='#3b82f6'))
-                fig.add_trace(go.Bar(name='Campaign', x=comp_data['Metric'], y=comp_data['Campaign'], marker_color='#06b6d4'))
-                fig = style_plotly_chart(fig)
-                fig.update_layout(barmode='group', title='Revenue & Profit Comparison')
-                st.plotly_chart(fig, width='stretch')
-            
-            with col2:
-                orders_data = pd.DataFrame({
-                    'Type': ['Baseline', 'Campaign'],
-                    'Orders': [comparison['baseline_orders'], outputs['expected_orders']]
-                })
-                
-                fig = px.bar(
-                    orders_data,
-                    x='Type',
-                    y='Orders',
-                    title='Orders Comparison',
-                    color='Type',
-                    color_discrete_sequence=['#8b5cf6', '#ec4899']
-                )
-                fig = style_plotly_chart(fig)
-                fig.update_layout(showlegend=False)
-                st.plotly_chart(fig, width='stretch')
-        
+
         elif warnings:
             for warning in warnings:
                 st.warning(warning)
-    
+
     show_footer()
 
 # ============================================================================
