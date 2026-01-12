@@ -1,31 +1,10 @@
 
-"""
-Data Cleaner Module - UAE Pulse Simulator
-Handles validation, cleaning, and issue logging for all datasets.
-
-DROP Logic:
-- stores.city NOT IN [Dubai, Abu Dhabi, Sharjah]
-- stores.channel NOT IN [App, Web, Marketplace]
-- stores.fulfillment_type NOT IN [Own, 3PL]
-- products.launch_flag NOT IN [New, Regular]
-- sales.payment_status NOT IN [Paid, Failed, Refunded]
-- sales.timestamp unparseable/corrupted
-
-FIX Logic:
-- sales.return_flag invalid → False
-- sales.qty outlier → cap at 95th percentile
-- sales.selling_price outlier → cap at 95th percentile
-- products.unit_cost > base_price → impute
-- products.unit_cost missing → impute median
-- sales.discount_pct missing → 0
-- inventory.stock_on_hand negative → 0
-"""
-
 import pandas as pd
 import numpy as np
 from datetime import datetime
 import json
 import os
+import re
 
 
 class DataCleaner:
@@ -64,8 +43,17 @@ class DataCleaner:
         
         # Default mappings if file not found
         return {
-            "cities": {},
-            "channels": {},
+            "cities": {
+                "dubai": "Dubai", "DUBAI": "Dubai", "Dubayy": "Dubai", "dubayy": "Dubai",
+                "abu dhabi": "Abu Dhabi", "ABU DHABI": "Abu Dhabi", "abudhabi": "Abu Dhabi",
+                "Abu dhabi": "Abu Dhabi", "abu Dhabi": "Abu Dhabi",
+                "sharjah": "Sharjah", "SHARJAH": "Sharjah", "Shrajah": "Sharjah", "sharja": "Sharjah"
+            },
+            "channels": {
+                "app": "App", "APP": "App", "mobile": "App", "Mobile": "App",
+                "web": "Web", "WEB": "Web", "website": "Web", "Website": "Web",
+                "marketplace": "Marketplace", "MARKETPLACE": "Marketplace", "market": "Marketplace"
+            },
             "categories": {},
             "standard_values": {
                 "cities": ["Dubai", "Abu Dhabi", "Sharjah"],
@@ -126,10 +114,10 @@ class DataCleaner:
         self.cleaning_report = {}
         
         # Clean in order (stores/products first, then sales/inventory)
-        clean_products = self._clean_products(products_df.copy())
-        clean_stores = self._clean_stores(stores_df.copy())
-        clean_sales = self._clean_sales(sales_df.copy(), clean_products, clean_stores)
-        clean_inventory = self._clean_inventory(inventory_df.copy(), clean_products, clean_stores)
+        clean_products = self._clean_products(products_df.copy() if products_df is not None else pd.DataFrame())
+        clean_stores = self._clean_stores(stores_df.copy() if stores_df is not None else pd.DataFrame())
+        clean_sales = self._clean_sales(sales_df.copy() if sales_df is not None else pd.DataFrame(), clean_products, clean_stores)
+        clean_inventory = self._clean_inventory(inventory_df.copy() if inventory_df is not None else pd.DataFrame(), clean_products, clean_stores)
         
         # Final foreign key validation
         clean_sales = self._validate_foreign_keys_sales(clean_sales, clean_products, clean_stores)
@@ -139,6 +127,10 @@ class DataCleaner:
     
     def _clean_products(self, df):
         """Clean products dataframe."""
+        if df is None or len(df) == 0:
+            self.cleaning_report['products'] = {'original_rows': 0, 'final_rows': 0, 'dropped_rows': 0}
+            return pd.DataFrame()
+        
         original_count = len(df)
         
         # Standardize column names
@@ -170,7 +162,7 @@ class DataCleaner:
             launch_mappings = {
                 'new': 'New', 'NEW': 'New', 'N': 'New', 'n': 'New',
                 'regular': 'Regular', 'REGULAR': 'Regular', 'R': 'Regular', 'r': 'Regular',
-                'Reg': 'Regular', 'reg': 'Regular'
+                'Reg': 'Regular', 'reg': 'Regular', 'nan': 'Regular', 'None': 'Regular'
             }
             df['launch_flag'] = df['launch_flag'].apply(
                 lambda x: launch_mappings.get(str(x).strip(), str(x).strip().title()) if pd.notna(x) else 'Regular'
@@ -184,7 +176,7 @@ class DataCleaner:
                 invalid_values = df.loc[invalid_mask, 'launch_flag'].unique()
                 for val in invalid_values:
                     val_count = (df['launch_flag'] == val).sum()
-                    self._log_issue('products', f'launch_flag={val}', 'INVALID_LAUNCH_FLAG',
+                    self._log_issue('products', f'{val_count} rows', 'INVALID_LAUNCH_FLAG',
                                   f"launch_flag '{val}' not in {self.VALID_LAUNCH_FLAG}",
                                   f'Dropped {val_count} rows')
                 
@@ -207,17 +199,21 @@ class DataCleaner:
                 break
         
         if cost_col:
+            # Convert to numeric
+            df[cost_col] = pd.to_numeric(df[cost_col], errors='coerce')
+            
             # Fix missing cost
             missing_cost = df[cost_col].isna().sum()
             if missing_cost > 0:
                 if price_col and price_col in df.columns:
+                    df[price_col] = pd.to_numeric(df[price_col], errors='coerce')
                     # Impute as 60% of price
                     median_ratio = 0.6
                     df.loc[df[cost_col].isna(), cost_col] = df.loc[df[cost_col].isna(), price_col] * median_ratio
                 else:
                     # Impute with median
                     median_cost = df[cost_col].median()
-                    df[cost_col] = df[cost_col].fillna(median_cost)
+                    df[cost_col] = df[cost_col].fillna(median_cost if pd.notna(median_cost) else 50)
                 
                 self._log_issue('products', f'{missing_cost} rows', 'MISSING_UNIT_COST',
                               f'{missing_cost} products missing unit_cost_aed',
@@ -226,6 +222,7 @@ class DataCleaner:
             
             # Fix unit_cost > base_price
             if price_col and price_col in df.columns:
+                df[price_col] = pd.to_numeric(df[price_col], errors='coerce')
                 invalid_cost_mask = df[cost_col] > df[price_col]
                 invalid_cost_count = invalid_cost_mask.sum()
                 if invalid_cost_count > 0:
@@ -257,6 +254,10 @@ class DataCleaner:
     
     def _clean_stores(self, df):
         """Clean stores dataframe."""
+        if df is None or len(df) == 0:
+            self.cleaning_report['stores'] = {'original_rows': 0, 'final_rows': 0, 'dropped_rows': 0}
+            return pd.DataFrame()
+        
         original_count = len(df)
         
         # Standardize column names
@@ -289,7 +290,7 @@ class DataCleaner:
                 invalid_values = df.loc[invalid_mask, 'city'].unique()
                 for val in invalid_values:
                     val_count = (df['city'] == val).sum()
-                    self._log_issue('stores', f'city={val}', 'INVALID_CITY',
+                    self._log_issue('stores', f'{val_count} rows', 'INVALID_CITY',
                                   f"City '{val}' not in {self.VALID_CITIES}",
                                   f'Dropped {val_count} rows')
                 
@@ -310,7 +311,7 @@ class DataCleaner:
                 invalid_values = df.loc[invalid_mask, 'channel'].unique()
                 for val in invalid_values:
                     val_count = (df['channel'] == val).sum()
-                    self._log_issue('stores', f'channel={val}', 'INVALID_CHANNEL',
+                    self._log_issue('stores', f'{val_count} rows', 'INVALID_CHANNEL',
                                   f"Channel '{val}' not in {self.VALID_CHANNELS}",
                                   f'Dropped {val_count} rows')
                 
@@ -323,10 +324,11 @@ class DataCleaner:
             fulfillment_mappings = {
                 'own': 'Own', 'OWN': 'Own', 'self': 'Own', 'Self': 'Own',
                 '3pl': '3PL', '3PL': '3PL', 'third party': '3PL', 'Third Party': '3PL',
-                'thirdparty': '3PL', '3rd party': '3PL', '3rd Party': '3PL'
+                'thirdparty': '3PL', '3rd party': '3PL', '3rd Party': '3PL',
+                'nan': 'Own', 'None': 'Own'
             }
             df['fulfillment_type'] = df['fulfillment_type'].apply(
-                lambda x: fulfillment_mappings.get(str(x).strip(), str(x).strip()) if pd.notna(x) else x
+                lambda x: fulfillment_mappings.get(str(x).strip(), str(x).strip()) if pd.notna(x) else 'Own'
             )
             
             # Drop invalid fulfillment_type
@@ -337,7 +339,7 @@ class DataCleaner:
                 invalid_values = df.loc[invalid_mask, 'fulfillment_type'].unique()
                 for val in invalid_values:
                     val_count = (df['fulfillment_type'] == val).sum()
-                    self._log_issue('stores', f'fulfillment_type={val}', 'INVALID_FULFILLMENT_TYPE',
+                    self._log_issue('stores', f'{val_count} rows', 'INVALID_FULFILLMENT_TYPE',
                                   f"fulfillment_type '{val}' not in {self.VALID_FULFILLMENT}",
                                   f'Dropped {val_count} rows')
                 
@@ -365,6 +367,10 @@ class DataCleaner:
     
     def _clean_sales(self, df, products_df, stores_df):
         """Clean sales dataframe."""
+        if df is None or len(df) == 0:
+            self.cleaning_report['sales'] = {'original_rows': 0, 'final_rows': 0, 'dropped_rows': 0}
+            return pd.DataFrame()
+        
         original_count = len(df)
         
         # Standardize column names
@@ -391,15 +397,16 @@ class DataCleaner:
         
         # ===== TIMESTAMP VALIDATION - DROP IF CORRUPTED =====
         if 'order_time' in df.columns:
-            original_timestamps = len(df)
-            
             def parse_timestamp(x):
                 if pd.isna(x):
                     return pd.NaT
                 try:
                     return pd.to_datetime(x, format='mixed')
                 except:
-                    return pd.NaT
+                    try:
+                        return pd.to_datetime(x)
+                    except:
+                        return pd.NaT
             
             df['order_time'] = df['order_time'].apply(parse_timestamp)
             
@@ -412,26 +419,39 @@ class DataCleaner:
                 df = df[df['order_time'].notna()].copy()
                 self.stats['invalid_dropped'] += invalid_timestamps
             
-            # Drop dates outside valid range (2020-2030)
+            # Drop dates outside valid range (2020 to current date)
             if len(df) > 0:
-                out_of_range = ((df['order_time'].dt.year < 2020) | (df['order_time'].dt.year > 2030)).sum()
-                if out_of_range > 0:
-                    self._log_issue('sales', f'{out_of_range} rows', 'OUT_OF_RANGE_DATE',
-                                  f'{out_of_range} orders have dates outside valid range (2020-2030)',
+                current_date = pd.Timestamp.now()
+                current_year = current_date.year
+                
+                # Future dates (beyond current date) are outliers
+                future_dates = (df['order_time'] > current_date).sum()
+                if future_dates > 0:
+                    self._log_issue('sales', f'{future_dates} rows', 'FUTURE_DATE_OUTLIER',
+                                  f'{future_dates} orders have future dates (beyond {current_date.strftime("%Y-%m-%d")})',
                                   'Dropped rows')
-                    df = df[(df['order_time'].dt.year >= 2020) & (df['order_time'].dt.year <= 2030)].copy()
-                    self.stats['invalid_dropped'] += out_of_range
+                    df = df[df['order_time'] <= current_date].copy()
+                    self.stats['invalid_dropped'] += future_dates
+                
+                # Very old dates (before 2020) are also outliers
+                old_dates = (df['order_time'].dt.year < 2020).sum()
+                if old_dates > 0:
+                    self._log_issue('sales', f'{old_dates} rows', 'OLD_DATE_OUTLIER',
+                                  f'{old_dates} orders have dates before 2020',
+                                  'Dropped rows')
+                    df = df[df['order_time'].dt.year >= 2020].copy()
+                    self.stats['invalid_dropped'] += old_dates
         
         # ===== PAYMENT_STATUS VALIDATION - DROP IF INVALID =====
         if 'payment_status' in df.columns:
             # Map variations first
             status_mappings = {
-                'paid': 'Paid', 'PAID': 'Paid', 'P': 'Paid', 'p': 'Paid', 'completed': 'Paid',
-                'failed': 'Failed', 'FAILED': 'Failed', 'F': 'Failed', 'f': 'Failed', 'failure': 'Failed',
-                'refunded': 'Refunded', 'REFUNDED': 'Refunded', 'R': 'Refunded', 'r': 'Refunded', 'refund': 'Refunded'
+                'paid': 'Paid', 'PAID': 'Paid', 'P': 'Paid', 'p': 'Paid', 'completed': 'Paid', 'Completed': 'Paid',
+                'failed': 'Failed', 'FAILED': 'Failed', 'F': 'Failed', 'f': 'Failed', 'failure': 'Failed', 'Failure': 'Failed',
+                'refunded': 'Refunded', 'REFUNDED': 'Refunded', 'R': 'Refunded', 'r': 'Refunded', 'refund': 'Refunded', 'Refund': 'Refunded'
             }
             df['payment_status'] = df['payment_status'].apply(
-                lambda x: status_mappings.get(str(x).strip(), str(x).strip().title()) if pd.notna(x) else x
+                lambda x: status_mappings.get(str(x).strip(), str(x).strip().title()) if pd.notna(x) else 'Paid'
             )
             
             # Drop invalid payment_status
@@ -442,7 +462,7 @@ class DataCleaner:
                 invalid_values = df.loc[invalid_mask, 'payment_status'].unique()
                 for val in invalid_values:
                     val_count = (df['payment_status'] == val).sum()
-                    self._log_issue('sales', f'payment_status={val}', 'INVALID_PAYMENT_STATUS',
+                    self._log_issue('sales', f'{val_count} rows', 'INVALID_PAYMENT_STATUS',
                                   f"payment_status '{val}' not in {self.VALID_PAYMENT_STATUS}",
                                   f'Dropped {val_count} rows')
                 
@@ -472,6 +492,7 @@ class DataCleaner:
         
         # ===== MISSING DISCOUNT_PCT - FIX (set to 0) =====
         if 'discount_pct' in df.columns:
+            df['discount_pct'] = pd.to_numeric(df['discount_pct'], errors='coerce')
             missing_discount = df['discount_pct'].isna().sum()
             if missing_discount > 0:
                 df['discount_pct'] = df['discount_pct'].fillna(0)
@@ -482,7 +503,7 @@ class DataCleaner:
         
         # ===== QTY OUTLIERS - CAP (not drop) =====
         if 'qty' in df.columns:
-            df['qty'] = pd.to_numeric(df['qty'], errors='coerce')
+            df['qty'] = pd.to_numeric(df['qty'], errors='coerce').fillna(1)
             
             # Fix negative qty
             neg_qty = (df['qty'] < 0).sum()
@@ -495,23 +516,29 @@ class DataCleaner:
             
             # Cap high qty outliers at 95th percentile
             qty_95 = df['qty'].quantile(0.95)
-            high_qty = (df['qty'] > qty_95 * 3).sum()  # 3x the 95th percentile
-            if high_qty > 0:
-                cap_value = qty_95 * 2
-                df.loc[df['qty'] > qty_95 * 3, 'qty'] = cap_value
-                self._log_issue('sales', f'{high_qty} rows', 'OUTLIER_QTY',
-                              f'{high_qty} orders have extreme qty values',
-                              f'Capped at {cap_value:.0f}')
-                self.stats['outliers_fixed'] += high_qty
+            if qty_95 > 0:
+                high_qty = (df['qty'] > qty_95 * 3).sum()
+                if high_qty > 0:
+                    cap_value = qty_95 * 2
+                    df.loc[df['qty'] > qty_95 * 3, 'qty'] = cap_value
+                    self._log_issue('sales', f'{high_qty} rows', 'OUTLIER_QTY',
+                                  f'{high_qty} orders have extreme qty values',
+                                  f'Capped at {cap_value:.0f}')
+                    self.stats['outliers_fixed'] += high_qty
         
         # ===== PRICE OUTLIERS - CAP (not drop) =====
         if 'selling_price_aed' in df.columns:
             df['selling_price_aed'] = pd.to_numeric(df['selling_price_aed'], errors='coerce')
             
+            # Fill missing with median
+            median_price = df['selling_price_aed'].median()
+            if pd.isna(median_price):
+                median_price = 100
+            df['selling_price_aed'] = df['selling_price_aed'].fillna(median_price)
+            
             # Fix negative price
             neg_price = (df['selling_price_aed'] < 0).sum()
             if neg_price > 0:
-                median_price = df['selling_price_aed'].median()
                 df.loc[df['selling_price_aed'] < 0, 'selling_price_aed'] = median_price
                 self._log_issue('sales', f'{neg_price} rows', 'NEGATIVE_PRICE',
                               f'{neg_price} orders have negative price',
@@ -520,14 +547,15 @@ class DataCleaner:
             
             # Cap high price outliers
             price_95 = df['selling_price_aed'].quantile(0.95)
-            high_price = (df['selling_price_aed'] > price_95 * 5).sum()
-            if high_price > 0:
-                cap_value = price_95 * 3
-                df.loc[df['selling_price_aed'] > price_95 * 5, 'selling_price_aed'] = cap_value
-                self._log_issue('sales', f'{high_price} rows', 'OUTLIER_PRICE',
-                              f'{high_price} orders have extreme price values',
-                              f'Capped at {cap_value:.0f}')
-                self.stats['outliers_fixed'] += high_price
+            if price_95 > 0:
+                high_price = (df['selling_price_aed'] > price_95 * 5).sum()
+                if high_price > 0:
+                    cap_value = price_95 * 3
+                    df.loc[df['selling_price_aed'] > price_95 * 5, 'selling_price_aed'] = cap_value
+                    self._log_issue('sales', f'{high_price} rows', 'OUTLIER_PRICE',
+                                  f'{high_price} orders have extreme price values',
+                                  f'Capped at {cap_value:.0f}')
+                    self.stats['outliers_fixed'] += high_price
         
         # ===== DUPLICATE ORDER_ID - KEEP LATEST =====
         if 'order_id' in df.columns:
@@ -553,6 +581,10 @@ class DataCleaner:
     
     def _clean_inventory(self, df, products_df, stores_df):
         """Clean inventory dataframe."""
+        if df is None or len(df) == 0:
+            self.cleaning_report['inventory'] = {'original_rows': 0, 'final_rows': 0, 'dropped_rows': 0}
+            return pd.DataFrame()
+        
         original_count = len(df)
         
         # Standardize column names
@@ -574,7 +606,7 @@ class DataCleaner:
         
         # ===== NEGATIVE STOCK - FIX (set to 0) =====
         if 'stock_on_hand' in df.columns:
-            df['stock_on_hand'] = pd.to_numeric(df['stock_on_hand'], errors='coerce')
+            df['stock_on_hand'] = pd.to_numeric(df['stock_on_hand'], errors='coerce').fillna(0)
             
             neg_stock = (df['stock_on_hand'] < 0).sum()
             if neg_stock > 0:
@@ -586,17 +618,19 @@ class DataCleaner:
             
             # Cap extreme stock values (like 9999)
             stock_95 = df['stock_on_hand'].quantile(0.95)
-            extreme_stock = (df['stock_on_hand'] > stock_95 * 5).sum()
-            if extreme_stock > 0:
-                cap_value = stock_95 * 3
-                df.loc[df['stock_on_hand'] > stock_95 * 5, 'stock_on_hand'] = cap_value
-                self._log_issue('inventory', f'{extreme_stock} rows', 'EXTREME_STOCK',
-                              f'{extreme_stock} inventory records have extreme stock values',
-                              f'Capped at {cap_value:.0f}')
-                self.stats['outliers_fixed'] += extreme_stock
+            if stock_95 > 0:
+                extreme_stock = (df['stock_on_hand'] > stock_95 * 5).sum()
+                if extreme_stock > 0:
+                    cap_value = stock_95 * 3
+                    df.loc[df['stock_on_hand'] > stock_95 * 5, 'stock_on_hand'] = cap_value
+                    self._log_issue('inventory', f'{extreme_stock} rows', 'EXTREME_STOCK',
+                                  f'{extreme_stock} inventory records have extreme stock values',
+                                  f'Capped at {cap_value:.0f}')
+                    self.stats['outliers_fixed'] += extreme_stock
         
         # Handle missing values
         if 'reorder_point' in df.columns:
+            df['reorder_point'] = pd.to_numeric(df['reorder_point'], errors='coerce')
             missing = df['reorder_point'].isna().sum()
             if missing > 0:
                 df['reorder_point'] = df['reorder_point'].fillna(10)
@@ -606,6 +640,7 @@ class DataCleaner:
                 self.stats['missing_values_fixed'] += missing
         
         if 'lead_time_days' in df.columns:
+            df['lead_time_days'] = pd.to_numeric(df['lead_time_days'], errors='coerce')
             missing = df['lead_time_days'].isna().sum()
             if missing > 0:
                 df['lead_time_days'] = df['lead_time_days'].fillna(3)
@@ -638,10 +673,15 @@ class DataCleaner:
     
     def _validate_foreign_keys_sales(self, sales_df, products_df, stores_df):
         """Validate and drop sales with invalid foreign keys."""
+        if sales_df is None or len(sales_df) == 0:
+            return sales_df
+        
         original_count = len(sales_df)
+        invalid_sku_count = 0
+        invalid_store_count = 0
         
         # Check SKU exists in products
-        if 'sku' in sales_df.columns and 'sku' in products_df.columns:
+        if 'sku' in sales_df.columns and products_df is not None and len(products_df) > 0 and 'sku' in products_df.columns:
             valid_skus = set(products_df['sku'].unique())
             invalid_sku_mask = ~sales_df['sku'].isin(valid_skus)
             invalid_sku_count = invalid_sku_mask.sum()
@@ -654,7 +694,7 @@ class DataCleaner:
                 self.stats['invalid_dropped'] += invalid_sku_count
         
         # Check store_id exists in stores
-        if 'store_id' in sales_df.columns and 'store_id' in stores_df.columns:
+        if 'store_id' in sales_df.columns and stores_df is not None and len(stores_df) > 0 and 'store_id' in stores_df.columns:
             valid_stores = set(stores_df['store_id'].unique())
             invalid_store_mask = ~sales_df['store_id'].isin(valid_stores)
             invalid_store_count = invalid_store_mask.sum()
@@ -667,22 +707,29 @@ class DataCleaner:
                 self.stats['invalid_dropped'] += invalid_store_count
         
         # Update report
-        self.cleaning_report['sales']['final_rows'] = len(sales_df)
-        self.cleaning_report['sales']['dropped_rows'] = original_count - len(sales_df) + self.cleaning_report['sales'].get('dropped_rows', 0)
+        if 'sales' in self.cleaning_report:
+            dropped_before = self.cleaning_report['sales'].get('dropped_rows', 0)
+            self.cleaning_report['sales']['final_rows'] = len(sales_df)
+            self.cleaning_report['sales']['dropped_rows'] = original_count - len(sales_df) + dropped_before
         
         self.cleaning_report['foreign_key_issues'] = {
-            'invalid_skus': invalid_sku_count if 'invalid_sku_count' in dir() else 0,
-            'invalid_stores': invalid_store_count if 'invalid_store_count' in dir() else 0
+            'invalid_skus': invalid_sku_count,
+            'invalid_stores': invalid_store_count
         }
         
         return sales_df
     
     def _validate_foreign_keys_inventory(self, inventory_df, products_df, stores_df):
         """Validate and drop inventory with invalid foreign keys."""
+        if inventory_df is None or len(inventory_df) == 0:
+            return inventory_df
+        
         original_count = len(inventory_df)
+        invalid_sku_count = 0
+        invalid_store_count = 0
         
         # Check SKU exists in products
-        if 'sku' in inventory_df.columns and 'sku' in products_df.columns:
+        if 'sku' in inventory_df.columns and products_df is not None and len(products_df) > 0 and 'sku' in products_df.columns:
             valid_skus = set(products_df['sku'].unique())
             invalid_sku_mask = ~inventory_df['sku'].isin(valid_skus)
             invalid_sku_count = invalid_sku_mask.sum()
@@ -695,7 +742,7 @@ class DataCleaner:
                 self.stats['invalid_dropped'] += invalid_sku_count
         
         # Check store_id exists in stores
-        if 'store_id' in inventory_df.columns and 'store_id' in stores_df.columns:
+        if 'store_id' in inventory_df.columns and stores_df is not None and len(stores_df) > 0 and 'store_id' in stores_df.columns:
             valid_stores = set(stores_df['store_id'].unique())
             invalid_store_mask = ~inventory_df['store_id'].isin(valid_stores)
             invalid_store_count = invalid_store_mask.sum()
@@ -708,8 +755,17 @@ class DataCleaner:
                 self.stats['invalid_dropped'] += invalid_store_count
         
         # Update report
-        self.cleaning_report['inventory']['final_rows'] = len(inventory_df)
-        self.cleaning_report['inventory']['dropped_rows'] = original_count - len(inventory_df) + self.cleaning_report['inventory'].get('dropped_rows', 0)
+        if 'inventory' in self.cleaning_report:
+            dropped_before = self.cleaning_report['inventory'].get('dropped_rows', 0)
+            self.cleaning_report['inventory']['final_rows'] = len(inventory_df)
+            self.cleaning_report['inventory']['dropped_rows'] = original_count - len(inventory_df) + dropped_before
+        
+        # Update foreign key issues (add to existing)
+        if 'foreign_key_issues' not in self.cleaning_report:
+            self.cleaning_report['foreign_key_issues'] = {}
+        
+        self.cleaning_report['foreign_key_issues']['invalid_skus_inventory'] = invalid_sku_count
+        self.cleaning_report['foreign_key_issues']['invalid_stores_inventory'] = invalid_store_count
         
         return inventory_df
     
@@ -717,18 +773,53 @@ class DataCleaner:
         """Return issues as a DataFrame in required format."""
         if not self.issues:
             return pd.DataFrame({
+                'table': ['None'],
                 'record_identifier': ['None'],
-                'issue_type': ['None'],
-                'issue_detail': ['No issues found'],
-                'action_taken': ['None']
+                'issue_type': ['NO_ISSUES'],
+                'issue_detail': ['No issues found - data was clean'],
+                'action_taken': ['None required']
             })
         
         return pd.DataFrame(self.issues)
     
     def get_issues_summary(self):
-        """Return summary of issues by type."""
+        """Return summary of issues by type (simple count of log entries)."""
         if not self.issues:
             return {}
         
         df = pd.DataFrame(self.issues)
         return df.groupby('issue_type').size().to_dict()
+    
+    def get_issues_summary_with_counts(self):
+        """
+        Return summary of issues by type with ACTUAL counts extracted from record_identifier.
+        
+        This method extracts the number from record_identifier like "5 rows" or "10 rows"
+        to get the true count of affected records, not just the number of log entries.
+        """
+        if not self.issues:
+            return {}
+        
+        summary = {}
+        for issue in self.issues:
+            issue_type = issue['issue_type']
+            record_id = str(issue.get('record_identifier', '1'))
+            
+            # Extract number from record_identifier like "5 rows" or "10 rows"
+            match = re.search(r'(\d+)', record_id)
+            count = int(match.group(1)) if match else 1
+            
+            if issue_type in summary:
+                summary[issue_type] += count
+            else:
+                summary[issue_type] = count
+        
+        return summary
+    
+    def get_cleaning_stats(self):
+        """Return cleaning statistics."""
+        return self.stats
+    
+    def get_cleaning_report(self):
+        """Return detailed cleaning report."""
+        return self.cleaning_report
